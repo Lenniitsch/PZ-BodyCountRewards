@@ -153,6 +153,10 @@ description=
 description=[h2]AI Transparency[/h2]
 description=The idea, architecture, and all code are my own. This is my first mod project and I genuinely enjoy building it. I used AI (Claude) as a tool for writing unit tests, debugging and understanding the B42 Trait API, and writing inline-comments.
 description=
+description=[b]To other modders:[/b] I'd encourage you to add a similar transparency note to your projects. Be honest about what's yours and what isn't.
+description=
+description=[b]To users:[/b] If AI-assisted development isn't your thing, that's fine - don't use the mod. But please don't downvote transparency. That only discourages others from being honest.
+description=
 description=[h2]Source Code[/h2]
 description=This mod is open source under the [url=https://opensource.org/licenses/MIT]MIT License[/url].
 description=Contributions, translations, and bug reports are welcome!
