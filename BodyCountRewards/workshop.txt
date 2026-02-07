@@ -161,7 +161,7 @@ description=[h2]Source Code[/h2]
 description=This mod is open source under the [url=https://opensource.org/licenses/MIT]MIT License[/url].
 description=Contributions, translations, and bug reports are welcome!
 description=
-description=[url=https://github.com/Lenniitsch/BodyCountRewards]GitHub Repository[/url]
+description=[url=https://github.com/Lenniitsch/PZ-BodyCountRewards]GitHub Repository[/url]
 description=
 description=[hr][/hr]
 description=
