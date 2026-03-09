@@ -1,0 +1,67 @@
+UI_DE = {
+    -- Kontextmenü
+    UI_BCR_MenuTitle = "Body Count Rewards",
+    UI_BCR_ViewStats = "Statistiken anzeigen...",
+    UI_BCR_Progress = "Fortschritt",
+    UI_BCR_NextReward = "Nächste Belohnung in",
+    UI_BCR_Kills = "Kills",
+
+    -- HaloText Benachrichtigungen
+    UI_BCR_Gained = "Trait erhalten",
+    UI_BCR_Lost = "Trait entfernt",
+    UI_BCR_PendingRewards = "Belohnungen verdient!",
+    UI_BCR_AllRewardsGranted = "Alle Belohnungen freigeschaltet. Beeindruckende Ausdauer!",
+
+    -- Statistikfenster: Tab-Namen
+    UI_BCR_TabProgress = "Fortschritt",
+    UI_BCR_TabHistory = "Verlauf",
+    UI_BCR_TabCatalog = "Trait-Katalog",
+
+    -- Statistikfenster: Fortschritt-Tab
+    UI_BCR_StatsTitle = "Leistungsbeurteilung",
+    UI_BCR_ZombieKills = "Zombie-Kills",
+    UI_BCR_NextRewardAt = "Nächste Belohnung bei",
+    UI_BCR_KillsRemaining = "Verbleibende Kills",
+    UI_BCR_TotalRewards = "Belohnungen gesamt",
+    UI_BCR_ScalingMode = "Skalierungsmodus",
+    UI_BCR_ScalingLinear = "Linear",
+    UI_BCR_ScalingProgressive = "Progressiv",
+    UI_BCR_RewardPriority = "Reward Priority",
+    UI_BCR_PriorityGainFirst = "Zuerst positive Traits verdienen",
+    UI_BCR_PriorityLoseFirst = "Zuerst negative Traits entfernen",
+    UI_BCR_PriorityRandom = "Zufällig (Positive oder negative Traits verdienen/entfernen)",
+    UI_BCR_AllComplete = "Alle Belohnungen erhalten!",
+    UI_BCR_NoData = "Keine Daten verfügbar.",
+    UI_BCR_ThousandSeparator = ".",
+
+    -- Statistikfenster: Meilenstein-Roadmap
+    UI_BCR_MilestoneRoadmap = "Meilensteine",
+    UI_BCR_MilestoneReached = "[x]",
+    UI_BCR_MilestoneCurrent = "[>]",
+    UI_BCR_MilestoneFuture = "[ ]",
+
+    -- Statistikfenster: Verlauf-Tab
+    UI_BCR_EarnedRewards = "Erhaltene Belohnungen",
+    UI_BCR_NoTraitsYet = "Noch keine Belohnungen. Zeit, deinen Body Count hochzutreiben!",
+
+    -- Statistikfenster: Katalog-Tab
+    UI_BCR_CatalogLegend = "% = Chance als nächste Belohnung",
+    UI_BCR_CatalogPositive = "Freischaltbare positive Traits",
+    UI_BCR_CatalogNegative = "Entfernbare negative Traits",
+    UI_BCR_CategoryDisabled = "In Sandbox deaktiviert",
+
+    -- Seltenheitsstufen
+    UI_BCR_Rarity_common = "Gewöhnlich",
+    UI_BCR_Rarity_uncommon = "Ungewöhnlich",
+    UI_BCR_Rarity_rare = "Selten",
+    UI_BCR_Rarity_veryRare = "Sehr Selten",
+
+    -- Status-Labels
+    UI_BCR_StatusEarned = "Bereits erhalten",
+    UI_BCR_StatusRemoved = "Bereits entfernt",
+    UI_BCR_StatusOwned = "Bereits vorhanden",
+    UI_BCR_StatusServerDisabled = "Vom Server deaktiviert",
+    UI_BCR_StatusConflict = "Konflikt mit %1",
+    UI_BCR_StatusUnavailable = "Nicht verfügbar",
+    UI_BCR_NoNegativeTraits = "Keine negativen Traits gefunden. Charakter wurde ohne erstellt."
+}
