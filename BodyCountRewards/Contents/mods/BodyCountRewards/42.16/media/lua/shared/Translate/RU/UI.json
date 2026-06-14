@@ -25,7 +25,7 @@
     "UI_BCR_PriorityRandom": "Случайно",
     "UI_BCR_AllComplete": "Все награды получены!",
     "UI_BCR_NoData": "Нет данных.",
-    "UI_BCR_ThousandSeparator": "",
+    "UI_BCR_ThousandSeparator": " ",
     "UI_BCR_MilestoneRoadmap": "Дорожная Карта",
     "UI_BCR_MilestoneReached": "[x]",
     "UI_BCR_MilestoneCurrent": "[>]",
