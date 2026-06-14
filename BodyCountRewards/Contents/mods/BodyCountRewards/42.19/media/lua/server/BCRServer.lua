@@ -1,0 +1,280 @@
+-- ============================================================
+-- BodyCountRewards v1.3.0 — BCRServer (Build 42.19+)
+-- Reward processor, milestone validation, batch logic,
+-- MP commands, SP direct path, kill sync, anti-cheat.
+-- ============================================================
+
+if isClient() and not isServer() then return end
+
+require "BCRCore"
+
+BCR = BCR or {}
+
+-- ============================================================
+-- PRIVATE HELPERS
+-- ============================================================
+
+local function getZombieKillsSafe(player)
+    if not player then return nil end
+    local ok, kills = pcall(function() return player:getZombieKills() end)
+    if not ok then return nil end
+    return kills or 0
+end
+
+local function getWorldAgeHoursSafe()
+    local ok, result = pcall(function()
+        local gt = getGameTime()
+        return gt and gt:getWorldAgeHours() or 0
+    end)
+    if ok then return result or 0 end
+    return 0
+end
+
+local function validateMilestone(player, bcrData, opts)
+    if not player or not bcrData or not opts then
+        return false, 0
+    end
+    local kills = getZombieKillsSafe(player)
+    if not kills then return false, 0 end
+    local milestonesAtKills = BCR.GetMilestonesAtKills(kills, opts)
+    local currentRewards = bcrData.rewardsGiven or 0
+    if milestonesAtKills <= currentRewards then
+        return false, 0
+    end
+    local missed = milestonesAtKills - currentRewards
+    if missed > 1 and not opts.grantMissedOpportunities then
+        return true, 1
+    end
+    return true, missed
+end
+
+local function recordTraitHistory(bcrData, result)
+    if not bcrData or not result then return end
+    if not bcrData.traitHistory then
+        bcrData.traitHistory = {}
+    end
+    table.insert(bcrData.traitHistory, {
+        id = result.id,
+        action = result.action,
+        rarity = result.rarity,
+        timestamp = getWorldAgeHoursSafe(),
+    })
+end
+
+local function buildAndApplyReward(player, earnablePool, removablePool, opts, appliedThisBatch)
+    if not player or not opts then return nil end
+
+    local filteredEarnable = BCR.FilterPoolByExclusion(earnablePool, appliedThisBatch)
+    local filteredRemovable = BCR.FilterPoolByExclusion(removablePool, appliedThisBatch)
+
+    local candidates = {}
+    local priority = opts.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST
+
+    if priority == BCR.PRIORITY_RANDOM then
+        priority = ZombRand(2) == 1 and BCR.PRIORITY_POSITIVE_FIRST or BCR.PRIORITY_NEGATIVE_FIRST
+    end
+
+    local firstChoice, secondChoice
+    if priority == BCR.PRIORITY_POSITIVE_FIRST then
+        firstChoice = { pool = filteredEarnable, action = "added", enabled = opts.enablePositive ~= false }
+        secondChoice = { pool = filteredRemovable, action = "removed", enabled = opts.enableNegative ~= false }
+    else
+        firstChoice = { pool = filteredRemovable, action = "removed", enabled = opts.enableNegative ~= false }
+        secondChoice = { pool = filteredEarnable, action = "added", enabled = opts.enablePositive ~= false }
+    end
+
+    for _, choice in ipairs({ firstChoice, secondChoice }) do
+        if choice.enabled then
+            local selected = BCR.WeightedRandomSelect(choice.pool)
+            if selected then
+                local success = false
+                if choice.action == "added" then
+                    success = BCR.AddTrait(player, selected)
+                else
+                    success = BCR.RemoveTrait(player, selected)
+                end
+                if success then
+                    return {
+                        id = selected.id,
+                        displayName = BCR.GetTraitDisplayName(selected.id),
+                        action = choice.action,
+                        rarity = selected.rarity,
+                        color = BCR.GetRarityColor(selected.cost),
+                        cost = selected.cost,
+                    }
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- ============================================================
+-- SP DIRECT PATH
+-- ============================================================
+
+function BCR.ProcessRewardDirect(player)
+    if not player then return nil end
+    local bcrData = BCR.EnsureModData(player)
+    if not bcrData then
+        BCR.DebugPrint("ProcessRewardDirect: no ModData")
+        return nil
+    end
+    local opts = BCR.opts
+    if not opts then
+        BCR.RefreshConfig()
+        opts = BCR.opts
+    end
+    local canClaim, missedCount = validateMilestone(player, bcrData, opts)
+    if not canClaim then return nil end
+    local rewardsToGive = math.min(missedCount, 1)
+    if not opts.grantMissedOpportunities then
+        rewardsToGive = 1
+    end
+    local result = nil
+    local appliedThisBatch = {}
+    for _ = 1, rewardsToGive do
+        local earnablePool = BCR.BuildEarnablePool(player, nil)
+        local removablePool = BCR.BuildRemovablePool(player, nil)
+        local applied = buildAndApplyReward(player, earnablePool, removablePool, opts, appliedThisBatch)
+        if applied then
+            appliedThisBatch[applied.id] = true
+            bcrData.rewardsGiven = (bcrData.rewardsGiven or 0) + 1
+            recordTraitHistory(bcrData, applied)
+            result = applied
+        end
+    end
+    if result then
+        if isServer() then
+            pcall(function() player:transmitModData() end)
+        end
+    end
+    return result
+end
+
+-- ============================================================
+-- MP HANDLERS
+-- ============================================================
+
+local function handleSyncKills(player, args)
+    if not player then return end
+    if not args or type(args.kills) ~= "number" then
+        BCR.DebugPrint("[Server] SyncKills received with invalid args")
+        return
+    end
+    local bcrData = BCR.EnsureModData(player)
+    if not bcrData then return end
+    local newKills = math.floor(args.kills)
+    local serverKills = getZombieKillsSafe(player) or 0
+    if serverKills > newKills then
+        BCR.DebugPrint(string.format(
+            "[Server] Server kill count (%d) higher than client report (%d) - using server value",
+            serverKills, newKills
+        ))
+        newKills = serverKills
+    end
+    local currentKills = bcrData.kills or 0
+    if newKills < currentKills then
+        local ok, username = pcall(function() return tostring(player:getUsername()) end)
+        local playerName = ok and username or "unknown"
+        BCR.DebugPrint(string.format(
+            "[Server] SyncKills REJECTED for %s: attempt to decrease kills (%d -> %d)",
+            playerName, currentKills, newKills
+        ))
+        return
+    end
+    if newKills > currentKills then
+        bcrData.kills = newKills
+    end
+    if isServer() then
+        pcall(function() player:transmitModData() end)
+    end
+    sendServerCommand(player, "BCR", "KillsSynced", {
+        kills = bcrData.kills,
+        rewardsGiven = bcrData.rewardsGiven or 0,
+    })
+end
+
+local function handleRequestReward(player, args)
+    if not player or not args then return end
+    local ok, username = pcall(function() return tostring(player:getUsername()) end)
+    local who = ok and username or "unknown"
+    BCR.DebugPrint("[Server] RequestReward received from: " .. who)
+    local bcrData = BCR.EnsureModData(player)
+    if not bcrData then
+        sendServerCommand(player, "BCR", "RewardError", { reason = "no_moddata" })
+        return
+    end
+    local opts = BCR.opts
+    if not opts then
+        BCR.RefreshConfig()
+        opts = BCR.opts
+    end
+
+    if not opts.enablePositive and not opts.enableNegative then
+        BCR.DebugPrint("[Server] Both trait rewards are disabled in sandbox options")
+        sendServerCommand(player, "BCR", "RewardError", {
+            reason = "rewards_disabled",
+        })
+        return
+    end
+
+    local serverKills = getZombieKillsSafe(player) or 0
+    local reportedKills = args.kills or 0
+    local bestKills = math.max(serverKills, reportedKills)
+    if bestKills > (bcrData.kills or 0) then
+        bcrData.kills = bestKills
+    end
+    local canClaim, missedCount = validateMilestone(player, bcrData, opts)
+    if not canClaim then
+        sendServerCommand(player, "BCR", "NoRewardAvailable", {})
+        return
+    end
+    local rewardsToGive = 1
+    if opts.grantMissedOpportunities then
+        rewardsToGive = missedCount
+    end
+    local appliedThisBatch = {}
+    local totalGranted = 0
+    for _ = 1, rewardsToGive do
+        local earnablePool = BCR.BuildEarnablePool(player, nil)
+        local removablePool = BCR.BuildRemovablePool(player, nil)
+        local applied = buildAndApplyReward(player, earnablePool, removablePool, opts, appliedThisBatch)
+        if applied then
+            appliedThisBatch[applied.id] = true
+            bcrData.rewardsGiven = (bcrData.rewardsGiven or 0) + 1
+            recordTraitHistory(bcrData, applied)
+            totalGranted = totalGranted + 1
+            BCR.DebugPrint(string.format(
+                "[Server] Reward granted to %s: %s (%s) - %s",
+                who, applied.id, applied.action, applied.rarity
+            ))
+            sendServerCommand(player, "BCR", "RewardGranted", {
+                id = applied.id,
+                displayName = applied.displayName,
+                action = applied.action,
+                rarity = applied.rarity,
+                color = applied.color,
+            })
+        end
+    end
+    local milestonesEarned = BCR.GetMilestonesAtKills(bcrData.kills or 0, opts)
+    local remainingMilestones = milestonesEarned - (bcrData.rewardsGiven or 0)
+    if isServer() then
+        pcall(function() player:transmitModData() end)
+    end
+    sendServerCommand(player, "BCR", "RewardBatchComplete", {
+        totalGranted = totalGranted,
+        remainingMilestones = remainingMilestones,
+        rewardsGiven = bcrData.rewardsGiven or 0,
+    })
+end
+
+Events.OnClientCommand.Add(function(module, command, player, args)
+    if module ~= "BCR" then return end
+    if command == "RequestReward" then
+        handleRequestReward(player, args)
+    elseif command == "SyncKills" then
+        handleSyncKills(player, args)
+    end
+end)
