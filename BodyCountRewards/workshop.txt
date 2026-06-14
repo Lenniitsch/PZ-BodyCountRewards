@@ -71,10 +71,12 @@ description=[b]Q: Switching from "Kill Milestones (Zombies)"?[/b]
 description=A: Just swap subscriptions. Kill count lives on your character. Earned traits stay. Only reward history won't carry over.
 description=
 description=[h2]Languages[/h2]
-description=English | Deutsch
+description=English | Deutsch | Español | Русский | Português (BR) | 简体中文 | 한국어 | Türkçe | Français | Polski | Українська
+description=
+description=[b]Translations are AI-generated.[/b] If you spot a mistake or something reads awkwardly in your language, [url=https://github.com/Lenniitsch/PZ-BodyCountRewards/issues]open an issue[/url] on GitHub. Native speakers who want to improve a translation are very welcome.
 description=
 description=[h2]AI Transparency[/h2]
-description=The idea, architecture, and all code are mine. This is my first mod and I genuinely enjoyed building it. I used AI (Claude) for unit tests, debugging, understanding the B42 Trait API, and inline comments.
+description=The idea, architecture, and all code are mine. This is my first mod and I genuinely enjoyed building it. I used AI (Claude) for unit tests, debugging, understanding the B42 Trait API, inline comments, and generating the non-English translation files.
 description=
 description=[b]To modders:[/b] Consider adding a similar note. Be honest about what's yours.
 description=[b]To users:[/b] If AI-assisted dev isn't your thing, don't use the mod. But please don't downvote transparency. That just discourages honesty.
