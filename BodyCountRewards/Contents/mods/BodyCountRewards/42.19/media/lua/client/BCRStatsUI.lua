@@ -567,11 +567,8 @@ function BCRStatsWindow:updateProgress()
         return
     end
 
+    BCR.RefreshConfig()
     local opts = BCR.opts
-    if not opts then
-        BCR.RefreshConfig()
-        opts = BCR.opts
-    end
     if not opts then return end
 
     local ok, kills = pcall(function() return self.player:getZombieKills() end)

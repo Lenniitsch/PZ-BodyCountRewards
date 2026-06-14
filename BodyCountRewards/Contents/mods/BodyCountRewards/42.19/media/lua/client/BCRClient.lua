@@ -269,11 +269,8 @@ function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test
     if not player then return end
 
     local bcrData = BCR.EnsureModData(player)
+    BCR.RefreshConfig()
     local opts = BCR.opts
-    if not opts then
-        BCR.RefreshConfig()
-        opts = BCR.opts
-    end
     if not opts then return end
 
     local ok, kills = pcall(function() return player:getZombieKills() end)
