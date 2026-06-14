@@ -10,6 +10,7 @@
 
 require "BCR_Shared"
 require "BCR_StatsUI"
+local BCR_Config = require "BCR_ModOptions"
 
 BCR = BCR or {}
 local ModuleName = "BCR"
@@ -446,6 +447,8 @@ end
 
 local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, test)
     if test then return true end
+    
+    if not BCR_Config.showContextMenu then return end
     
     local player = getSpecificPlayer(playerNum)
     if not player then return end

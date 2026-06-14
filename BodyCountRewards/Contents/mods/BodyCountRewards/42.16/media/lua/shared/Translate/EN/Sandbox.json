@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "Progressive (increasing)",
     "Sandbox_BCR_ProgressiveScalingFactor": "Progressive Scaling Factor",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "Controls how steeply the kill requirement grows in Progressive mode. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Examples with BodyCount = 1,000: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Factor 0.5 (Gentle): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 2,500  |  #3 = 4,500 <LINE>   #5 = 10,000  |  #10 = 32,500 <LINE><LINE> <RGB:1.0,0.85,0.4> Factor 1.0 (Default): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 3,000  |  #3 = 6,000 <LINE>   #5 = 15,000  |  #10 = 55,000 <LINE><LINE> <RGB:1.0,0.6,0.2> Factor 2.0 (Extreme): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 4,000  |  #3 = 9,000 <LINE>   #5 = 25,000  |  #10 = 100,000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> Only applies when Milestone Scaling is set to Progressive.",
+    "Sandbox_BCR_enableDebugLogging": "Enable Debug Logging",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "Prints detailed BodyCountRewards information to the console for troubleshooting. <LINE><LINE> <RGB:1.0,0.6,0.2> Intended for debugging only. <LINE><LINE> <RGB:0.8,0.8,0.8> Default: Disabled",
     "Sandbox_BCR_allow_SPEED_DEMON": "Speed Demon",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] POSITIVE TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Allow earning this trait as a reward. <LINE><LINE> <RGB:0.7,0.7,0.7> Rarity: Common",
     "Sandbox_BCR_allow_NIGHT_VISION": "Cat's Eyes",

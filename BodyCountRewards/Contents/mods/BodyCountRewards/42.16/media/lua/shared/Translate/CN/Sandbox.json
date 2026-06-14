@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "递进（递增）",
     "Sandbox_BCR_ProgressiveScalingFactor": "递进缩放系数",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "控制递进模式下击杀要求增长的陡峭程度。 <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> 以基础击杀数 = 1,000 为例： <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> 系数 0.5（平缓）： <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 2,500  |  #3 = 4,500 <LINE>   #5 = 10,000  |  #10 = 32,500 <LINE><LINE> <RGB:1.0,0.85,0.4> 系数 1.0（默认）： <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 3,000  |  #3 = 6,000 <LINE>   #5 = 15,000  |  #10 = 55,000 <LINE><LINE> <RGB:1.0,0.6,0.2> 系数 2.0（极端）： <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 4,000  |  #3 = 9,000 <LINE>   #5 = 25,000  |  #10 = 100,000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> 仅在里程碑缩放设为递进时生效。",
+    "Sandbox_BCR_enableDebugLogging": "启用调试日志",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "将详细的 BodyCountRewards 信息输出到控制台以进行故障排查。 <LINE><LINE> <RGB:1.0,0.6,0.2> 仅供调试使用。 <LINE><LINE> <RGB:0.8,0.8,0.8> 默认：禁用",
     "Sandbox_BCR_allow_SPEED_DEMON": "超速狂魔",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] 正面特质 <LINE><LINE> <RGB:0.8,0.8,0.8> 允许将此特质作为奖励获得。 <LINE><LINE> <RGB:0.7,0.7,0.7> 稀有度：普通",
     "Sandbox_BCR_allow_NIGHT_VISION": "视夜如明",

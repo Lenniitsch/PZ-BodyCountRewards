@@ -241,6 +241,7 @@ function BCR.getSandboxOptions()
         MilestoneScaling = SandboxSetting.MilestoneScaling or 1,
         ProgressiveScalingFactor = SandboxSetting.ProgressiveScalingFactor or 1.0,
     }
+    BCR.DEBUG = SandboxSetting.enableDebugLogging == true
     return cachedSandboxOpts
 end
 

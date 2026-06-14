@@ -45,5 +45,7 @@
     "UI_BCR_StatusOwned": "Ya Pose\u00eddo",
     "UI_BCR_StatusServerDisabled": "Desactivado por Servidor",
     "UI_BCR_StatusConflict": "Conflicto con %1",
-    "UI_BCR_StatusUnavailable": "No Disponible"
+    "UI_BCR_StatusUnavailable": "No Disponible",
+    "UI_BCR_Option_ShowMenu": "Mostrar Men\u00fa Contextual",
+    "UI_BCR_Option_ShowMenu_tooltip": "Al activarlo, hacer clic derecho muestra el progreso de Body Count Rewards en el men\u00fa contextual."
 }

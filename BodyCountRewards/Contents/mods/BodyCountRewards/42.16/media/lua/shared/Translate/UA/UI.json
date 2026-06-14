@@ -45,5 +45,7 @@
     "UI_BCR_StatusOwned": "Вже Має",
     "UI_BCR_StatusServerDisabled": "Вимкнено Сервером",
     "UI_BCR_StatusConflict": "Конфліктує з %1",
-    "UI_BCR_StatusUnavailable": "Недоступно"
+    "UI_BCR_StatusUnavailable": "Недоступно",
+    "UI_BCR_Option_ShowMenu": "Показати Контекстне Меню",
+    "UI_BCR_Option_ShowMenu_tooltip": "При ввімкненні правий клік показує прогрес Body Count Rewards у контекстному меню."
 }

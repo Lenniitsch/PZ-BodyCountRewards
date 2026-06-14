@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "누진 (증가)",
     "Sandbox_BCR_ProgressiveScalingFactor": "누진 증가 계수",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "누진 모드에서 처치 요구량이 증가하는 기울기를 조정합니다. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> 처치 수 = 1,000 기준 예시: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> 계수 0.5 (완만): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 2,500  |  #3 = 4,500 <LINE>   #5 = 10,000  |  #10 = 32,500 <LINE><LINE> <RGB:1.0,0.85,0.4> 계수 1.0 (기본값): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 3,000  |  #3 = 6,000 <LINE>   #5 = 15,000  |  #10 = 55,000 <LINE><LINE> <RGB:1.0,0.6,0.2> 계수 2.0 (극한): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1,000  |  #2 = 4,000  |  #3 = 9,000 <LINE>   #5 = 25,000  |  #10 = 100,000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> 이정표 증가 방식이 누진으로 설정된 경우에만 적용됩니다.",
+    "Sandbox_BCR_enableDebugLogging": "디버그 로깅 활성화",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "문제 해결을 위해 상세한 BodyCountRewards 정보를 콘솔에 출력합니다. <LINE><LINE> <RGB:1.0,0.6,0.2> 디버그 전용입니다. <LINE><LINE> <RGB:0.8,0.8,0.8> 기본값: 비활성화",
     "Sandbox_BCR_allow_SPEED_DEMON": "속도광",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] 긍정 특성 <LINE><LINE> <RGB:0.8,0.8,0.8> 보상으로 이 특성을 획득할 수 있도록 허용합니다. <LINE><LINE> <RGB:0.7,0.7,0.7> 등급: 일반",
     "Sandbox_BCR_allow_NIGHT_VISION": "고양이의 눈",

@@ -45,5 +45,7 @@
     "UI_BCR_StatusOwned": "Already Owned",
     "UI_BCR_StatusServerDisabled": "Server Disabled",
     "UI_BCR_StatusConflict": "Conflicts with %1",
-    "UI_BCR_StatusUnavailable": "Unavailable"
+    "UI_BCR_StatusUnavailable": "Unavailable",
+    "UI_BCR_Option_ShowMenu": "Show Context Menu",
+    "UI_BCR_Option_ShowMenu_tooltip": "When enabled, right-clicking shows Body Count Rewards progress in the context menu."
 }

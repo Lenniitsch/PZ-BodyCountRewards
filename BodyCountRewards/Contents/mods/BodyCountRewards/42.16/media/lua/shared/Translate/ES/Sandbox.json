@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "Progresivo (creciente)",
     "Sandbox_BCR_ProgressiveScalingFactor": "Factor de Escalado Progresivo",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "Controla el ritmo de crecimiento del requisito de bajas en modo Progresivo. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Ejemplos con Cuerpos = 1.000: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Factor 0.5 (Suave): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 2.500  |  #3 = 4.500 <LINE>   #5 = 10.000  |  #10 = 32.500 <LINE><LINE> <RGB:1.0,0.85,0.4> Factor 1.0 (Por defecto): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 3.000  |  #3 = 6.000 <LINE>   #5 = 15.000  |  #10 = 55.000 <LINE><LINE> <RGB:1.0,0.6,0.2> Factor 2.0 (Extremo): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 4.000  |  #3 = 9.000 <LINE>   #5 = 25.000  |  #10 = 100.000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> Solo se aplica cuando Escalado de Hitos est\u00e1 en Progresivo.",
+    "Sandbox_BCR_enableDebugLogging": "Activar Depuraci\u00f3n",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "Muestra informaci\u00f3n detallada de BodyCountRewards en la consola para solucionar problemas. <LINE><LINE> <RGB:1.0,0.6,0.2> Solo para depuraci\u00f3n. <LINE><LINE> <RGB:0.8,0.8,0.8> Por defecto: Desactivado",
     "Sandbox_BCR_allow_SPEED_DEMON": "Demonio de la velocidad",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] RASGO POSITIVO <LINE><LINE> <RGB:0.8,0.8,0.8> Permite obtener este rasgo como recompensa. <LINE><LINE> <RGB:0.7,0.7,0.7> Rareza: Com\u00fan",
     "Sandbox_BCR_allow_NIGHT_VISION": "Ojos de gato",

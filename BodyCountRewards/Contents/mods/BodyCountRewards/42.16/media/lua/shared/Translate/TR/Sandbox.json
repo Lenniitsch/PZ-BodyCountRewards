@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "Kademeli (artan)",
     "Sandbox_BCR_ProgressiveScalingFactor": "Kademeli Ölçeklendirme Faktörü",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "Kademeli modda öldürme gereksiniminin ne kadar dik artacağını kontrol eder. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Aşama Başına Öldürme Sayısı = 1.000 ile örnekler: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Faktör 0.5 (Yumuşak): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 2.500  |  #3 = 4.500 <LINE>   #5 = 10.000  |  #10 = 32.500 <LINE><LINE> <RGB:1.0,0.85,0.4> Faktör 1.0 (Varsayılan): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 3.000  |  #3 = 6.000 <LINE>   #5 = 15.000  |  #10 = 55.000 <LINE><LINE> <RGB:1.0,0.6,0.2> Faktör 2.0 (Ekstrem): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 4.000  |  #3 = 9.000 <LINE>   #5 = 25.000  |  #10 = 100.000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> Yalnızca Aşama Ölçeklendirmesi Kademeli olarak ayarlandığında geçerlidir.",
+    "Sandbox_BCR_enableDebugLogging": "Hata Ayıklama Günlüğü",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "Sorun giderme için BodyCountRewards hakkında ayrıntılı bilgileri konsola yazdırır. <LINE><LINE> <RGB:1.0,0.6,0.2> Yalnızca hata ayıklama amaçlıdır. <LINE><LINE> <RGB:0.8,0.8,0.8> Varsayılan: Devre Dışı",
     "Sandbox_BCR_allow_SPEED_DEMON": "Hız Şeytanı",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] POZİTİF ÖZELLİK <LINE><LINE> <RGB:0.8,0.8,0.8> Bu özelliğin ödül olarak kazanılmasına izin ver. <LINE><LINE> <RGB:0.7,0.7,0.7> Nadirlik: Yaygın",
     "Sandbox_BCR_allow_NIGHT_VISION": "Kedi Gözlü",

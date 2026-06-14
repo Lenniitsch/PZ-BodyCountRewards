@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "Progressif (croissant)",
     "Sandbox_BCR_ProgressiveScalingFactor": "Facteur de Progression",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "Contrôle la vitesse à laquelle le nombre de morts requis augmente en mode Progressif. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Exemples avec Cadavres = 1 000 : <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Facteur 0.5 (Doux) : <LINE> <RGB:0.8,0.8,0.8>   n°1 = 1 000  |  n°2 = 2 500  |  n°3 = 4 500 <LINE>   n°5 = 10 000  |  n°10 = 32 500 <LINE><LINE> <RGB:1.0,0.85,0.4> Facteur 1.0 (Défaut) : <LINE> <RGB:0.8,0.8,0.8>   n°1 = 1 000  |  n°2 = 3 000  |  n°3 = 6 000 <LINE>   n°5 = 15 000  |  n°10 = 55 000 <LINE><LINE> <RGB:1.0,0.6,0.2> Facteur 2.0 (Extrême) : <LINE> <RGB:0.8,0.8,0.8>   n°1 = 1 000  |  n°2 = 4 000  |  n°3 = 9 000 <LINE>   n°5 = 25 000  |  n°10 = 100 000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> S'applique uniquement quand la Progression des Paliers est réglée sur Progressif.",
+    "Sandbox_BCR_enableDebugLogging": "Activer le débogage",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "Affiche des informations détaillées de BodyCountRewards dans la console pour le dépannage. <LINE><LINE> <RGB:1.0,0.6,0.2> Réservé au débogage. <LINE><LINE> <RGB:0.8,0.8,0.8> Par défaut : Désactivé",
     "Sandbox_BCR_allow_SPEED_DEMON": "Fou du volant",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] TRAIT POSITIF <LINE><LINE> <RGB:0.8,0.8,0.8> Permet d'obtenir ce trait en récompense. <LINE><LINE> <RGB:0.7,0.7,0.7> Rareté : Commun",
     "Sandbox_BCR_allow_NIGHT_VISION": "Nyctalope",

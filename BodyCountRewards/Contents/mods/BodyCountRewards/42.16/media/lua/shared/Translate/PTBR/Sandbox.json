@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "Progressivo (crescente)",
     "Sandbox_BCR_ProgressiveScalingFactor": "Fator de Escala Progressivo",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "Controla o quanto a exig\u00eancia de abates aumenta no modo Progressivo. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Exemplos com Contagem de Corpos = 1.000: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Fator 0.5 (Suave): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 2.500  |  #3 = 4.500 <LINE>   #5 = 10.000  |  #10 = 32.500 <LINE><LINE> <RGB:1.0,0.85,0.4> Fator 1.0 (Padr\u00e3o): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 3.000  |  #3 = 6.000 <LINE>   #5 = 15.000  |  #10 = 55.000 <LINE><LINE> <RGB:1.0,0.6,0.2> Fator 2.0 (Extremo): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 4.000  |  #3 = 9.000 <LINE>   #5 = 25.000  |  #10 = 100.000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> Aplica-se apenas quando Escala de Conquistas est\u00e1 definido como Progressivo.",
+    "Sandbox_BCR_enableDebugLogging": "Ativar Depura\u00e7\u00e3o",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "Exibe informa\u00e7\u00f5es detalhadas do BodyCountRewards no console para solu\u00e7\u00e3o de problemas. <LINE><LINE> <RGB:1.0,0.6,0.2> Apenas para depura\u00e7\u00e3o. <LINE><LINE> <RGB:0.8,0.8,0.8> Padr\u00e3o: Desativado",
     "Sandbox_BCR_allow_SPEED_DEMON": "Bom de Volante",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] ATRIBUTO POSITIVO <LINE><LINE> <RGB:0.8,0.8,0.8> Permite ganhar este atributo como recompensa. <LINE><LINE> <RGB:0.7,0.7,0.7> Raridade: Comum",
     "Sandbox_BCR_allow_NIGHT_VISION": "Olhos de Gato",

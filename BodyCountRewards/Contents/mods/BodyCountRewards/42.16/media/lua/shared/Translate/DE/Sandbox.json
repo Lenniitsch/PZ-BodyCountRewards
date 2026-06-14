@@ -20,6 +20,8 @@
     "Sandbox_BCR_MilestoneScaling_option2": "Progressiv (ansteigend)",
     "Sandbox_BCR_ProgressiveScalingFactor": "Progressiver Skalierungsfaktor",
     "Sandbox_BCR_ProgressiveScalingFactor_tooltip": "Steuert, wie steil die Kill-Anforderung im Progressiv-Modus wächst. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Beispiele mit Kills = 1.000: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Faktor 0.5 (Sanft): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 2.500  |  #3 = 4.500 <LINE>   #5 = 10.000  |  #10 = 32.500 <LINE><LINE> <RGB:1.0,0.85,0.4> Faktor 1.0 (Standard): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 3.000  |  #3 = 6.000 <LINE>   #5 = 15.000  |  #10 = 55.000 <LINE><LINE> <RGB:1.0,0.6,0.2> Faktor 2.0 (Extrem): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 4.000  |  #3 = 9.000 <LINE>   #5 = 25.000  |  #10 = 100.000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> Gilt nur bei Meilenstein-Skalierung: Progressiv.",
+    "Sandbox_BCR_enableDebugLogging": "Debug-Aufzeichnung aktivieren",
+    "Sandbox_BCR_enableDebugLogging_tooltip": "Gibt detaillierte BodyCountRewards-Informationen zur Fehlersuche in der Konsole aus. <LINE><LINE> <RGB:1.0,0.6,0.2> Nur für Fehlerbehebung gedacht. <LINE><LINE> <RGB:0.8,0.8,0.8> Standard: Deaktiviert",
     "Sandbox_BCR_allow_SPEED_DEMON": "Geschwindigkeitsdämon",
     "Sandbox_BCR_allow_SPEED_DEMON_tooltip": "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
     "Sandbox_BCR_allow_NIGHT_VISION": "Katzenaugen",

@@ -45,5 +45,7 @@
     "UI_BCR_StatusServerDisabled": "Vom Server deaktiviert",
     "UI_BCR_StatusConflict": "Konflikt mit %1",
     "UI_BCR_StatusUnavailable": "Nicht verfügbar",
-    "UI_BCR_NoNegativeTraits": "Keine negativen Traits gefunden. Charakter wurde ohne erstellt."
+    "UI_BCR_NoNegativeTraits": "Keine negativen Traits gefunden. Charakter wurde ohne erstellt.",
+    "UI_BCR_Option_ShowMenu": "Kontextmenü anzeigen",
+    "UI_BCR_Option_ShowMenu_tooltip": "Wenn aktiviert, zeigt ein Rechtsklick den Body Count Rewards-Fortschritt im Kontextmenü an."
 }

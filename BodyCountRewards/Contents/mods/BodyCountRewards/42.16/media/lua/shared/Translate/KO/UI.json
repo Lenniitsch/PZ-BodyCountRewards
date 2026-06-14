@@ -45,5 +45,7 @@
     "UI_BCR_StatusOwned": "이미 보유함",
     "UI_BCR_StatusServerDisabled": "서버 비활성화",
     "UI_BCR_StatusConflict": "%1과(와) 충돌",
-    "UI_BCR_StatusUnavailable": "획득 불가"
+    "UI_BCR_StatusUnavailable": "획득 불가",
+    "UI_BCR_Option_ShowMenu": "컨텍스트 메뉴 표시",
+    "UI_BCR_Option_ShowMenu_tooltip": "활성화하면 마우스 오른쪽 클릭 시 컨텍스트 메뉴에 Body Count Rewards 진행도를 표시합니다."
 }
