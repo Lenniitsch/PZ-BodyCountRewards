@@ -23,7 +23,7 @@ local TestRunner = {
 }
 
 local function logLine(msg)
-    print("[BCR_Test] " .. msg)
+    print("[BCR Test] " .. msg)
 end
 
 local function startSuite(name)

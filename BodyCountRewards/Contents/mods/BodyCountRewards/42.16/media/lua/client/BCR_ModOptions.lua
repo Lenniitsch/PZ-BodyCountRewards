@@ -23,7 +23,7 @@ if PZAPI and PZAPI.ModOptions then
     end
 
     Events.OnMainMenuEnter.Add(function()
-        options:apply()
+        if options then options:apply() end
     end)
 end
 

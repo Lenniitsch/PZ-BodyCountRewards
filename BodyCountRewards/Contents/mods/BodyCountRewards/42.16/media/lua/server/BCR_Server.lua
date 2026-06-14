@@ -143,6 +143,13 @@ local function selectAndApplyReward(player, earnablePool, removablePool, opts)
         if #earnablePool > 0 then table.insert(attempts, { pool = earnablePool, action = "added", type = "positive" }) end
     end
     
+    if #attempts == 0 then
+        BCR.DebugPrint(string.format(
+            "[Server] selectAndApplyReward: both pools empty (earnable=%d, removable=%d)",
+            #earnablePool, #removablePool
+        ))
+    end
+
     for _, attempt in ipairs(attempts) do
         selected = BCR.weightedRandomSelect(attempt.pool)
         if selected then
@@ -164,6 +171,8 @@ local function selectAndApplyReward(player, earnablePool, removablePool, opts)
                 BCR.DebugPrint("[Server] Failed to apply trait: " .. tostring(applyResult))
                 selected = nil
             end
+        else
+            BCR.DebugPrint("[Server] weightedRandomSelect returned nil from " .. attempt.type .. " pool (size=" .. #attempt.pool .. ")")
         end
     end
     
@@ -242,9 +251,7 @@ local function handleRequestReward(player, args)
         local earnablePool, removablePool = buildTraitPools(player, opts)
         
         -- Session-level dedup: exclude traits already modified in this batch session
-        local hasModified = false
-        for _ in pairs(modifiedTraits) do hasModified = true; break end
-        if hasModified then
+        if totalGranted > 0 then
             earnablePool = BCR.filterPoolByExclusion(earnablePool, modifiedTraits)
             removablePool = BCR.filterPoolByExclusion(removablePool, modifiedTraits)
         end
@@ -306,7 +313,7 @@ local function handleRequestReward(player, args)
     end
     
     if isServer() and totalGranted > 0 then
-        player:transmitModData()
+        pcall(function() player:transmitModData() end)
     end
     
     local milestonesEarned = BCR.getMilestonesAtKills(bcrData.kills, opts)
@@ -363,7 +370,7 @@ local function handleSyncKills(player, args)
     bcrData.kills = newKills
     
     if isServer() then
-        player:transmitModData()
+        pcall(function() player:transmitModData() end)
     end
     
     BCR.DebugPrint(string.format(

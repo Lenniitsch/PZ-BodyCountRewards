@@ -21,6 +21,7 @@ local ModuleName = "BCR"
 
 local PENDING_REWARD_DELAY_TICKS = 90   -- ~1.5 seconds between auto-claims
 local NOTIFICATION_DELAY_TICKS = 200    -- ~3.3 seconds between staggered notifications
+local MAX_NOTIFICATION_QUEUE = 8
 
 
 -- ===========================
@@ -141,7 +142,9 @@ local function showRewardNotification(player, result)
     local actionText
     local displayName = BCR.getTraitDisplayName(result.trait)
     
-    if result.action == "added" then
+    if result.action == "batch" then
+        HaloTextHelper.addTextWithArrow(player, displayName, true, 200, 200, 200)
+    elseif result.action == "added" then
         actionText = getText("UI_BCR_Gained") or "Gained"
         local text = actionText .. ": " .. displayName
         HaloTextHelper.addTextWithArrow(player, text, true, 0, 255, 0)
@@ -175,6 +178,15 @@ local function requestReward(player, bcrData)
         local result = BCR.ProcessRewardDirect(player)
         
         if result then
+            if #notificationQueue >= MAX_NOTIFICATION_QUEUE then
+                notificationQueue = {{
+                    trait = "BATCH",
+                    displayName = tostring(#notificationQueue + 1) .. " rewards",
+                    action = "batch",
+                    rarity = "common",
+                    color = {1.0, 1.0, 1.0},
+                }}
+            end
             table.insert(notificationQueue, {
                 trait = result.trait,
                 displayName = BCR.getTraitDisplayName(result.trait),
@@ -193,7 +205,21 @@ local function requestReward(player, bcrData)
                 showFinalMessageTimer = 0
             end
         else
-            BCR.DebugPrint("[Client] SP Reward failed or no traits available")
+            -- Distinguish why ProcessRewardDirect returned nil
+            local bcrCheck = ensureClientModData(player)
+            if bcrCheck then
+                local optsCheck = BCR.getSandboxOptions()
+                local req = BCR.getKillsForMilestone((bcrCheck.rewardsGiven or 0) + 1, optsCheck)
+                if bcrCheck.kills < req then
+                    BCR.DebugPrint(string.format("[Client] SP Reward skipped: milestone not reached (%d/%d kills)", bcrCheck.kills, req))
+                elseif not BCR.HasAvailableRewards(player) then
+                    BCR.DebugPrint("[Client] SP Reward skipped: all traits exhausted")
+                else
+                    BCR.DebugPrint("[Client] SP Reward skipped: no eligible trait selected (pool has " .. #(BCR.getEarnableTraits(player) or {}) .. " earnable, " .. #(BCR.getRemovableTraits(player) or {}) .. " removable)")
+                end
+            else
+                BCR.DebugPrint("[Client] SP Reward skipped: could not access ModData")
+            end
             
             if not BCR.HasAvailableRewards(player) and not hasShownAllTraitsMessage then
                 shouldShowFinalMessage = true
@@ -214,7 +240,10 @@ end
 local function processPendingReward()
     -- Prevent overlapping requests: in MP, flag is held until server responds;
     -- in SP, flag acts as re-entry guard during synchronous ProcessRewardDirect
-    if isPendingRequestInFlight then return end
+    if isPendingRequestInFlight then
+        BCR.DebugPrint("[Client] processPendingReward blocked: request already in-flight")
+        return
+    end
     if pendingRewardsCount <= 0 then
         isPendingRequestInFlight = false
         return
@@ -379,6 +408,15 @@ local function onServerCommand(module, command, args)
     
     if command == "RewardGranted" then
         bcrData.rewardsGiven = bcrData.rewardsGiven + 1
+        if #notificationQueue >= MAX_NOTIFICATION_QUEUE then
+            notificationQueue = {{
+                trait = "BATCH",
+                displayName = tostring(#notificationQueue + 1) .. " rewards",
+                action = "batch",
+                rarity = "common",
+                color = {1.0, 1.0, 1.0},
+            }}
+        end
         table.insert(notificationQueue, {
             trait = args.trait,
             displayName = args.displayName,
@@ -510,6 +548,7 @@ end
 -- PLAYER CREATION
 
 local function onCreatePlayer(playerNum, player)
+    BCR.initDebugFlag()
     BCR.getSandboxOptions()
     if not player then return end
     
@@ -527,13 +566,20 @@ local function onCreatePlayer(playerNum, player)
     notificationQueue = {}
     notificationTimer = 0
     
-    ensureClientModData(player)
+    local bcrData = ensureClientModData(player)
     lastKnownKills = getCurrentKills(player)
+    local rewardsGiven = bcrData and bcrData.rewardsGiven or 0
+    
+    BCR.DebugPrint(string.format(
+        "[Client] onCreatePlayer: kills=%d, rewardsGiven=%d, traits=%d",
+        lastKnownKills, rewardsGiven, bcrData and #(bcrData.traitHistory or {}) or 0
+    ))
     
     -- Restore exhaustion state on save load
     if not BCR.HasAvailableRewards(player) then
         hasShownAllTraitsMessage = true
         rewardsExhausted = true
+        BCR.DebugPrint("[Client] onCreatePlayer: all rewards exhausted — skipping future processing")
     end
 end
 

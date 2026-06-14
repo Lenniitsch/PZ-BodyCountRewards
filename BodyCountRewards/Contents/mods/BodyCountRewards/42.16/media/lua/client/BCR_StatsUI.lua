@@ -416,8 +416,8 @@ end
 
 function BCRStatsWindow:getBCRData()
     if not self.player then return nil end
-    local modData = self.player:getModData()
-    if not modData then return nil end
+    local ok, modData = pcall(function() return self.player:getModData() end)
+    if not ok or not modData then return nil end
     return modData.BCR
 end
 

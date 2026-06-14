@@ -227,6 +227,11 @@ BCR.PRIORITY_POSITIVE_FIRST = 1
 BCR.PRIORITY_NEGATIVE_FIRST = 2
 BCR.PRIORITY_RANDOM = 3
 
+function BCR.initDebugFlag()
+    local SandboxSetting = SandboxVars.BCR or {}
+    BCR.DEBUG = SandboxSetting.enableDebugLogging == true
+end
+
 function BCR.getSandboxOptions()
     local SandboxSetting = SandboxVars.BCR or {}
     local opts = {
@@ -238,7 +243,6 @@ function BCR.getSandboxOptions()
         MilestoneScaling = SandboxSetting.MilestoneScaling or 1,
         ProgressiveScalingFactor = SandboxSetting.ProgressiveScalingFactor or 0.5,
     }
-    BCR.DEBUG = SandboxSetting.enableDebugLogging == true
     return opts
 end
 
