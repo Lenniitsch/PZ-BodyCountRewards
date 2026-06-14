@@ -30,7 +30,6 @@ local lastKnownKills = 0
 local pendingRewardsCount = 0
 local pendingRewardTimer = 0
 local isProcessingPendingRewards = false
-local currentTick = 0
 local hasShownAllTraitsMessage = false
 local shouldShowFinalMessage = false
 local showFinalMessageTimer = 0
@@ -225,14 +224,13 @@ local function processPendingReward()
     pendingRewardsCount = pendingRewardsCount - 1
     
     BCR.DebugPrint("[Client] Auto-claiming pending reward (" .. pendingRewardsCount .. " remaining)")
-    requestReward(player, bcrData)
+    local ok, err = pcall(requestReward, player, bcrData)
+    if not ok then
+        BCR.DebugPrint("[Client] Error during reward request: " .. tostring(err))
+    end
     
     pendingRewardTimer = 0
     isProcessingPendingRewards = false
-    
-    if pendingRewardsCount <= 0 then
-        -- All pending rewards processed
-    end
 end
 
 
@@ -242,8 +240,6 @@ end
 local function BCR_OnPlayerUpdate(player)
     if not player then return end
     if player:isDead() then return end
-    
-    currentTick = currentTick + 1
     
     -- All rewards exhausted - skip all processing
     if hasShownAllTraitsMessage then
@@ -496,6 +492,7 @@ end
 -- PLAYER CREATION
 
 local function onCreatePlayer(playerNum, player)
+    BCR.getSandboxOptions()
     if not player then return end
     
     BCR.DebugPrint("[Client] Player created - initializing BCR")

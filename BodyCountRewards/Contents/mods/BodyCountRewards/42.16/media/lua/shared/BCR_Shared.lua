@@ -227,22 +227,19 @@ BCR.PRIORITY_POSITIVE_FIRST = 1
 BCR.PRIORITY_NEGATIVE_FIRST = 2
 BCR.PRIORITY_RANDOM = 3
 
-local cachedSandboxOpts = nil
-
 function BCR.getSandboxOptions()
-    if cachedSandboxOpts then return cachedSandboxOpts end
     local SandboxSetting = SandboxVars.BCR or {}
-    cachedSandboxOpts = {
+    local opts = {
         BodyCount = SandboxSetting.BodyCount or 1000,
         givePositiveTraits = SandboxSetting.enablePositiveTraits ~= false,
         removeNegativeTraits = SandboxSetting.enableNegativeTraits ~= false,
         rewardPriority = SandboxSetting.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST,
         grandMissedOpportunities = SandboxSetting.grandMissedOpportunities == true,
         MilestoneScaling = SandboxSetting.MilestoneScaling or 1,
-        ProgressiveScalingFactor = SandboxSetting.ProgressiveScalingFactor or 1.0,
+        ProgressiveScalingFactor = SandboxSetting.ProgressiveScalingFactor or 0.5,
     }
     BCR.DEBUG = SandboxSetting.enableDebugLogging == true
-    return cachedSandboxOpts
+    return opts
 end
 
 function BCR.isTraitAllowed(traitName)
@@ -633,6 +630,6 @@ function BCR.getTraitDisplayName(traitID)
     return formatTraitName(traitID)
 end
 
-print("[BodyCountRewards] Shared.lua loaded - " 
+BCR.DebugPrint("Shared.lua loaded - " 
     .. #BCR.PositiveTraitsList .. " positive, " 
     .. #BCR.NegativeTraitsList .. " negative traits")

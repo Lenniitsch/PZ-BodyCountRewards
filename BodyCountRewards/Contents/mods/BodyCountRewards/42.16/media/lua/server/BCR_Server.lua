@@ -73,19 +73,19 @@ local function buildTraitPools(player, opts)
     
     if opts.givePositiveTraits then
         local success, result = pcall(BCR.getEarnableTraits, player)
-        if success and result then
-            earnablePool = result
-        else
+        if not success then
             BCR.DebugPrint("[Server] Error getting earnable traits: " .. tostring(result))
+        elseif result then
+            earnablePool = result
         end
     end
     
     if opts.removeNegativeTraits then
         local success, result = pcall(BCR.getRemovableTraits, player)
-        if success and result then
-            removablePool = result
-        else
+        if not success then
             BCR.DebugPrint("[Server] Error getting removable traits: " .. tostring(result))
+        elseif result then
+            removablePool = result
         end
     end
     
