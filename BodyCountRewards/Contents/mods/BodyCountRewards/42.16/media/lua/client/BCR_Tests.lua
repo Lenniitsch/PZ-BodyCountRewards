@@ -280,7 +280,7 @@ local function testWeightedRandomSelection()
     }
 
     local counts = { HIGH_WEIGHT = 0, LOW_WEIGHT = 0 }
-    local iterations = 500
+    local iterations = 1000
 
     for i = 1, iterations do
         local pick = BCR.weightedRandomSelect(multiPool)
@@ -426,6 +426,9 @@ local function testMutualExclusionEnforcement(player)
         { "SPEED_DEMON",   "SUNDAY_DRIVER" },
     }
 
+    -- Track modifications for best-effort cleanup if suite crashes
+    local activeEntry = nil
+
     for _, pair in ipairs(testPairs) do
         local traitA = pair[1]
         local traitB = pair[2]
@@ -435,7 +438,6 @@ local function testMutualExclusionEnforcement(player)
         if not udA or not udB then
             skip(traitA .. " <-> " .. traitB, "Could not resolve trait userdata")
         else
-            -- Check if player already has either trait
             local hadA = BCR.playerHasTrait(player, traitA)
             local hadB = BCR.playerHasTrait(player, traitB)
 
@@ -445,12 +447,12 @@ local function testMutualExclusionEnforcement(player)
                 -- Add traitA
                 local entryA = { trait = traitA, traitUserdata = udA }
                 BCR.addTraitToPlayer(player, entryA)
+                activeEntry = entryA
 
-                -- Verify hasMutuallyExclusiveTrait blocks traitB
+                -- Forward: traitA blocks traitB
                 local blocked = BCR.hasMutuallyExclusiveTrait(player, traitB)
                 assert_true(blocked, traitB .. " is blocked when " .. traitA .. " is active")
 
-                -- Verify traitB cannot be earned (canEarnTrait logic via pool)
                 local earnablePool = BCR.getEarnableTraits(player)
                 local foundBlocked = false
                 for _, e in ipairs(earnablePool) do
@@ -460,8 +462,60 @@ local function testMutualExclusionEnforcement(player)
 
                 -- Cleanup: remove traitA
                 BCR.removeTraitFromPlayer(player, entryA)
+                activeEntry = nil
+
+                -- Reverse: add traitB, verify it blocks traitA
+                local entryB = { trait = traitB, traitUserdata = udB }
+                BCR.addTraitToPlayer(player, entryB)
+                activeEntry = entryB
+
+                local blockedRev = BCR.hasMutuallyExclusiveTrait(player, traitA)
+                assert_true(blockedRev, traitA .. " is blocked when " .. traitB .. " is active (reverse)")
+
+                local earnablePoolB = BCR.getEarnableTraits(player)
+                local foundBlockedRev = false
+                for _, e in ipairs(earnablePoolB) do
+                    if e.trait == traitA then foundBlockedRev = true; break end
+                end
+                assert_false(foundBlockedRev, traitA .. " is NOT in earnable pool when " .. traitB .. " is active (reverse)")
+
+                -- Cleanup: remove traitB
+                BCR.removeTraitFromPlayer(player, entryB)
+                activeEntry = nil
             end
         end
+    end
+
+    -- 3-way exclusion: FAST_READER blocks both ILLITERATE and SLOW_READER
+    local udFast = BCR.getTraitUserdata("FAST_READER")
+    if udFast and not BCR.playerHasTrait(player, "FAST_READER")
+            and not BCR.playerHasTrait(player, "ILLITERATE")
+            and not BCR.playerHasTrait(player, "SLOW_READER") then
+        local entryFast = { trait = "FAST_READER", traitUserdata = udFast }
+        BCR.addTraitToPlayer(player, entryFast)
+        activeEntry = entryFast
+
+        local blockedIll = BCR.hasMutuallyExclusiveTrait(player, "ILLITERATE")
+        local blockedSlow = BCR.hasMutuallyExclusiveTrait(player, "SLOW_READER")
+        assert_true(blockedIll, "ILLITERATE is blocked when FAST_READER is active")
+        assert_true(blockedSlow, "SLOW_READER is blocked when FAST_READER is active")
+
+        local pool = BCR.getEarnableTraits(player)
+        for _, e in ipairs(pool) do
+            assert_false(e.trait == "ILLITERATE", "ILLITERATE not in earnable pool with FAST_READER")
+            assert_false(e.trait == "SLOW_READER", "SLOW_READER not in earnable pool with FAST_READER")
+        end
+
+        BCR.removeTraitFromPlayer(player, entryFast)
+        activeEntry = nil
+    else
+        skip("3-way FAST_READER exclusion", "Preconditions not met")
+    end
+
+    -- Best-effort cleanup in case an intermediate assertion failed
+    if activeEntry then
+        logLine("  CLEANUP: Removing leftover trait: " .. activeEntry.trait)
+        BCR.removeTraitFromPlayer(player, activeEntry)
     end
 end
 
@@ -572,12 +626,24 @@ local function testMilestoneCatchUp(player)
     end
 
     -- Save original ModData so we can restore it
-    local modData = player:getModData()
+    local ok, modData = pcall(function() return player:getModData() end)
+    if not ok or not modData then
+        skip("All milestone tests", "Could not access player ModData")
+        return
+    end
     local originalBCR = nil
     if modData.BCR then
+        -- Deep-copy traitHistory entries too (shallow per-entry is fine)
+        local origHistory = {}
+        if modData.BCR.traitHistory then
+            for _, h in ipairs(modData.BCR.traitHistory) do
+                table.insert(origHistory, { trait = h.trait, action = h.action, rarity = h.rarity, timestamp = h.timestamp })
+            end
+        end
         originalBCR = {
             kills = modData.BCR.kills,
             rewardsGiven = modData.BCR.rewardsGiven,
+            traitHistory = origHistory,
         }
     end
 
@@ -651,11 +717,11 @@ local function testMilestoneCatchUp(player)
     local belowResult = BCR.ProcessRewardDirect(player)
     assert_nil(belowResult, (bodyCount - 1) .. " kills (1 below milestone) = no reward")
 
-    -- Restore original ModData
+    -- Restore original ModData (including traitHistory)
     if originalBCR then
         modData.BCR = originalBCR
     else
-        modData.BCR = { kills = 0, rewardsGiven = 0 }
+        modData.BCR = { kills = 0, rewardsGiven = 0, traitHistory = {} }
     end
 
     logLine("  ModData restored to original state")
@@ -693,6 +759,130 @@ local function testDisplayNames()
     local fakeName = BCR.getTraitDisplayName("TOTALLY_FAKE_TRAIT")
     assert_not_nil(fakeName, "Fake trait still returns a fallback name")
     assert_true(#fakeName > 0, "Fake trait fallback is non-empty")
+end
+
+
+-- ============================================================
+-- SUITE: SANDBOX OPTIONS
+-- ============================================================
+
+local function testSandboxOptions()
+    startSuite("Sandbox Options")
+
+    local opts = BCR.getSandboxOptions()
+    assert_not_nil(opts, "getSandboxOptions returns a table")
+    assert_true(type(opts.BodyCount) == "number", "BodyCount is a number")
+    assert_true(opts.BodyCount >= 2, "BodyCount >= 2")
+    assert_true(type(opts.givePositiveTraits) == "boolean", "givePositiveTraits is boolean")
+    assert_true(type(opts.removeNegativeTraits) == "boolean", "removeNegativeTraits is boolean")
+    assert_true(type(opts.grandMissedOpportunities) == "boolean", "grandMissedOpportunities is boolean")
+    assert_true(type(opts.MilestoneScaling) == "number", "MilestoneScaling is a number")
+    assert_true(opts.MilestoneScaling == 1 or opts.MilestoneScaling == 2, "MilestoneScaling is 1 or 2")
+
+    -- isTraitAllowed: known traits should be allowed by default
+    for _, entry in ipairs(BCR.PositiveTraitsList) do
+        assert_true(BCR.isTraitAllowed(entry.trait), "Trait allowed: " .. entry.trait)
+    end
+    for _, entry in ipairs(BCR.NegativeTraitsList) do
+        assert_true(BCR.isTraitAllowed(entry.trait), "Trait allowed: " .. entry.trait)
+    end
+
+    -- Fake trait still passes (no sandbox block defined)
+    assert_true(BCR.isTraitAllowed("TOTALLY_FAKE_TRAIT_XYZ"), "Fake trait allowed (no block defined)")
+
+    -- Priority values
+    assert_equal(1, BCR.PRIORITY_POSITIVE_FIRST, "PRIORITY_POSITIVE_FIRST = 1")
+    assert_equal(2, BCR.PRIORITY_NEGATIVE_FIRST, "PRIORITY_NEGATIVE_FIRST = 2")
+    assert_equal(3, BCR.PRIORITY_RANDOM, "PRIORITY_RANDOM = 3")
+end
+
+
+-- ============================================================
+-- SUITE: FILTER POOL BY EXCLUSION
+-- ============================================================
+
+local function testFilterPoolByExclusion()
+    startSuite("Filter Pool By Exclusion")
+
+    -- nil pool returns empty table
+    local nilResult = BCR.filterPoolByExclusion(nil, {})
+    assert_not_nil(nilResult, "nil pool returns a table")
+    assert_equal(0, #nilResult, "nil pool returns empty table")
+
+    -- Empty pool returns empty table
+    local emptyResult = BCR.filterPoolByExclusion({}, { A = true })
+    assert_equal(0, #emptyResult, "Empty pool returns empty table")
+
+    -- nil excludeSet returns pool unchanged
+    local pool = {
+        { trait = "A", weight = 1 },
+        { trait = "B", weight = 2 },
+    }
+    local noFilter = BCR.filterPoolByExclusion(pool, nil)
+    assert_equal(2, #noFilter, "nil excludeSet returns full pool")
+
+    -- Empty excludeSet returns pool unchanged
+    local emptyFilter = BCR.filterPoolByExclusion(pool, {})
+    assert_equal(2, #emptyFilter, "Empty excludeSet returns full pool")
+
+    -- Single exclusion
+    local singleExclude = BCR.filterPoolByExclusion(pool, { A = true })
+    assert_equal(1, #singleExclude, "Single exclusion removes 1 entry")
+    assert_equal("B", singleExclude[1].trait, "Remaining entry is 'B'")
+
+    -- All excluded
+    local fullExclude = BCR.filterPoolByExclusion(pool, { A = true, B = true })
+    assert_equal(0, #fullExclude, "All excluded returns empty pool")
+end
+
+
+-- ============================================================
+-- SUITE: MILESTONE MATH EDGE CASES
+-- ============================================================
+
+local function testMilestoneEdgeCases()
+    startSuite("Milestone Math Edge Cases")
+
+    local linearOpts  = { BodyCount = 100, MilestoneScaling = 1 }
+    local progOpts    = { BodyCount = 100, MilestoneScaling = 2, ProgressiveScalingFactor = 0.5 }
+    local defaultOpts = { BodyCount = 100 }  -- MilestoneScaling defaults to 1
+
+    -- getKillsForMilestone edge cases
+    assert_equal(0, BCR.getKillsForMilestone(0, linearOpts), "Milestone 0 = 0 kills")
+    assert_equal(0, BCR.getKillsForMilestone(-1, linearOpts), "Negative milestone = 0 kills")
+    assert_equal(100, BCR.getKillsForMilestone(1, linearOpts), "Milestone 1 = 100 kills (linear)")
+    assert_equal(200, BCR.getKillsForMilestone(2, linearOpts), "Milestone 2 = 200 kills (linear)")
+
+    -- Progressive scaling (factor 0.5)
+    local m1 = BCR.getKillsForMilestone(1, progOpts)
+    local m2 = BCR.getKillsForMilestone(2, progOpts)
+    local m3 = BCR.getKillsForMilestone(3, progOpts)
+    assert_equal(100, m1, "Progressive milestone 1 = 100")
+    assert_true(m2 > 200, "Progressive milestone 2 > linear (" .. m2 .. " > 200)")
+    assert_true(m3 > m2 + (m2 - m1), "Progressive gap grows: (" .. m1 .. " → " .. m2 .. " → " .. m3 .. ")")
+
+    -- getMilestonesAtKills edge cases
+    assert_equal(0, BCR.getMilestonesAtKills(0, linearOpts), "0 kills = 0 milestones")
+    assert_equal(0, BCR.getMilestonesAtKills(-1, linearOpts), "Negative kills = 0 milestones")
+    assert_equal(1, BCR.getMilestonesAtKills(100, linearOpts), "100 kills = 1 milestone")
+    assert_equal(5, BCR.getMilestonesAtKills(500, linearOpts), "500 kills = 5 milestones")
+    assert_equal(5, BCR.getMilestonesAtKills(599, linearOpts), "599 kills = 5 milestones (floor)")
+
+    -- BodyCount = 0 safety
+    local zeroOpts = { BodyCount = 0 }
+    assert_equal(0, BCR.getKillsForMilestone(1, zeroOpts), "BodyCount 0 → milestone requires 0 kills")
+    assert_equal(0, BCR.getMilestonesAtKills(1000, zeroOpts), "BodyCount 0 → 0 milestones")
+
+    -- Missing scaling defaults to linear
+    assert_equal(300, BCR.getKillsForMilestone(3, defaultOpts), "Missing MilestoneScaling defaults to linear")
+
+    -- Progressive with factor 0
+    local zeroFactorOpts = { BodyCount = 100, MilestoneScaling = 2, ProgressiveScalingFactor = 0 }
+    assert_equal(200, BCR.getKillsForMilestone(2, zeroFactorOpts), "Progressive factor 0 → linear")
+
+    -- Negative factor should behave like 0
+    local negFactorOpts = { BodyCount = 100, MilestoneScaling = 2, ProgressiveScalingFactor = -1 }
+    assert_equal(200, BCR.getKillsForMilestone(2, negFactorOpts), "Negative progressive factor → linear")
 end
 
 
@@ -773,26 +963,45 @@ function BCR_RunTests()
     logLine("")
 
     -- Get the current player (singleplayer only)
-    local player = getPlayer and getPlayer() or nil
+    local player = nil
+    local ok, p = pcall(function() return getPlayer and getPlayer() or nil end)
+    if ok then player = p end
     if not player then
         logLine("WARNING: No player found. Player-dependent tests will be skipped.")
         logLine("         Run these tests from an active singleplayer game.")
         logLine("")
     end
 
-    -- Run all test suites
-    testTraitRegistryResolution()
-    testRarityAndWeight()
-    testMutualExclusions()
-    testWeightedRandomSelection()
-    testDisplayNames()
-    testDataIntegrity()
-    testAddRemoveTraits(player)
-    testMutualExclusionEnforcement(player)
-    testTraitPoolBuilding(player)
-    testMilestoneCatchUp(player)
+    -- Run a suite in protected mode — one suite crash won't kill the run
+    local function runSuite(name, fn, ...)
+        local ok, err = pcall(fn, ...)
+        if not ok then
+            logLine("  SUITE CRASHED: " .. name .. " — " .. tostring(err))
+            TestRunner.failed = TestRunner.failed + 1
+            table.insert(TestRunner.errors, name .. " crashed: " .. tostring(err))
+        end
+    end
 
-    -- Print summary
+    runSuite("Trait Registry Resolution", testTraitRegistryResolution)
+    runSuite("Rarity and Weight Calculations", testRarityAndWeight)
+    runSuite("Mutually Exclusive Trait Validation", testMutualExclusions)
+    runSuite("Weighted Random Selection", testWeightedRandomSelection)
+    runSuite("Display Name Resolution", testDisplayNames)
+    runSuite("Data Integrity Checks", testDataIntegrity)
+    runSuite("Sandbox Options", testSandboxOptions)
+    runSuite("Filter Pool By Exclusion", testFilterPoolByExclusion)
+    runSuite("Milestone Math Edge Cases", testMilestoneEdgeCases)
+    runSuite("Add and Remove Traits", testAddRemoveTraits, player)
+    runSuite("Mutual Exclusion Enforcement", testMutualExclusionEnforcement, player)
+    runSuite("Trait Pool Building", testTraitPoolBuilding, player)
+    runSuite("Milestone Catch-Up", testMilestoneCatchUp, player)
+
+    if TestRunner.failed > 0 then
+        logLine("")
+        logLine("NOTE: Some tests failed. If mutation tests failed, the player may be in")
+        logLine("      a modified state. Restart the game to get a clean character.")
+    end
+
     printSummary()
 
     return TestRunner.failed == 0

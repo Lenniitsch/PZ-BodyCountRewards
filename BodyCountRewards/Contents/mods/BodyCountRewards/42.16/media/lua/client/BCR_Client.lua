@@ -29,7 +29,7 @@ local NOTIFICATION_DELAY_TICKS = 200    -- ~3.3 seconds between staggered notifi
 local lastKnownKills = 0
 local pendingRewardsCount = 0
 local pendingRewardTimer = 0
-local isProcessingPendingRewards = false
+local isPendingRequestInFlight = false    -- MP: waiting for server response; SP: re-entry guard
 local hasShownAllTraitsMessage = false
 local shouldShowFinalMessage = false
 local showFinalMessageTimer = 0
@@ -48,7 +48,11 @@ end
 
 local function ensureClientModData(player)
     if not player then return nil end
-    local modData = player:getModData()
+    local ok, modData = pcall(function() return player:getModData() end)
+    if not ok or not modData then
+        BCR.DebugPrint("[Client] ensureClientModData failed: could not get ModData")
+        return nil
+    end
     if not modData.BCR then
         modData.BCR = {
             kills = 0,
@@ -208,9 +212,11 @@ end
 -- PENDING REWARDS PROCESSING
 
 local function processPendingReward()
-    if isProcessingPendingRewards then return end
+    -- Prevent overlapping requests: in MP, flag is held until server responds;
+    -- in SP, flag acts as re-entry guard during synchronous ProcessRewardDirect
+    if isPendingRequestInFlight then return end
     if pendingRewardsCount <= 0 then
-        isProcessingPendingRewards = false
+        isPendingRequestInFlight = false
         return
     end
     
@@ -220,17 +226,24 @@ local function processPendingReward()
     local bcrData = ensureClientModData(player)
     if not bcrData then return end
     
-    isProcessingPendingRewards = true
+    isPendingRequestInFlight = true
     pendingRewardsCount = pendingRewardsCount - 1
     
     BCR.DebugPrint("[Client] Auto-claiming pending reward (" .. pendingRewardsCount .. " remaining)")
     local ok, err = pcall(requestReward, player, bcrData)
     if not ok then
         BCR.DebugPrint("[Client] Error during reward request: " .. tostring(err))
+        pendingRewardsCount = pendingRewardsCount + 1
+        isPendingRequestInFlight = false
+        return
     end
     
     pendingRewardTimer = 0
-    isProcessingPendingRewards = false
+    -- SP: requestReward is synchronous, safe to clear now.
+    -- MP: flag held until server responds (RewardBatchComplete / RewardError / NoRewardAvailable)
+    if BCR.isSinglePlayer() then
+        isPendingRequestInFlight = false
+    end
 end
 
 
@@ -283,7 +296,12 @@ local function BCR_OnPlayerUpdate(player)
                         requestReward(player, bcrData)
                     end
                 else
-                    requestReward(player, bcrData)
+                    -- MP: if pending rewards are already queued, let the timer handle follow-ups
+                    if pendingRewardsCount > 0 then
+                        BCR.DebugPrint("[Client] Milestone reached but reward processing already in progress")
+                    else
+                        requestReward(player, bcrData)
+                    end
                 end
             end
             
@@ -376,6 +394,8 @@ local function onServerCommand(module, command, args)
         local totalGranted = args.totalGranted or 0
         local remaining = args.remainingMilestones or 0
         
+        isPendingRequestInFlight = false
+        
         BCR.DebugPrint("[Client] Batch complete: " .. totalGranted .. " granted, " .. remaining .. " milestones remaining")
         
         if totalGranted > 1 then
@@ -389,7 +409,6 @@ local function onServerCommand(module, command, args)
             BCR.DebugPrint("[Client] Server reports " .. remaining .. " milestones remaining - queuing follow-up requests")
         else
             pendingRewardsCount = 0
-            isProcessingPendingRewards = false
             BCR.DebugPrint("[Client] Server reports all milestones handled")
         end
         
@@ -413,14 +432,13 @@ local function onServerCommand(module, command, args)
         
     elseif command == "RewardError" then
         BCR.DebugPrint("[Client] Reward error: " .. tostring(args.reason))
-        -- Clear pending queue on server denial
+        isPendingRequestInFlight = false
         pendingRewardsCount = 0
-        isProcessingPendingRewards = false
         
     elseif command == "NoRewardAvailable" then
         BCR.DebugPrint("[Client] No rewards available: " .. tostring(args.reason))
+        isPendingRequestInFlight = false
         pendingRewardsCount = 0
-        isProcessingPendingRewards = false
     end
 end
 
@@ -501,7 +519,7 @@ local function onCreatePlayer(playerNum, player)
     lastKnownKills = 0
     pendingRewardsCount = 0
     pendingRewardTimer = 0
-    isProcessingPendingRewards = false
+    isPendingRequestInFlight = false
     hasShownAllTraitsMessage = false 
     shouldShowFinalMessage = false 
     showFinalMessageTimer = 0

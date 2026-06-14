@@ -21,7 +21,11 @@ local ModuleName = "BCR"
 
 local function ensureModData(player)
     if not player then return nil end
-    local modData = player:getModData()
+    local ok, modData = pcall(function() return player:getModData() end)
+    if not ok or not modData then
+        BCR.DebugPrint("[Server] ensureModData failed: could not get ModData")
+        return nil
+    end
     if not modData.BCR then
         modData.BCR = {
             kills = 0,
@@ -34,6 +38,22 @@ local function ensureModData(player)
         modData.BCR.traitHistory = {}
     end
     return modData.BCR
+end
+
+local function getZombieKillsSafe(player)
+    if not player then return 0 end
+    local ok, kills = pcall(function() return player:getZombieKills() end)
+    if ok and type(kills) == "number" then return kills end
+    return 0
+end
+
+local function getWorldAgeHoursSafe()
+    local ok, result = pcall(function()
+        local gt = getGameTime()
+        return gt and gt:getWorldAgeHours() or 0
+    end)
+    if ok then return result or 0 end
+    return 0
 end
 
 
@@ -178,10 +198,14 @@ local function handleRequestReward(player, args)
     end
     
     local bcrData = ensureModData(player)
+    if not bcrData then
+        BCR.DebugPrint("[Server] RequestReward failed: could not access player ModData")
+        return
+    end
     
     -- Use best available kill count: ModData, client report, or server API
     local reportedKills = (args and type(args.kills) == "number") and math.floor(args.kills) or 0
-    local serverKills = player:getZombieKills() or 0
+    local serverKills = getZombieKillsSafe(player)
     local bestKills = math.max(bcrData.kills, reportedKills, serverKills)
     
     if bestKills > bcrData.kills then
@@ -246,7 +270,7 @@ local function handleRequestReward(player, args)
                 trait = result.trait,
                 action = result.action,
                 rarity = result.rarity,
-                timestamp = (getGameTime() and getGameTime():getWorldAgeHours()) or 0,
+                timestamp = getWorldAgeHoursSafe(),
             })
             
             totalGranted = totalGranted + 1
@@ -308,10 +332,14 @@ local function handleSyncKills(player, args)
     end
     
     local bcrData = ensureModData(player)
+    if not bcrData then
+        BCR.DebugPrint("[Server] SyncKills failed: could not access player ModData")
+        return
+    end
     local newKills = math.floor(args.kills)
     
     -- Prefer server-side kill count if higher (anti-cheat measure)
-    local serverKills = player:getZombieKills()
+    local serverKills = getZombieKillsSafe(player)
     if serverKills and serverKills > newKills then
         BCR.DebugPrint(string.format(
             "[Server] Server kill count (%d) higher than client report (%d) - using server value",
@@ -372,6 +400,7 @@ function BCR.ProcessRewardDirect(player)
     
     local opts = BCR.getSandboxOptions()
     local bcrData = ensureModData(player)
+    if not bcrData then return nil end
     
     local isValid, missedRewards = validateMilestone(player, bcrData, opts)
     if not isValid then return nil end
@@ -390,7 +419,7 @@ function BCR.ProcessRewardDirect(player)
             trait = result.trait,
             action = result.action,
             rarity = result.rarity,
-            timestamp = (getGameTime() and getGameTime():getWorldAgeHours()) or 0,
+            timestamp = getWorldAgeHoursSafe(),
         })
     end
     
