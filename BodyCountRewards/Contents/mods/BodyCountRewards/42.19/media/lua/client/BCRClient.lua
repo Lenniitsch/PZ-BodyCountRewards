@@ -83,7 +83,6 @@ function BCR_OnCreatePlayer(playerNum, player)
     local ok, kills = pcall(function() return player:getZombieKills() end)
     local rewardsGiven = bcrData.rewardsGiven or 0
     if ok and kills then
-        lastKnownKills = kills
         if bcrData.kills == 0 and kills > 0 then
             bcrData.kills = kills
         end
@@ -92,7 +91,7 @@ function BCR_OnCreatePlayer(playerNum, player)
     local traitCount = bcrData.traitHistory and #bcrData.traitHistory or 0
     BCR.DebugPrint(string.format(
         "[Client] onCreatePlayer: kills=%d, rewardsGiven=%d, traits=%d",
-        lastKnownKills or 0, rewardsGiven, traitCount
+        kills or 0, rewardsGiven, traitCount
     ))
 
     if not BCR.HasAvailableRewards(player) then
@@ -114,7 +113,7 @@ local function requestReward(player, bcrData)
     end
     BCR.EnqueueNotification(result)
     BCR.RefreshStatsWindow()
-    BCR.DebugPrint("[Client] SP Reward granted: " .. tostring(result.trait) .. " (" .. tostring(result.action) .. ")")
+    BCR.DebugPrint("[Client] SP Reward granted: " .. tostring(result.id) .. " (" .. tostring(result.action) .. ")")
     if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
         BCR.DebugPrint("[Client] No more rewards available - scheduling final message")
         rewardsExhausted = true
