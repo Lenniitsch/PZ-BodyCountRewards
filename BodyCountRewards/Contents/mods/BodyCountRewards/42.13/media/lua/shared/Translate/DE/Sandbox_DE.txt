@@ -1,0 +1,173 @@
+Sandbox_DE = {
+
+    -- SEITENTITEL
+    Sandbox_BodyCountRewards = "Body Count Rewards",
+    Sandbox_BodyCountRewardsTraits = "Body Count Rewards - Traits",
+
+
+    -- ALLGEMEINE EINSTELLUNGEN
+    
+    Sandbox_BCR_BodyCount = "Kills pro Meilenstein",
+    Sandbox_BCR_BodyCount_tooltip = "Wie viele Zombie-Kills bis zur nächsten Belohnung. <LINE><LINE> <RGB:0.6,1.0,0.2> Niedriger = Schnellere Belohnungen <LINE> <RGB:1.0,0.6,0.2> Höher = Langsamere Belohnungen <LINE><LINE> <RGB:0.8,0.8,0.8> Standard: 1000",
+
+    Sandbox_BCR_enablePositiveTraits = "Positive Traits aktivieren",
+    Sandbox_BCR_enablePositiveTraits_tooltip = "Positive Traits als Belohnung freischalten. <LINE><LINE> <RGB:0.8,0.8,0.8> Standard: Aktiviert",
+
+    Sandbox_BCR_enableNegativeTraits = "Entfernung negativer Traits aktivieren",
+    Sandbox_BCR_enableNegativeTraits_tooltip = "Negative Traits als Belohnung entfernen. <LINE><LINE> <RGB:0.8,0.8,0.8> Standard: Deaktiviert",
+
+    Sandbox_BCR_grandMissedOpportunities = "Rückwirkende Belohnungen",
+    Sandbox_BCR_grandMissedOpportunities_tooltip = "Belohnungen für Kills vor Mod-Installation vergeben. <LINE><LINE> <RGB:1.0,0.6,0.2> WARNUNG: Hohe Killzahlen können viele Belohnungen auf einmal vergeben! <LINE><LINE> <RGB:0.8,0.8,0.8> Standard: Deaktiviert",
+
+    Sandbox_BCR_rewardPriority = "Belohnungspriorität",
+    Sandbox_BCR_rewardPriority_tooltip = "Was kommt zuerst bei einem Meilenstein? <LINE><LINE> <RGB:0.6,1.0,0.2> Zuerst erhalten: Positive Traits vor dem Entfernen negativer <LINE> <RGB:1.0,0.6,0.2> Zuerst entfernen: Negative Traits entfernen vor dem Erhalt positiver <LINE> <RGB:0.8,0.3,1.0> Zufällig: Für etwas Spannung! <LINE><LINE> <RGB:0.8,0.8,0.8> Standard: Zuerst erhalten",
+    Sandbox_BCR_rewardPriority_option1 = "Zuerst erhalten",
+    Sandbox_BCR_rewardPriority_option2 = "Zuerst entfernen",
+    Sandbox_BCR_rewardPriority_option3 = "Zufällig",
+
+    Sandbox_BCR_MilestoneScaling = "Meilenstein-Skalierung",
+    Sandbox_BCR_MilestoneScaling_tooltip = "Wie die Kill-Anforderung zwischen Meilensteinen wächst. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:1.0,0.85,0.4> LINEAR (Kills = 1.000): <LINE> <RGB:0.8,0.8,0.8>   Meilenstein #1  = 1.000 <LINE>   Meilenstein #2  = 2.000 <LINE>   Meilenstein #3  = 3.000 <LINE>   Meilenstein #5  = 5.000 <LINE>   Meilenstein #10 = 10.000 <LINE><LINE> <RGB:0.6,1.0,0.2> PROGRESSIV x1.0 (Kills = 1.000): <LINE> <RGB:0.8,0.8,0.8>   Meilenstein #1  = 1.000 <LINE>   Meilenstein #2  = 3.000 <LINE>   Meilenstein #3  = 6.000 <LINE>   Meilenstein #5  = 15.000 <LINE>   Meilenstein #10 = 55.000 <LINE> <RGB:0.5,0.8,1.0> __________________________",
+    Sandbox_BCR_MilestoneScaling_option1 = "Linear (konstant)",
+    Sandbox_BCR_MilestoneScaling_option2 = "Progressiv (ansteigend)",
+
+    Sandbox_BCR_ProgressiveScalingFactor = "Progressiver Skalierungsfaktor",
+    Sandbox_BCR_ProgressiveScalingFactor_tooltip = "Steuert, wie steil die Kill-Anforderung im Progressiv-Modus wächst. <LINE><LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE> <RGB:0.8,0.8,0.8> Beispiele mit Kills = 1.000: <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:0.6,1.0,0.2> Faktor 0.5 (Sanft): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 2.500  |  #3 = 4.500 <LINE>   #5 = 10.000  |  #10 = 32.500 <LINE><LINE> <RGB:1.0,0.85,0.4> Faktor 1.0 (Standard): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 3.000  |  #3 = 6.000 <LINE>   #5 = 15.000  |  #10 = 55.000 <LINE><LINE> <RGB:1.0,0.6,0.2> Faktor 2.0 (Extrem): <LINE> <RGB:0.8,0.8,0.8>   #1 = 1.000  |  #2 = 4.000  |  #3 = 9.000 <LINE>   #5 = 25.000  |  #10 = 100.000 <LINE> <RGB:0.5,0.8,1.0> __________________________ <LINE><LINE> <RGB:1.0,0.5,0.5> Gilt nur bei Meilenstein-Skalierung: Progressiv.",
+
+
+    -- POSITIVE TRAITS (Freischaltbar)
+    
+    Sandbox_BCR_allow_SPEED_DEMON = "Geschwindigkeitsdämon",
+    Sandbox_BCR_allow_SPEED_DEMON_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_NIGHT_VISION = "Katzenaugen",
+    Sandbox_BCR_allow_NIGHT_VISION_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_DEXTROUS = "Gewandt",
+    Sandbox_BCR_allow_DEXTROUS_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_FAST_READER = "Schnell-Leser",
+    Sandbox_BCR_allow_FAST_READER_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_INVENTIVE = "Geschickt",
+    Sandbox_BCR_allow_INVENTIVE_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_LIGHT_EATER = "Appetitlosigkeit",
+    Sandbox_BCR_allow_LIGHT_EATER_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_LOW_THIRST = "Kamel",
+    Sandbox_BCR_allow_LOW_THIRST_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_OUTDOORSMAN = "Naturbursche",
+    Sandbox_BCR_allow_OUTDOORSMAN_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_NEEDS_LESS_SLEEP = "Schlaflos",
+    Sandbox_BCR_allow_NEEDS_LESS_SLEEP_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_IRON_GUT = "Darm aus Stahl",
+    Sandbox_BCR_allow_IRON_GUT_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_ADRENALINE_JUNKIE = "Adrenalinjunkie",
+    Sandbox_BCR_allow_ADRENALINE_JUNKIE_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_EAGLE_EYED = "Luchsaugen",
+    Sandbox_BCR_allow_EAGLE_EYED_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_GRACEFUL = "Anmutig",
+    Sandbox_BCR_allow_GRACEFUL_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_INCONSPICUOUS = "Unauffällig",
+    Sandbox_BCR_allow_INCONSPICUOUS_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_NUTRITIONIST = "Ernährungswissenschaftler",
+    Sandbox_BCR_allow_NUTRITIONIST_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_ORGANIZED = "Organisiert",
+    Sandbox_BCR_allow_ORGANIZED_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_RESILIENT = "Resistent",
+    Sandbox_BCR_allow_RESILIENT_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_FAST_HEALER = "Schnell-Heiler",
+    Sandbox_BCR_allow_FAST_HEALER_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_FAST_LEARNER = "Schnell-Lerner",
+    Sandbox_BCR_allow_FAST_LEARNER_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_KEEN_HEARING = "Gutes Hörvermögen",
+    Sandbox_BCR_allow_KEEN_HEARING_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_THICK_SKINNED = "Dickhäutig",
+    Sandbox_BCR_allow_THICK_SKINNED_tooltip = "<RGB:0.6,1.0,0.2> [+] POSITIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung freischalten. <LINE><LINE> <RGB:0.8,0.3,1.0> Seltenheit: Sehr Selten",
+
+    -- ============================================
+    -- NEGATIVE TRAITS (Entfernbar)
+    -- Offizielle deutsche PZ-Namen aus UI_DE.txt
+    -- ============================================
+    
+    Sandbox_BCR_allow_HIGH_THIRST = "Durstig",
+    Sandbox_BCR_allow_HIGH_THIRST_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_SUNDAY_DRIVER = "Sonntagsfahrer",
+    Sandbox_BCR_allow_SUNDAY_DRIVER_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_ALL_THUMBS = "Schusslig",
+    Sandbox_BCR_allow_ALL_THUMBS_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_CLUMSY = "Tollpatschig",
+    Sandbox_BCR_allow_CLUMSY_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_COWARDLY = "Feige",
+    Sandbox_BCR_allow_COWARDLY_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_SLOW_READER = "Langsam-Leser",
+    Sandbox_BCR_allow_SLOW_READER_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.7,0.7,0.7> Seltenheit: Gewöhnlich",
+
+    Sandbox_BCR_allow_SLOW_HEALER = "Langsam-Heiler",
+    Sandbox_BCR_allow_SLOW_HEALER_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_WEAK_STOMACH = "Magenleiden",
+    Sandbox_BCR_allow_WEAK_STOMACH_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_SMOKER = "Raucher",
+    Sandbox_BCR_allow_SMOKER_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_AGORAPHOBIC = "Agoraphobisch",
+    Sandbox_BCR_allow_AGORAPHOBIC_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_CLAUSTROPHOBIC = "Klaustrophobisch",
+    Sandbox_BCR_allow_CLAUSTROPHOBIC_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_CONSPICUOUS = "Auffällig",
+    Sandbox_BCR_allow_CONSPICUOUS_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_HEARTY_APPETITE = "Gesunder Appetit",
+    Sandbox_BCR_allow_HEARTY_APPETITE_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_PACIFIST = "Pazifist",
+    Sandbox_BCR_allow_PACIFIST_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_PRONE_TO_ILLNESS = "Schwaches Immunsystem",
+    Sandbox_BCR_allow_PRONE_TO_ILLNESS_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_NEEDS_MORE_SLEEP = "Schlafmütze",
+    Sandbox_BCR_allow_NEEDS_MORE_SLEEP_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.6,1.0,0.2> Seltenheit: Ungewöhnlich",
+
+    Sandbox_BCR_allow_ASTHMATIC = "Asthmatiker",
+    Sandbox_BCR_allow_ASTHMATIC_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_HEMOPHOBIC = "Hämatophobie",
+    Sandbox_BCR_allow_HEMOPHOBIC_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_DISORGANIZED = "Messie",
+    Sandbox_BCR_allow_DISORGANIZED_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_SLOW_LEARNER = "Langsam-Lerner",
+    Sandbox_BCR_allow_SLOW_LEARNER_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.4,0.6,1.0> Seltenheit: Selten",
+
+    Sandbox_BCR_allow_ILLITERATE = "Analphabet",
+    Sandbox_BCR_allow_ILLITERATE_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.8,0.3,1.0> Seltenheit: Sehr Selten",
+
+    Sandbox_BCR_allow_THIN_SKINNED = "Dünnhäutig",
+    Sandbox_BCR_allow_THIN_SKINNED_tooltip = "<RGB:1.0,0.4,0.4> [-] NEGATIVER TRAIT <LINE><LINE> <RGB:0.8,0.8,0.8> Diesen Trait als Belohnung entfernen. <LINE><LINE> <RGB:0.8,0.3,1.0> Seltenheit: Sehr Selten",
+
+}
