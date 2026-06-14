@@ -101,6 +101,28 @@ function BCR_OnCreatePlayer(playerNum, player)
     end
 end
 
+local function requestReward(player, bcrData)
+    if not player then
+        BCR.DebugPrint("[Client] requestReward called with nil player")
+        return
+    end
+    BCR.DebugPrint("[Client] Requesting reward...")
+    local ok, result = pcall(BCR.ProcessRewardDirect, player)
+    if not ok or not result then
+        BCR.DebugPrint("[Client] SP Reward skipped: " .. tostring(result or ok))
+        return
+    end
+    BCR.EnqueueNotification(result)
+    BCR.RefreshStatsWindow()
+    BCR.DebugPrint("[Client] SP Reward granted: " .. tostring(result.trait) .. " (" .. tostring(result.action) .. ")")
+    if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
+        BCR.DebugPrint("[Client] No more rewards available - scheduling final message")
+        rewardsExhausted = true
+        shouldShowFinalMessage = true
+        showFinalMessageTimer = 0
+    end
+end
+
 function BCR_OnPlayerUpdate(player)
     if not player then return end
     if player:isDead() then return end
@@ -133,7 +155,9 @@ function BCR_OnPlayerUpdate(player)
                     HaloTextHelper.addText(player, msg, "", 255, 255, 255)
                 else
                     if not isPendingRequestInFlight then
+                        isPendingRequestInFlight = true
                         requestReward(player, bcrData)
+                        isPendingRequestInFlight = false
                     end
                 end
             else
