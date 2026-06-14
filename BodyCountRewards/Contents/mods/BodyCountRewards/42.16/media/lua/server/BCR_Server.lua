@@ -242,7 +242,9 @@ local function handleRequestReward(player, args)
         local earnablePool, removablePool = buildTraitPools(player, opts)
         
         -- Session-level dedup: exclude traits already modified in this batch session
-        if next(modifiedTraits) then
+        local hasModified = false
+        for _ in pairs(modifiedTraits) do hasModified = true; break end
+        if hasModified then
             earnablePool = BCR.filterPoolByExclusion(earnablePool, modifiedTraits)
             removablePool = BCR.filterPoolByExclusion(removablePool, modifiedTraits)
         end

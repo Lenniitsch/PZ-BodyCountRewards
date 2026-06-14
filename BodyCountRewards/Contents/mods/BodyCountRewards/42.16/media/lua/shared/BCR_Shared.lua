@@ -415,7 +415,10 @@ end
 
 function BCR.filterPoolByExclusion(pool, excludeSet)
     if not pool or #pool == 0 then return pool or {} end
-    if not excludeSet or not next(excludeSet) then return pool end
+    if not excludeSet then return pool end
+    local empty = true
+    for _ in pairs(excludeSet) do empty = false; break end
+    if empty then return pool end
     
     local filtered = {}
     for _, entry in ipairs(pool) do
