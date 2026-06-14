@@ -34,7 +34,7 @@ local function validateMilestone(player, bcrData, opts)
     if not player or not bcrData or not opts then
         return false, 0
     end
-    local kills = getZombieKillsSafe(player)
+    local kills = bcrData.kills or 0
     if not kills then return false, 0 end
     local milestonesAtKills = BCR.GetMilestonesAtKills(kills, opts)
     local currentRewards = bcrData.rewardsGiven or 0
@@ -220,14 +220,16 @@ local function handleRequestReward(player, args)
     end
 
     local serverKills = getZombieKillsSafe(player) or 0
-    local reportedKills = args.kills or 0
-    local bestKills = math.max(serverKills, reportedKills)
+    local reportedKills = type(args.kills) == "number" and math.floor(args.kills) or 0
+    local bestKills = math.max(bcrData.kills or 0, reportedKills, serverKills)
     if bestKills > (bcrData.kills or 0) then
         bcrData.kills = bestKills
     end
     local canClaim, missedCount = validateMilestone(player, bcrData, opts)
     if not canClaim then
-        sendServerCommand(player, "BCR", "NoRewardAvailable", {})
+        sendServerCommand(player, "BCR", "RewardError", {
+            reason = "Milestone not reached",
+        })
         return
     end
     local rewardsToGive = 1

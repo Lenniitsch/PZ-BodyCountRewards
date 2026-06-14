@@ -5,6 +5,10 @@
 -- ============================================================
 
 require "BCRCore"
+require "ISUI/ISCollapsableWindow"
+require "ISUI/ISTabPanel"
+require "ISUI/ISRichTextPanel"
+require "ISUI/ISPanel"
 
 BCR = BCR or {}
 

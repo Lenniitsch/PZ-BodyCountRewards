@@ -102,6 +102,8 @@ function BCR_OnCreatePlayer(playerNum, player)
 end
 
 function BCR_OnPlayerUpdate(player)
+    if not player then return end
+    if player:isDead() then return end
     if hasShownAllTraitsMessage then return end
     if BCR.opts == nil then
         BCR.RefreshConfig()
@@ -124,33 +126,14 @@ function BCR_OnPlayerUpdate(player)
             if isSinglePlayer() then
                 local missed = countMissedMilestones(bcrData, BCR.opts)
                 if missed > 1 then
-                    pendingRewardsCount = missed - 1
+                    BCR.DebugPrint("[Client] Found " .. missed .. " milestones to claim")
+                    pendingRewardsCount = missed
                     pendingRewardTimer = 0
                     local msg = missed .. " " .. (getText("UI_BCR_PendingRewards") or "rewards earned!")
                     HaloTextHelper.addText(player, msg, "", 255, 255, 255)
-                end
-                if not isPendingRequestInFlight then
-                    BCR.DebugPrint("[Client] Requesting reward...")
-                    isPendingRequestInFlight = true
-                    local ok, result = pcall(BCR.ProcessRewardDirect, player)
-                    if not ok or not result then
-                        isPendingRequestInFlight = false
-                        if not ok then
-                            BCR.DebugPrint("OnPlayerUpdate: ProcessRewardDirect error: " .. tostring(result))
-                        else
-                            BCR.DebugPrint("OnPlayerUpdate: ProcessRewardDirect returned nil")
-                        end
-                    else
-                        isPendingRequestInFlight = false
-                        BCR.DebugPrint(string.format("[Client] SP Reward granted: %s (%s)", result.id, result.action))
-                        BCR.EnqueueNotification(result)
-                        BCR.RefreshStatsWindow()
-                        if not BCR.HasAvailableRewards(player) then
-                            BCR.DebugPrint("[Client] No more rewards available - scheduling final message")
-                            rewardsExhausted = true
-                            shouldShowFinalMessage = true
-                            showFinalMessageTimer = 0
-                        end
+                else
+                    if not isPendingRequestInFlight then
+                        requestReward(player, bcrData)
                     end
                 end
             else

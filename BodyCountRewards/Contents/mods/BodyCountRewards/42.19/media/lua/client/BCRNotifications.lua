@@ -69,11 +69,13 @@ function BCR.UpdateNotifications(player)
     local action = result.action or "added"
     local displayName = result.displayName or BCR.GetTraitDisplayName(result.id) or "Unknown"
     if action == "added" then
-        local text = getText("UI_BCR_Gained") or "Gained: "
-        HaloTextHelper.addTextWithArrow(player, text .. displayName, true, 0, 255, 0)
+        local actionText = getText("UI_BCR_Gained") or "Gained"
+        local text = actionText .. ": " .. displayName
+        HaloTextHelper.addTextWithArrow(player, text, true, 0, 255, 0)
     elseif action == "removed" then
-        local text = getText("UI_BCR_Lost") or "Lost: "
-        HaloTextHelper.addTextWithArrow(player, text .. displayName, true, 255, 165, 0)
+        local actionText = getText("UI_BCR_Lost") or "Lost"
+        local text = actionText .. ": " .. displayName
+        HaloTextHelper.addTextWithArrow(player, text, true, 255, 165, 0)
     elseif action == "batch" then
         HaloTextHelper.addText(player, displayName, "", 200, 200, 200)
     end

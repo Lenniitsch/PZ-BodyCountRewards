@@ -59,7 +59,8 @@ function BCR.GetPlayerTraitsList(player)
     if not ok2 or not knownTraits then return nil end
     local result = {}
     local ok3, size = pcall(function() return knownTraits:size() end)
-    if not ok3 then return result end
+    if not ok3 then     return result == true
+end
     for i = 0, size - 1 do
         local ok4, trait = pcall(function() return knownTraits:get(i) end)
         if ok4 and trait then
@@ -348,7 +349,7 @@ function BCR.GetTraitDisplayName(traitId)
             end
         end
     end
-    return table.concat(words, " ")
+    return #words > 0 and table.concat(words, " ") or "Unknown"
 end
 
 -- ============================================================
@@ -365,6 +366,9 @@ function BCR.EnsureModData(player)
             rewardsGiven = 0,
             traitHistory = {},
         }
+    end
+    if not modData.BCR.traitHistory then
+        modData.BCR.traitHistory = {}
     end
     return modData.BCR
 end
