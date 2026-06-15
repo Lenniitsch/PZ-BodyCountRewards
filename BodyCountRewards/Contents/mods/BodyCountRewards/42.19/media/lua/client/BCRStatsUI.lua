@@ -485,16 +485,12 @@ function BCRStatsWindow:updateCatalog()
 
         if isInPool then
             line = line .. " <INDENT:16> " .. colorTag(COLORS.text)
-            line = line .. "- " .. displayName .. " | " .. colorTag(rarityColor(rarity)) .. rarityLabel
+            line = line .. "- " .. displayName .. "  |  " .. colorTag(rarityColor(rarity)) .. rarityLabel
             line = line .. " <LINE> "
-            if source then
-                line = line .. " <INDENT:24> " .. colorTag(COLORS.dim) .. rarityLabel
-                line = line .. " | Source: " .. source .. " <LINE> "
-            end
             return line
         end
 
-        local statusReason, statusColor
+        local statusReason
         if not isAllowed then
             statusReason = getText("UI_BCR_StatusServerDisabled") or "Disabled"
         elseif isPositive and modGranted[traitId] then
@@ -514,14 +510,10 @@ function BCRStatsWindow:updateCatalog()
         end
 
         line = line .. " <INDENT:16> " .. colorTag(COLORS.dim)
-        line = line .. "- " .. displayName .. " | " .. statusReason
+        line = line .. "- " .. displayName .. "  |  " .. statusReason
         line = line .. " <LINE> "
-        local hasSub = source ~= nil
-        if hasSub then
-            line = line .. " <INDENT:24> " .. colorTag(rarityMuted(rarity)) .. rarityLabel
-            line = line .. " | " .. colorTag(COLORS.dim) .. "Source: " .. source
-            line = line .. " <LINE> "
-        end
+        line = line .. " <INDENT:24> " .. colorTag(rarityMuted(rarity)) .. rarityLabel
+        line = line .. " <LINE> "
         return line
     end
 
