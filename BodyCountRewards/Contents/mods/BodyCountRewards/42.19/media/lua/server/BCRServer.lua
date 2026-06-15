@@ -117,7 +117,7 @@ function BCR.ProcessRewardDirect(player)
     if not player then return nil end
     local bcrData = BCR.EnsureModData(player)
     if not bcrData then
-        BCR.DebugPrint("ProcessRewardDirect: no ModData")
+        print("[BCR] ProcessRewardDirect: no ModData")
         return nil
     end
     local opts = BCR.opts
@@ -212,7 +212,7 @@ local function handleRequestReward(player, args)
     end
 
     if not opts.enablePositive and not opts.enableNegative then
-        BCR.DebugPrint("[Server] Both trait rewards are disabled in sandbox options")
+        print("[BCR] [Server] Both trait rewards are disabled in sandbox options")
         sendServerCommand(player, "BCR", "RewardError", {
             reason = "rewards_disabled",
         })
@@ -247,8 +247,8 @@ local function handleRequestReward(player, args)
             bcrData.rewardsGiven = (bcrData.rewardsGiven or 0) + 1
             recordTraitHistory(bcrData, applied)
             totalGranted = totalGranted + 1
-            BCR.DebugPrint(string.format(
-                "[Server] Reward granted to %s: %s (%s) - %s",
+            print(string.format(
+                "[BCR] [Server] Reward granted to %s: %s (%s) - %s",
                 who, applied.id, applied.action, applied.rarity
             ))
             sendServerCommand(player, "BCR", "RewardGranted", {

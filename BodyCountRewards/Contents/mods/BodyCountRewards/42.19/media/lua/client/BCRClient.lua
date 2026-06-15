@@ -81,7 +81,7 @@ function BCR_OnCreatePlayer(playerNum, player)
     BCR.RefreshConfig()
     if not player then return end
 
-    BCR.DebugPrint("[Client] Player created - initializing BCR")
+    print("[BCR] [Client] Player created - initializing BCR")
 
     resetState()
 
@@ -121,7 +121,7 @@ local function requestReward(player, bcrData)
     end
     BCR.EnqueueNotification(result)
     BCR.RefreshStatsWindow()
-    BCR.DebugPrint("[Client] SP Reward granted: " .. tostring(result.id) .. " (" .. tostring(result.action) .. ")")
+    print("[BCR] [Client] SP Reward granted: " .. tostring(result.id) .. " (" .. tostring(result.action) .. ")")
     if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
         BCR.DebugPrint("[Client] No more rewards available - scheduling final message")
         rewardsExhausted = true
@@ -151,7 +151,7 @@ function BCR_OnPlayerUpdate(player)
         local milestonesAtKills = BCR.GetMilestonesAtKills(currentKills, BCR.opts)
         local currentRewards = bcrData.rewardsGiven or 0
         if milestonesAtKills > currentRewards and not rewardsExhausted then
-            BCR.DebugPrint("[Client] Milestone reached at " .. currentKills .. " kills!")
+            print("[BCR] [Client] Milestone reached at " .. currentKills .. " kills!")
             if isSinglePlayer() then
                 local missed = countMissedMilestones(bcrData, BCR.opts)
                 if missed > 1 then
@@ -259,7 +259,7 @@ function BCR_OnServerCommand(module, command, args)
             bcrData.rewardsGiven = rewardsGiven
         end
     elseif command == "RewardError" then
-        BCR.DebugPrint(string.format("[Client] Reward error: %s", tostring(args.reason)))
+        print("[BCR] [Client] Reward error: " .. tostring(args.reason))
         isPendingRequestInFlight = false
         pendingRewardsCount = 0
     elseif command == "NoRewardAvailable" then
@@ -326,20 +326,20 @@ end
 
 Events.OnCreatePlayer.Add(function(playerNum, player)
     local ok, err = pcall(function() BCR_OnCreatePlayer(playerNum, player) end)
-    if not ok then BCR.DebugPrint("OnCreatePlayer error: " .. tostring(err)) end
+    if not ok then print("[BCR] OnCreatePlayer error: " .. tostring(err)) end
 end)
 
 Events.OnPlayerUpdate.Add(function(player)
     local ok, err = pcall(function() BCR_OnPlayerUpdate(player) end)
-    if not ok then BCR.DebugPrint("OnPlayerUpdate error: " .. tostring(err)) end
+    if not ok then print("[BCR] OnPlayerUpdate error: " .. tostring(err)) end
 end)
 
 Events.OnServerCommand.Add(function(module, command, args)
     local ok, err = pcall(function() BCR_OnServerCommand(module, command, args) end)
-    if not ok then BCR.DebugPrint("OnServerCommand error: " .. tostring(err)) end
+    if not ok then print("[BCR] OnServerCommand error: " .. tostring(err)) end
 end)
 
 Events.OnFillWorldObjectContextMenu.Add(function(playerNum, context, worldObjects, test)
     local ok, err = pcall(function() BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test) end)
-    if not ok then BCR.DebugPrint("OnFillWorldObjectContextMenu error: " .. tostring(err)) end
+    if not ok then print("[BCR] OnFillWorldObjectContextMenu error: " .. tostring(err)) end
 end)
