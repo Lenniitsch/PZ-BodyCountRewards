@@ -1,7 +1,7 @@
 {
     "Sandbox_BodyCountRewards": "Nagrody za ZabÃ³jstwa",
     "Sandbox_BodyCountRewardsTraits": "Nagrody za ZabÃ³jstwa - Cechy",
-    "Sandbox_BodyCountRewardsThirdPartyTraits": "BodyCountRewards - Third Party Traits",
+    "Sandbox_BodyCountRewardsThirdPartyTraits": "BodyCountRewards - Addon Traits",
     "Sandbox_BCR_BodyCount": "ZabÃ³jstwa na KamieÅ„ Milowy",
     "Sandbox_BCR_BodyCount_tooltip": "Ile zabÃ³jstw zombie potrzeba do zdobycia nagrody. <LINE><LINE> <RGB:0.6,1.0,0.2> Mniej = Szybsze nagrody <LINE> <RGB:1.0,0.6,0.2> WiÄ™cej = Wolniejsze nagrody",
     "Sandbox_BCR_enablePositiveTraits": "WÅ‚Ä…cz Pozytywne Cechy",

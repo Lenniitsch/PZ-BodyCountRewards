@@ -1,7 +1,7 @@
 {
     "Sandbox_BodyCountRewards": "BodyCountRewards",
     "Sandbox_BodyCountRewardsTraits": "BodyCountRewards - Traits",
-    "Sandbox_BodyCountRewardsThirdPartyTraits": "BodyCountRewards - Third Party Traits",
+    "Sandbox_BodyCountRewardsThirdPartyTraits": "BodyCountRewards - Addon Traits",
     "Sandbox_BCR_BodyCount": "Bodies per Milestone",
     "Sandbox_BCR_BodyCount_tooltip": "How many zombie kills before earning a reward. <LINE><LINE> <RGB:0.6,1.0,0.2> Lower = Faster rewards <LINE> <RGB:1.0,0.6,0.2> Higher = Slower rewards",
     "Sandbox_BCR_enablePositiveTraits": "Enable Positive Traits",
