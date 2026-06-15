@@ -413,13 +413,14 @@ function BCRStatsWindow:updateHistory()
             sourceStr = " | Source: " .. entry.source
         end
 
-        text = text .. "<INDENT:16>" .. colorTag(COLORS.text)
+        text = text .. "<INDENT:16>"
         if entry.action == "added" then
-            text = text .. "+ " .. displayName
+            text = text .. colorTag({ r=0.40, g=1.00, b=0.40 })
+            text = text .. "+ " .. displayName .. " | " .. rarityLabel .. sourceStr
         else
-            text = text .. "- " .. displayName
+            text = text .. colorTag({ r=1.00, g=0.40, b=0.40 })
+            text = text .. "- " .. displayName .. " | " .. rarityLabel .. sourceStr
         end
-        text = text .. colorTag(COLORS.dim) .. "  | " .. rarityLabel .. sourceStr
         text = text .. " <LINE> "
     end
 
