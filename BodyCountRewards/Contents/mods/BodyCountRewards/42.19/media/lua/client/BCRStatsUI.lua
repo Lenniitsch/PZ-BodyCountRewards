@@ -32,14 +32,21 @@ local COLORS = {
     dim = { r = 0.55, g = 0.55, b = 0.55 },
     disabled = { r = 0.45, g = 0.45, b = 0.45 },
     sectionHead = { r = 1.00, g = 0.85, b = 0.40 },
-    accent = {
+    bright = {
         common = { r = 0.80, g = 0.80, b = 0.80 },
-        uncommon = { r = 0.60, g = 1.00, b = 0.20 },
-        rare = { r = 1.00, g = 0.60, b = 0.20 },
-        veryRare = { r = 0.80, g = 0.30, b = 1.00 },
+        uncommon = { r = 0.50, g = 1.00, b = 0.15 },
+        rare = { r = 1.00, g = 0.55, b = 0.15 },
+        veryRare = { r = 0.75, g = 0.25, b = 1.00 },
     },
-    added = { r = 0.40, g = 1.00, b = 0.40 },
-    removed = { r = 1.00, g = 0.45, b = 0.45 },
+    muted = {
+        common = { r = 0.45, g = 0.45, b = 0.45 },
+        uncommon = { r = 0.22, g = 0.45, b = 0.07 },
+        rare = { r = 0.45, g = 0.25, b = 0.07 },
+        veryRare = { r = 0.33, g = 0.10, b = 0.45 },
+    },
+    earned = { r = 0.40, g = 1.00, b = 0.40 },
+    removed = { r = 1.00, g = 0.40, b = 0.40 },
+    conflict = { r = 1.00, g = 0.55, b = 0.15 },
     empty = { r = 0.55, g = 0.55, b = 0.55 },
     barBg = { r = 0.15, g = 0.15, b = 0.15, a = 0.6 },
     barBorder = { r = 0.40, g = 0.40, b = 0.40, a = 0.6 },
@@ -57,7 +64,10 @@ local function colorTag(color)
 end
 
 local function rarityColor(rarity)
-    return (COLORS.accent[rarity] or COLORS.accent.common)
+    return (COLORS.bright[rarity] or COLORS.bright.common)
+end
+local function rarityMuted(rarity)
+    return (COLORS.muted[rarity] or COLORS.muted.common)
 end
 
 local function getBCRData(player)
@@ -280,7 +290,7 @@ function BCRProgressPanel:drawProgressContent()
             local prefix, cr, cg, cb
             if ms.reached then
                 prefix = getText("UI_BCR_MilestoneReached") or "[x]"
-                cr, cg, cb = COLORS.added.r, COLORS.added.g, COLORS.added.b
+                cr, cg, cb = COLORS.earned.r, COLORS.earned.g, COLORS.earned.b
             elseif ms.isCurrent then
                 prefix = getText("UI_BCR_MilestoneCurrent") or "[>]"
                 cr, cg, cb = COLORS.text.r, COLORS.text.g, COLORS.text.b
@@ -473,7 +483,7 @@ function BCRStatsWindow:updateCatalog()
         end
     end
 
-    local function renderTraitLine(traitId, cost, poolLookup, isPositive, sourceName)
+    local function renderTraitLine(traitId, cost, poolLookup, isPositive)
         local line = ""
         local displayName = BCR.GetTraitDisplayName(traitId) or traitId
         local rarity = BCR.GetRarity(cost)
@@ -481,40 +491,47 @@ function BCRStatsWindow:updateCatalog()
         local isInPool = poolLookup[traitId] ~= nil
         local isAllowed = BCR.IsTraitAllowed(traitId)
 
-        local infoStr = colorTag(COLORS.dim) .. rarityLabel .. "  "
-            .. (getText("UI_BCR_Cost") or "cost") .. ": " .. tostring(cost)
-
         if isInPool then
             line = line .. " <INDENT:16> " .. colorTag(rarityColor(rarity)) .. displayName
-            line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. infoStr
             line = line .. " <LINE> "
+            line = line .. " <INDENT:24> " .. colorTag(COLORS.dim) .. "<SIZE:small>"
+            line = line .. rarityLabel .. "  " .. tostring(cost)
+            local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
+            if source then
+                line = line .. "  " .. source
+            end
+            line = line .. " </SIZE> <LINE> "
             return line
         end
 
-        local statusReason
+        local statusReason, statusColor
         if not isAllowed then
             statusReason = getText("UI_BCR_StatusServerDisabled") or "Server Disabled"
+            statusColor = COLORS.dim
         elseif isPositive and modGranted[traitId] then
-            statusReason = getText("UI_BCR_StatusEarned") or "Already Earned"
+            statusReason = getText("UI_BCR_StatusEarned") or "Earned"
+            statusColor = COLORS.earned
         elseif not isPositive and modRemoved[traitId] then
-            statusReason = getText("UI_BCR_StatusRemoved") or "Already Removed"
+            statusReason = getText("UI_BCR_StatusRemoved") or "Removed"
+            statusColor = COLORS.removed
         elseif isPositive and BCR.PlayerHasTrait(self.player, traitId) then
-            statusReason = getText("UI_BCR_StatusOwned") or "Already Owned"
+            statusReason = getText("UI_BCR_StatusOwned") or "Owned"
+            statusColor = COLORS.earned
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
             if isPositive and hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
                 statusReason = getText("UI_BCR_StatusConflict", blockerName)
+                statusColor = COLORS.conflict
             else
                 statusReason = getText("UI_BCR_StatusUnavailable") or "Unavailable"
+                statusColor = COLORS.dim
             end
         end
 
-        line = line .. " <INDENT:16> " .. colorTag(COLORS.disabled) .. displayName
-        line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. colorTag(COLORS.dim) .. infoStr
-        line = line .. " <LINE> "
-        line = line .. " <INDENT:32> " .. colorTag(COLORS.dim)
-            .. "<SIZE:small> " .. statusReason .. " </SIZE> "
+        line = line .. " <INDENT:16> " .. colorTag(rarityMuted(rarity)) .. displayName
+        line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. colorTag(statusColor)
+        line = line .. statusReason
         line = line .. " <LINE> "
         return line
     end
@@ -529,7 +546,7 @@ function BCRStatsWindow:updateCatalog()
                 lastSource = source
                 t = t .. " <LINE> " .. colorTag(COLORS.dim) .. source .. " <LINE> "
             end
-            t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive, source)
+            t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive)
         end
         return t
     end
@@ -562,7 +579,7 @@ function BCRStatsWindow:updateCatalog()
         text = text .. " <LINE> "
     else
         for _, entry in ipairs(BCR.PositiveTraits) do
-            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true, nil)
+            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true)
         end
         text = text .. renderCustomSection(BCR.CustomPositiveTraits, earnablePool, true)
     end
@@ -583,7 +600,7 @@ function BCRStatsWindow:updateCatalog()
             local traitId = entry.id
             if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                 hasRelevantTraits = true
-                text = text .. renderTraitLine(traitId, entry.cost, removablePool, false, nil)
+                text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
             end
         end
         if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
@@ -598,7 +615,7 @@ function BCRStatsWindow:updateCatalog()
                         lastSource = source
                         addonText = addonText .. " <LINE> " .. colorTag(COLORS.dim) .. source .. " <LINE> "
                     end
-                    addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false, source)
+                    addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false)
                 end
             end
             text = text .. addonText
