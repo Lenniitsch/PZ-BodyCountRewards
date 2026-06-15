@@ -469,6 +469,10 @@ function BCRStatsWindow:updateCatalog()
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local isInPool = poolLookup[traitId] ~= nil
         local isAllowed = BCR.IsTraitAllowed(traitId)
+        local sourceTag = ""
+        if BCR.CustomTraitSources and BCR.CustomTraitSources[traitId] then
+            sourceTag = " [" .. BCR.CustomTraitSources[traitId] .. "]"
+        end
 
         line = line .. " <INDENT:16> "
 
@@ -477,24 +481,24 @@ function BCRStatsWindow:updateCatalog()
             line = line .. displayName .. " (" .. rarityLabel .. ")"
         elseif not isAllowed then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ") - "
+            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusServerDisabled") or "Server Disabled")
         elseif isPositive and modGranted[traitId] then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ") - "
+            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusEarned") or "Already Earned")
         elseif not isPositive and modRemoved[traitId] then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ") - "
+            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusRemoved") or "Already Removed")
         elseif isPositive and BCR.PlayerHasTrait(self.player, traitId) then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ") - "
+            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusOwned") or "Already Owned")
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ") - "
+            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
             if hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
                 line = line .. getText("UI_BCR_StatusConflict", blockerName)
@@ -522,6 +526,12 @@ function BCRStatsWindow:updateCatalog()
             local traitId = entry.id
             text = text .. renderTraitLine(traitId, entry.cost, earnablePool, true)
         end
+        if BCR.CustomPositiveTraits then
+            for _, entry in ipairs(BCR.CustomPositiveTraits) do
+                local traitId = entry.id
+                text = text .. renderTraitLine(traitId, entry.cost, earnablePool, true)
+            end
+        end
     end
 
     text = text .. " <INDENT:0> <BR> "
@@ -542,6 +552,16 @@ function BCRStatsWindow:updateCatalog()
             if isRelevant then
                 hasRelevantTraits = true
                 text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
+            end
+        end
+        if BCR.CustomNegativeTraits then
+            for _, entry in ipairs(BCR.CustomNegativeTraits) do
+                local traitId = entry.id
+                local isRelevant = BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId]
+                if isRelevant then
+                    hasRelevantTraits = true
+                    text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
+                end
             end
         end
 

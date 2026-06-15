@@ -56,6 +56,15 @@ function BCR.RefreshConfig()
 end
 
 function BCR.IsTraitAllowed(id)
+    local namespace = BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[id]
+    if namespace then
+        local sv = SandboxVars[namespace]
+        if sv and sv["allow_" .. id] == false then
+            BCR.DebugPrint("Trait blocked by sandbox [" .. namespace .. "]: " .. id)
+            return false
+        end
+        return true
+    end
     local sv = SandboxVars.BCR or {}
     local key = "allow_" .. id
     if sv[key] == false then

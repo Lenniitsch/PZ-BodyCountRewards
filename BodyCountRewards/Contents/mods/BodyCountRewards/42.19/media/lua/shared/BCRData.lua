@@ -118,3 +118,130 @@ BCR.RarityTiers = {
     rare      = { maxCost = 6,  color = { 1.00, 0.60, 0.20 } },
     veryRare  = { maxCost = 99, color = { 0.80, 0.30, 1.00 } },
 }
+
+-- ============================================================
+-- EXTENSIBILITY — third-party addon trait registration
+-- ============================================================
+
+BCR.CustomPositiveTraits = {}
+BCR.CustomNegativeTraits = {}
+BCR.CustomTraitSources = {}
+BCR.CustomTraitNamespaces = {}
+
+function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, negativeTraits, exclusions)
+    if not sourceName then
+        print("[BCR] RegisterCustomTraits: missing sourceName")
+        return 0
+    end
+    if not sandboxNamespace then
+        print("[BCR] RegisterCustomTraits: missing sandboxNamespace for \"" .. tostring(sourceName) .. "\"")
+        return 0
+    end
+    local registeredPos = 0
+    local registeredNeg = 0
+    local rejected = 0
+
+    local function registerBatch(list, isPositive)
+        if not list then return end
+        for _, entry in ipairs(list) do
+            local traitId = entry.id
+            if not traitId then
+                print("[BCR] \"" .. sourceName .. "\" — trait entry missing id, skipped")
+                rejected = rejected + 1
+            elseif type(entry.cost) ~= "number" then
+                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " has no numeric cost, skipped")
+                rejected = rejected + 1
+            elseif not BCR.GetTraitUserdata(traitId) then
+                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
+                rejected = rejected + 1
+            elseif BCR.CustomTraitSources[traitId] then
+                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
+                rejected = rejected + 1
+            else
+                local alreadyInBase = false
+                if isPositive then
+                    for _, b in ipairs(BCR.PositiveTraits) do
+                        if b.id == traitId then alreadyInBase = true; break end
+                    end
+                    if not alreadyInBase then
+                        table.insert(BCR.CustomPositiveTraits, { id = traitId, cost = entry.cost })
+                    end
+                else
+                    for _, b in ipairs(BCR.NegativeTraits) do
+                        if b.id == traitId then alreadyInBase = true; break end
+                    end
+                    if not alreadyInBase then
+                        table.insert(BCR.CustomNegativeTraits, { id = traitId, cost = entry.cost })
+                    end
+                end
+                if alreadyInBase then
+                    print("[BCR] \"" .. sourceName .. "\" — " .. traitId .. " is already a base BCR trait, skipped")
+                    rejected = rejected + 1
+                else
+                    BCR.CustomTraitSources[traitId] = sourceName
+                    BCR.CustomTraitNamespaces[traitId] = sandboxNamespace
+                    if isPositive then
+                        registeredPos = registeredPos + 1
+                    else
+                        registeredNeg = registeredNeg + 1
+                    end
+                end
+            end
+        end
+    end
+
+    local function mergeExclusions()
+        if not exclusions then return end
+        for traitId, excludeList in pairs(exclusions) do
+            if type(traitId) == "string" and type(excludeList) == "table" then
+                for _, excludedId in ipairs(excludeList) do
+                    if type(excludedId) ~= "string" or excludedId == "" then
+                        BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] invalid exclusion entry in " .. traitId)
+                    else
+                        if not BCR.Exclusions[traitId] then
+                            BCR.Exclusions[traitId] = {}
+                        end
+                        local target = BCR.Exclusions[traitId]
+                        local found = false
+                        for _, e in ipairs(target) do
+                            if e == excludedId then found = true; break end
+                        end
+                        if not found then
+                            table.insert(target, excludedId)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local ok, err = pcall(function()
+        registerBatch(positiveTraits, true)
+        registerBatch(negativeTraits, false)
+        mergeExclusions()
+    end)
+    if not ok then
+        print("[BCR] \"" .. sourceName .. "\" — internal error during registration: " .. tostring(err))
+        return registeredPos + registeredNeg
+    end
+
+    local totalRegistered = registeredPos + registeredNeg
+    local parts = {}
+    if registeredPos > 0 then table.insert(parts, registeredPos .. " positive") end
+    if registeredNeg > 0 then table.insert(parts, registeredNeg .. " negative") end
+    local registeredStr = table.concat(parts, ", ")
+
+    local statusStr
+    if totalRegistered == 0 then
+        statusStr = "nothing registered — check messages above"
+    else
+        statusStr = registeredStr
+        if rejected > 0 then
+            statusStr = statusStr .. " (" .. rejected .. " rejected)"
+        end
+    end
+
+    print("[BCR] \"" .. sourceName .. "\" — " .. statusStr)
+    BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] detail — " .. registeredStr)
+    return totalRegistered
+end

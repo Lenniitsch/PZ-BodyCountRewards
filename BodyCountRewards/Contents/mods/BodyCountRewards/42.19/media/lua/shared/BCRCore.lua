@@ -203,7 +203,8 @@ end
 
 function BCR.BuildEarnablePool(player, customTraits)
     if not player then return nil end
-    local allTraits = mergeTraitTables(BCR.PositiveTraits, customTraits)
+    local allTraits = mergeTraitTables(BCR.PositiveTraits, BCR.CustomPositiveTraits)
+    allTraits = mergeTraitTables(allTraits, customTraits)
     local pool = {}
     for _, entry in ipairs(allTraits) do
         local traitId = entry.id
@@ -236,7 +237,8 @@ end
 
 function BCR.BuildRemovablePool(player, customTraits)
     if not player then return nil end
-    local allTraits = mergeTraitTables(BCR.NegativeTraits, customTraits)
+    local allTraits = mergeTraitTables(BCR.NegativeTraits, BCR.CustomNegativeTraits)
+    allTraits = mergeTraitTables(allTraits, customTraits)
     local pool = {}
     for _, entry in ipairs(allTraits) do
         local traitId = entry.id
@@ -399,4 +401,92 @@ function BCR.HasAvailableRewards(player)
         end
     end
     return earnableCount > 0 or removableCount > 0
+end
+
+-- ============================================================
+-- THIRD-PARTY TRAIT TESTS
+-- ============================================================
+
+function BCR_RunThirdPartyTests()
+    local passed, failed = 0, 0
+
+    local function ok(msg, condition)
+        if condition then
+            passed = passed + 1
+            print("[BCR ThirdPartyTest] PASS: " .. msg)
+        else
+            failed = failed + 1
+            print("[BCR ThirdPartyTest] FAIL: " .. msg)
+        end
+    end
+
+    local positiveCount = 0
+    local negativeCount = 0
+    if BCR.CustomPositiveTraits then
+        for _ in ipairs(BCR.CustomPositiveTraits) do positiveCount = positiveCount + 1 end
+    end
+    if BCR.CustomNegativeTraits then
+        for _ in ipairs(BCR.CustomNegativeTraits) do negativeCount = negativeCount + 1 end
+    end
+
+    if positiveCount == 0 and negativeCount == 0 then
+        print("[BCR ThirdPartyTest] No third-party traits registered.")
+        return true
+    end
+
+    print("[BCR ThirdPartyTest] ===== Checking " .. tostring(positiveCount) ..
+        " custom positive, " .. tostring(negativeCount) .. " custom negative trait(s) =====")
+
+    local sources = {}
+
+    local function testTraitList(list, label)
+        if not list then return end
+        for _, entry in ipairs(list) do
+            local traitId = entry.id
+            if not traitId then
+                failed = failed + 1
+                print("[BCR ThirdPartyTest] FAIL: " .. label .. " entry missing id")
+            else
+                local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
+                local ns = BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[traitId]
+                local userdata = BCR.GetTraitUserdata(traitId)
+
+                if not source then
+                    failed = failed + 1
+                    print("[BCR ThirdPartyTest] FAIL: " .. traitId .. " missing source")
+                else
+                    sources[source] = true
+                end
+
+                if not ns then
+                    failed = failed + 1
+                    print("[BCR ThirdPartyTest] FAIL: " .. traitId .. " missing sandbox namespace")
+                end
+
+                if not userdata then
+                    failed = failed + 1
+                    print("[BCR ThirdPartyTest] FAIL: " .. traitId .. " does not resolve via CharacterTrait")
+                end
+
+                if source and ns and userdata then
+                    passed = passed + 1
+                    print("[BCR ThirdPartyTest] OK: " .. traitId .. " (source=\"" .. source .. "\", ns=\"" .. ns .. "\")")
+                end
+            end
+        end
+    end
+
+    testTraitList(BCR.CustomPositiveTraits, "positive")
+    testTraitList(BCR.CustomNegativeTraits, "negative")
+
+    ok("All custom traits have valid exclusions in BCR.Exclusions",
+        BCR.Exclusions ~= nil and type(BCR.Exclusions) == "table")
+
+    local sourceList = {}
+    for s, _ in pairs(sources) do table.insert(sourceList, "\"" .. s .. "\"") end
+    print("[BCR ThirdPartyTest] Active addon(s): " .. table.concat(sourceList, ", "))
+
+    print("[BCR ThirdPartyTest] ===== " .. tostring(passed) .. " passed, " ..
+        tostring(failed) .. " failed =====")
+    return failed == 0
 end
