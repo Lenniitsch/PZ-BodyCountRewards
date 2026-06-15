@@ -21,7 +21,6 @@ local UI_WIDTH = 520
 local UI_HEIGHT = 550
 local PADDING = 10
 local TAB_CONTENT_OFFSET = 6
-local INFO_COLUMN = 280
 
 -- ============================================================
 -- COLORS (named keys for clarity)
@@ -30,7 +29,6 @@ local INFO_COLUMN = 280
 local COLORS = {
     text = { r = 0.85, g = 0.85, b = 0.85 },
     dim = { r = 0.55, g = 0.55, b = 0.55 },
-    disabled = { r = 0.45, g = 0.45, b = 0.45 },
     sectionHead = { r = 1.00, g = 0.85, b = 0.40 },
     bright = {
         common = { r = 0.80, g = 0.80, b = 0.80 },
@@ -44,9 +42,6 @@ local COLORS = {
         rare = { r = 0.45, g = 0.25, b = 0.07 },
         veryRare = { r = 0.33, g = 0.10, b = 0.45 },
     },
-    earned = { r = 0.40, g = 1.00, b = 0.40 },
-    removed = { r = 1.00, g = 0.40, b = 0.40 },
-    conflict = { r = 1.00, g = 0.55, b = 0.15 },
     empty = { r = 0.55, g = 0.55, b = 0.55 },
     barBg = { r = 0.15, g = 0.15, b = 0.15, a = 0.6 },
     barBorder = { r = 0.40, g = 0.40, b = 0.40, a = 0.6 },
@@ -290,7 +285,7 @@ function BCRProgressPanel:drawProgressContent()
             local prefix, cr, cg, cb
             if ms.reached then
                 prefix = getText("UI_BCR_MilestoneReached") or "[x]"
-                cr, cg, cb = COLORS.earned.r, COLORS.earned.g, COLORS.earned.b
+                cr, cg, cb = 0.40, 1.00, 0.40
             elseif ms.isCurrent then
                 prefix = getText("UI_BCR_MilestoneCurrent") or "[>]"
                 cr, cg, cb = COLORS.text.r, COLORS.text.g, COLORS.text.b
@@ -422,22 +417,18 @@ function BCRStatsWindow:updateHistory()
         local displayName = BCR.GetTraitDisplayName(entry.id) or entry.id
         local rarity = entry.rarity or "common"
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
-        local sourceSuffix = ""
+        local sourceStr = ""
         if entry.source then
-            sourceSuffix = " " .. colorTag(COLORS.dim) .. "· " .. entry.source
+            sourceStr = " | Source: " .. entry.source
         end
-
-        local infoStr = colorTag(COLORS.dim) .. " " .. rarityLabel .. sourceSuffix
 
         text = text .. "<INDENT:16>"
         if entry.action == "added" then
-            text = text .. "<GHC> + " .. colorTag(COLORS.text)
-            text = text .. displayName
+            text = text .. "<GHC> + " .. colorTag(COLORS.text) .. displayName
         else
-            text = text .. "<BHC> - " .. colorTag(COLORS.text)
-            text = text .. displayName
+            text = text .. "<BHC> - " .. colorTag(COLORS.text) .. displayName
         end
-        text = text .. " <SETX:" .. INFO_COLUMN .. "> " .. infoStr
+        text = text .. " | " .. colorTag(COLORS.dim) .. rarityLabel .. sourceStr
         text = text .. " <LINE> "
     end
 
@@ -490,49 +481,47 @@ function BCRStatsWindow:updateCatalog()
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local isInPool = poolLookup[traitId] ~= nil
         local isAllowed = BCR.IsTraitAllowed(traitId)
+        local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
 
         if isInPool then
-            line = line .. " <INDENT:16> " .. colorTag(rarityColor(rarity)) .. displayName
+            line = line .. " <INDENT:16> " .. colorTag(COLORS.text)
+            line = line .. "- " .. displayName .. " | " .. colorTag(rarityColor(rarity)) .. rarityLabel
             line = line .. " <LINE> "
-            line = line .. " <INDENT:24> " .. colorTag(COLORS.dim) .. "<SIZE:small>"
-            line = line .. rarityLabel .. "  " .. tostring(cost)
-            local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
             if source then
-                line = line .. "  " .. source
+                line = line .. " <INDENT:24> " .. colorTag(COLORS.dim) .. rarityLabel
+                line = line .. " | Source: " .. source .. " <LINE> "
             end
-            line = line .. " </SIZE> <LINE> "
             return line
         end
 
         local statusReason, statusColor
         if not isAllowed then
-            statusReason = getText("UI_BCR_StatusServerDisabled") or "Server Disabled"
-            statusColor = COLORS.dim
+            statusReason = getText("UI_BCR_StatusServerDisabled") or "Disabled"
         elseif isPositive and modGranted[traitId] then
             statusReason = getText("UI_BCR_StatusEarned") or "Earned"
-            statusColor = COLORS.earned
         elseif not isPositive and modRemoved[traitId] then
             statusReason = getText("UI_BCR_StatusRemoved") or "Removed"
-            statusColor = COLORS.removed
         elseif isPositive and BCR.PlayerHasTrait(self.player, traitId) then
             statusReason = getText("UI_BCR_StatusOwned") or "Owned"
-            statusColor = COLORS.earned
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
             if isPositive and hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
                 statusReason = getText("UI_BCR_StatusConflict", blockerName)
-                statusColor = COLORS.conflict
             else
                 statusReason = getText("UI_BCR_StatusUnavailable") or "Unavailable"
-                statusColor = COLORS.dim
             end
         end
 
-        line = line .. " <INDENT:16> " .. colorTag(rarityMuted(rarity)) .. displayName
-        line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. colorTag(statusColor)
-        line = line .. statusReason
+        line = line .. " <INDENT:16> " .. colorTag(COLORS.dim)
+        line = line .. "- " .. displayName .. " | " .. statusReason
         line = line .. " <LINE> "
+        local hasSub = source ~= nil
+        if hasSub then
+            line = line .. " <INDENT:24> " .. colorTag(rarityMuted(rarity)) .. rarityLabel
+            line = line .. " | " .. colorTag(COLORS.dim) .. "Source: " .. source
+            line = line .. " <LINE> "
+        end
         return line
     end
 
