@@ -415,11 +415,11 @@ function BCRStatsWindow:updateHistory()
 
         text = text .. "<INDENT:16>"
         if entry.action == "added" then
-            text = text .. "<GHC> + " .. colorTag(COLORS.text) .. displayName
+            text = text .. "<GHC>+ " .. displayName
         else
-            text = text .. "<BHC> - " .. colorTag(COLORS.text) .. displayName
+            text = text .. "<BHC>- " .. displayName
         end
-        text = text .. " | " .. colorTag(COLORS.dim) .. rarityLabel .. sourceStr
+        text = text .. "  " .. colorTag(COLORS.dim) .. "| " .. rarityLabel .. sourceStr
         text = text .. " <LINE> "
     end
 
@@ -476,7 +476,7 @@ function BCRStatsWindow:updateCatalog()
         if isInPool then
             line = line .. " <INDENT:16> " .. colorTag(rarityColor(rarity))
             line = line .. "- " .. displayName .. " | " .. rarityLabel
-            line = line .. " <LINE> "
+            line = line .. " <LINE> <LINE> "
             return line
         end
 
@@ -503,7 +503,7 @@ function BCRStatsWindow:updateCatalog()
         line = line .. "- " .. displayName .. " | " .. rarityLabel
         line = line .. " <LINE> "
         line = line .. " <INDENT:24> " .. colorTag(COLORS.dim) .. statusReason
-        line = line .. " <LINE> "
+        line = line .. " <LINE> <LINE> "
         return line
     end
 
