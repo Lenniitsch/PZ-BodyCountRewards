@@ -422,10 +422,10 @@ function BCRStatsWindow:updateHistory()
 
         text = text .. "<INDENT:16>"
         if entry.action == "added" then
-            text = text .. colorTag(COLORS.added) .. "+ " .. colorTag(COLORS.text)
+            text = text .. "<GHC> + " .. colorTag(COLORS.text)
             text = text .. displayName
         else
-            text = text .. colorTag(COLORS.removed) .. "- " .. colorTag(COLORS.text)
+            text = text .. "<BHC> - " .. colorTag(COLORS.text)
             text = text .. displayName
         end
         text = text .. " <SETX:" .. INFO_COLUMN .. "> " .. infoStr
