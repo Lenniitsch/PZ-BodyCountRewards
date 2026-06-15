@@ -1,0 +1,23 @@
+[ ALERT_CONFIG ]
+link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=3660382016,
+link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
+[ ------ ]
+
+[ v1.3.0 - Body Count Rewards ]
+
+FIXES & IMPROVEMENTS
+- Fixed trait exclusion bugs where conflicting traits could be double-granted (e.g. Adrenaline Junkie + Cowardly).
+- Corrected several trait point costs to match vanilla B42 values.
+- Cached config and trait lookups - less per-tick overhead.
+- Staggered notification queuing - no more halo text spam on batch claims.
+
+NEW OPTIONS
+- Enable Debug Logging sandbox option - for sending me log files when things break.
+- Show Context Menu toggle in the ESC menu - hides the right-click entry if it annoys you.
+
+NEW LANGUAGES
+- Auto-translated support for a whole bunch of languages across sandbox options and the stats UI. Machine-generated, so if something reads like a bad fever dream, let me know in the Steam Workshop thread.
+
+THIRD-PARTY TRAIT API
+- Other modders can now register their own trait packs with BCR. Custom traits merge into the reward pools, stats UI, and history - no hacks needed. Check the "I Am Not Your Mom" addon for a working template.
+[ ------ ]
