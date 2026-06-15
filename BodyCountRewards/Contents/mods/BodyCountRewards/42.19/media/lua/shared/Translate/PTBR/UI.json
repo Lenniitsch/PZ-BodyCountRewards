@@ -49,5 +49,6 @@
 	"UI_BCR_Option_ShowMenu": "Mostrar Menu de Contexto",
 	"UI_BCR_Option_ShowMenu_tooltip": "Quando ativado, clicar com o botão direito mostra o progresso do Body Count Rewards no menu de contexto",
 	"UI_BCR_AddonTraits": "--- Addon Traits ---",
-	"UI_BCR_BatchRewards": "Multiple rewards earned!"
+	"UI_BCR_BatchRewards": "Multiple rewards earned!",
+	"UI_BCR_Cost": "cost"
 }

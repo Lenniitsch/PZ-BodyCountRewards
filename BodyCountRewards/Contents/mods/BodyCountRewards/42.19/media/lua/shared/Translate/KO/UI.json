@@ -49,5 +49,6 @@
 	"UI_BCR_Option_ShowMenu": "컨텍스트 메뉴 표시",
 	"UI_BCR_Option_ShowMenu_tooltip": "활성화하면 마우스 오른쪽 클릭 시 컨텍스트 메뉴에 Body Count Rewards 진행도를 표시합니다",
 	"UI_BCR_AddonTraits": "--- Addon Traits ---",
-	"UI_BCR_BatchRewards": "Multiple rewards earned!"
+	"UI_BCR_BatchRewards": "Multiple rewards earned!",
+	"UI_BCR_Cost": "cost"
 }

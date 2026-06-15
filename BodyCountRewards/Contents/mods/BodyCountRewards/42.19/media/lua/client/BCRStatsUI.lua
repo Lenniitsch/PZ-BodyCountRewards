@@ -21,26 +21,27 @@ local UI_WIDTH = 520
 local UI_HEIGHT = 550
 local PADDING = 10
 local TAB_CONTENT_OFFSET = 6
+local INFO_COLUMN = 280
 
 -- ============================================================
 -- COLORS (named keys for clarity)
 -- ============================================================
 
 local COLORS = {
-    common = { r = 0.80, g = 0.80, b = 0.80 },
-    uncommon = { r = 0.60, g = 1.00, b = 0.20 },
-    rare = { r = 1.00, g = 0.60, b = 0.20 },
-    veryRare = { r = 0.80, g = 0.30, b = 1.00 },
+    text = { r = 0.85, g = 0.85, b = 0.85 },
+    dim = { r = 0.55, g = 0.55, b = 0.55 },
     sectionHead = { r = 1.00, g = 0.85, b = 0.40 },
+    accent = {
+        common = { r = 0.80, g = 0.80, b = 0.80 },
+        uncommon = { r = 0.60, g = 1.00, b = 0.20 },
+        rare = { r = 1.00, g = 0.60, b = 0.20 },
+        veryRare = { r = 0.80, g = 0.30, b = 1.00 },
+    },
     addonHead = { r = 0.40, g = 0.80, b = 1.00 },
-    addonSubHead = { r = 0.50, g = 0.70, b = 0.85 },
-    sourceTag = { r = 0.50, g = 0.50, b = 0.50 },
-    label = { r = 0.75, g = 0.75, b = 0.75 },
-    value = { r = 1.00, g = 1.00, b = 1.00 },
     added = { r = 0.40, g = 1.00, b = 0.40 },
     removed = { r = 1.00, g = 0.45, b = 0.45 },
+    disabled = { r = 0.35, g = 0.35, b = 0.35 },
     empty = { r = 0.55, g = 0.55, b = 0.55 },
-    disabled = { r = 0.40, g = 0.40, b = 0.40 },
     barBg = { r = 0.15, g = 0.15, b = 0.15, a = 0.6 },
     barBorder = { r = 0.40, g = 0.40, b = 0.40, a = 0.6 },
     barFillLow = { r = 0.80, g = 0.30, b = 0.30 },
@@ -57,7 +58,7 @@ local function colorTag(color)
 end
 
 local function rarityColor(rarity)
-    return COLORS[rarity] or COLORS.common
+    return (COLORS.accent[rarity] or COLORS.accent.common)
 end
 
 local function getBCRData(player)
@@ -133,41 +134,41 @@ function BCRProgressPanel:drawProgressContent()
 
         self:drawText(
             (getText("UI_BCR_TotalRewards") or "Total Rewards") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             tostring(d.rewardsGiven),
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_ZombieKills") or "Zombie Kills") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             formatNumber(d.kills),
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_ScalingMode") or "Scaling Mode") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             d.scalingLabel,
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_RewardPriority") or "Reward Priority") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             d.rewardPriorityLabel,
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
     else
@@ -214,51 +215,51 @@ function BCRProgressPanel:drawProgressContent()
 
         self:drawText(
             (getText("UI_BCR_NextRewardAt") or "Next Reward at") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             formatNumber(d.nextMilestone) .. " " .. (getText("UI_BCR_Kills") or "kills"),
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_KillsRemaining") or "Kills Remaining") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             formatNumber(d.killsRemaining),
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_TotalRewards") or "Total Rewards") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             tostring(d.rewardsGiven),
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_ScalingMode") or "Scaling Mode") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             d.scalingLabel,
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
 
         self:drawText(
             (getText("UI_BCR_RewardPriority") or "Reward Priority") .. ":",
-            x, y, COLORS.label.r, COLORS.label.g, COLORS.label.b, 1, UIFont.Small
+            x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small
         )
         self:drawText(
             d.rewardPriorityLabel,
-            valX, y, COLORS.value.r, COLORS.value.g, COLORS.value.b, 1, UIFont.Small
+            valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small
         )
         y = y + lineH
     end
@@ -283,10 +284,10 @@ function BCRProgressPanel:drawProgressContent()
                 cr, cg, cb = COLORS.added.r, COLORS.added.g, COLORS.added.b
             elseif ms.isCurrent then
                 prefix = getText("UI_BCR_MilestoneCurrent") or "[>]"
-                cr, cg, cb = COLORS.value.r, COLORS.value.g, COLORS.value.b
+                cr, cg, cb = COLORS.text.r, COLORS.text.g, COLORS.text.b
             else
                 prefix = getText("UI_BCR_MilestoneFuture") or "[ ]"
-                cr, cg, cb = COLORS.label.r, COLORS.label.g, COLORS.label.b
+                cr, cg, cb = COLORS.dim.r, COLORS.dim.g, COLORS.dim.b
             end
 
             self:drawText(prefix, x, y, cr, cg, cb, 1, UIFont.Small)
@@ -412,19 +413,22 @@ function BCRStatsWindow:updateHistory()
         local displayName = BCR.GetTraitDisplayName(entry.id) or entry.id
         local rarity = entry.rarity or "common"
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
-        local sourceTag = ""
+        local sourceSuffix = ""
         if entry.source then
-            sourceTag = colorTag(COLORS.sourceTag) .. " [" .. entry.source .. "]"
+            sourceSuffix = " " .. colorTag(COLORS.dim) .. "· " .. entry.source
         end
+
+        local infoStr = colorTag(COLORS.dim) .. " " .. rarityLabel .. sourceSuffix
 
         text = text .. "<INDENT:16>"
         if entry.action == "added" then
-            text = text .. colorTag(COLORS.added)
-            text = text .. "+ " .. displayName .. sourceTag .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")"
+            text = text .. colorTag(COLORS.added) .. "+ " .. colorTag(COLORS.text)
+            text = text .. displayName
         else
-            text = text .. colorTag(COLORS.removed)
-            text = text .. "- " .. displayName .. sourceTag .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")"
+            text = text .. colorTag(COLORS.removed) .. "- " .. colorTag(COLORS.text)
+            text = text .. displayName
         end
+        text = text .. " <SETX:" .. INFO_COLUMN .. "> " .. infoStr
         text = text .. " <LINE> "
     end
 
@@ -477,44 +481,55 @@ function BCRStatsWindow:updateCatalog()
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local isInPool = poolLookup[traitId] ~= nil
         local isAllowed = BCR.IsTraitAllowed(traitId)
-        local sourceTag = ""
-        if BCR.CustomTraitSources and BCR.CustomTraitSources[traitId] then
-            sourceTag = colorTag(COLORS.sourceTag) .. " [" .. BCR.CustomTraitSources[traitId] .. "]"
+        local isCustom = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
+        local sourceSuffix = ""
+        if isCustom then
+            sourceSuffix = " " .. colorTag(COLORS.dim) .. "· " .. BCR.CustomTraitSources[traitId]
         end
 
-        line = line .. " <INDENT:16> "
+        local infoStr = colorTag(COLORS.dim) .. " " .. rarityLabel .. " · " .. (getText("UI_BCR_Cost") or "cost")
+            .. ": " .. tostring(cost) .. sourceSuffix
 
         if isInPool then
-            line = line .. colorTag(rarityColor(rarity))
-            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag
-        elseif not isAllowed then
-            line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
-            line = line .. (getText("UI_BCR_StatusServerDisabled") or "Server Disabled")
+            local accentColor
+            if isCustom then
+                accentColor = colorTag(rarityColor(rarity))
+                line = line .. " <INDENT:16> " .. accentColor .. "<SIZE:medium> ◇</SIZE> "
+                    .. colorTag(COLORS.text) .. displayName
+            else
+                accentColor = colorTag(rarityColor(rarity))
+                line = line .. " <INDENT:16> " .. accentColor .. "<SIZE:medium> ●</SIZE> "
+                    .. colorTag(COLORS.text) .. displayName
+            end
+            line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. infoStr
+            line = line .. " <LINE> "
+            return line
+        end
+
+        local statusReason
+        if not isAllowed then
+            statusReason = getText("UI_BCR_StatusServerDisabled") or "Server Disabled"
         elseif isPositive and modGranted[traitId] then
-            line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
-            line = line .. (getText("UI_BCR_StatusEarned") or "Already Earned")
+            statusReason = getText("UI_BCR_StatusEarned") or "Already Earned"
         elseif not isPositive and modRemoved[traitId] then
-            line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
-            line = line .. (getText("UI_BCR_StatusRemoved") or "Already Removed")
+            statusReason = getText("UI_BCR_StatusRemoved") or "Already Removed"
         elseif isPositive and BCR.PlayerHasTrait(self.player, traitId) then
-            line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
-            line = line .. (getText("UI_BCR_StatusOwned") or "Already Owned")
+            statusReason = getText("UI_BCR_StatusOwned") or "Already Owned"
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
-            line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
             if isPositive and hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
-                line = line .. getText("UI_BCR_StatusConflict", blockerName)
+                statusReason = getText("UI_BCR_StatusConflict", blockerName)
             else
-                line = line .. (getText("UI_BCR_StatusUnavailable") or "Unavailable")
+                statusReason = getText("UI_BCR_StatusUnavailable") or "Unavailable"
             end
         end
 
+        line = line .. " <INDENT:16> " .. colorTag(COLORS.disabled) .. "<SIZE:medium> -</SIZE> "
+            .. colorTag(COLORS.disabled) .. displayName
+        line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. colorTag(COLORS.disabled) .. infoStr
+        line = line .. " <LINE> "
+        line = line .. " <INDENT:32> " .. colorTag(COLORS.dim) .. "<SIZE:small> " .. statusReason .. " </SIZE> "
         line = line .. " <LINE> "
         return line
     end
@@ -532,7 +547,9 @@ function BCRStatsWindow:updateCatalog()
             return na < nb
         end)
     end
+    sortByCost(BCR.PositiveTraits)
     sortByCost(BCR.CustomPositiveTraits)
+    sortByCost(BCR.NegativeTraits)
     sortByCost(BCR.CustomNegativeTraits)
 
     text = text .. colorTag(COLORS.sectionHead)
@@ -540,30 +557,19 @@ function BCRStatsWindow:updateCatalog()
     text = text .. " <LINE><TEXT> "
 
     if opts.enablePositive == false then
-        text = text .. " <INDENT:16> " .. colorTag(COLORS.disabled)
+        text = text .. " <INDENT:16> " .. colorTag(COLORS.dim)
         text = text .. (getText("UI_BCR_CategoryDisabled") or "Disabled in server settings")
         text = text .. " <LINE> "
     else
         for _, entry in ipairs(BCR.PositiveTraits) do
-            local traitId = entry.id
-            text = text .. renderTraitLine(traitId, entry.cost, earnablePool, true)
+            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true)
         end
         if BCR.CustomPositiveTraits and #BCR.CustomPositiveTraits > 0 then
-            text = text .. " <INDENT:16> <LINE> "
-            text = text .. colorTag(COLORS.addonHead)
-            text = text .. (getText("UI_BCR_AddonTraits") or "--- Addon Traits ---")
+            text = text .. " <LINE> " .. colorTag(COLORS.addonHead)
+            text = text .. (getText("UI_BCR_AddonTraits") or "Addon Traits")
             text = text .. " <LINE> "
-            local lastSource = nil
             for _, entry in ipairs(BCR.CustomPositiveTraits) do
-                local traitId = entry.id
-                local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
-                if source and source ~= lastSource then
-                    lastSource = source
-                    text = text .. " <INDENT:24> " .. colorTag(COLORS.addonSubHead)
-                    text = text .. source
-                    text = text .. " <LINE> "
-                end
-                text = text .. renderTraitLine(traitId, entry.cost, earnablePool, true)
+                text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true)
             end
         end
     end
@@ -575,43 +581,30 @@ function BCRStatsWindow:updateCatalog()
     text = text .. " <LINE><TEXT> "
 
     if opts.enableNegative == false then
-        text = text .. " <INDENT:16> " .. colorTag(COLORS.disabled)
+        text = text .. " <INDENT:16> " .. colorTag(COLORS.dim)
         text = text .. (getText("UI_BCR_CategoryDisabled") or "Disabled in server settings")
         text = text .. " <LINE> "
     else
         local hasRelevantTraits = false
         for _, entry in ipairs(BCR.NegativeTraits) do
             local traitId = entry.id
-            local isRelevant = BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId]
-            if isRelevant then
+            if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                 hasRelevantTraits = true
                 text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
             end
         end
         if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
             local addonText = ""
-            local lastSource = nil
             for _, entry in ipairs(BCR.CustomNegativeTraits) do
                 local traitId = entry.id
                 if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                     hasRelevantTraits = true
-                    if not addonText then
-                        addonText = ""
-                    end
-                    local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
-                    if source and source ~= lastSource then
-                        lastSource = source
-                        addonText = addonText .. " <INDENT:24> " .. colorTag(COLORS.addonSubHead)
-                        addonText = addonText .. source
-                        addonText = addonText .. " <LINE> "
-                    end
                     addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false)
                 end
             end
-            if addonText and #addonText > 0 then
-                text = text .. " <INDENT:16> <LINE> "
-                text = text .. colorTag(COLORS.addonHead)
-                text = text .. (getText("UI_BCR_AddonTraits") or "--- Addon Traits ---")
+            if #addonText > 0 then
+                text = text .. " <LINE> " .. colorTag(COLORS.addonHead)
+                text = text .. (getText("UI_BCR_AddonTraits") or "Addon Traits")
                 text = text .. " <LINE> " .. addonText
             end
         end
