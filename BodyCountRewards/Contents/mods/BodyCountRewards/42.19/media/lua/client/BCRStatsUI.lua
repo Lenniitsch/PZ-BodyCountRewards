@@ -34,6 +34,7 @@ local COLORS = {
     sectionHead = { r = 1.00, g = 0.85, b = 0.40 },
     addonHead = { r = 0.40, g = 0.80, b = 1.00 },
     addonSubHead = { r = 0.50, g = 0.70, b = 0.85 },
+    sourceTag = { r = 0.50, g = 0.50, b = 0.50 },
     label = { r = 0.75, g = 0.75, b = 0.75 },
     value = { r = 1.00, g = 1.00, b = 1.00 },
     added = { r = 0.40, g = 1.00, b = 0.40 },
@@ -413,16 +414,16 @@ function BCRStatsWindow:updateHistory()
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local sourceTag = ""
         if entry.source then
-            sourceTag = " [" .. entry.source .. "]"
+            sourceTag = colorTag(COLORS.sourceTag) .. " [" .. entry.source .. "]"
         end
 
         text = text .. "<INDENT:16>"
         if entry.action == "added" then
             text = text .. colorTag(COLORS.added)
-            text = text .. "+ " .. displayName .. sourceTag .. " (" .. rarityLabel .. ")"
+            text = text .. "+ " .. displayName .. sourceTag .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")"
         else
             text = text .. colorTag(COLORS.removed)
-            text = text .. "- " .. displayName .. sourceTag .. " (" .. rarityLabel .. ")"
+            text = text .. "- " .. displayName .. sourceTag .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")"
         end
         text = text .. " <LINE> "
     end
@@ -478,34 +479,34 @@ function BCRStatsWindow:updateCatalog()
         local isAllowed = BCR.IsTraitAllowed(traitId)
         local sourceTag = ""
         if BCR.CustomTraitSources and BCR.CustomTraitSources[traitId] then
-            sourceTag = " [" .. BCR.CustomTraitSources[traitId] .. "]"
+            sourceTag = colorTag(COLORS.sourceTag) .. " [" .. BCR.CustomTraitSources[traitId] .. "]"
         end
 
         line = line .. " <INDENT:16> "
 
         if isInPool then
             line = line .. colorTag(rarityColor(rarity))
-            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag
+            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag
         elseif not isAllowed then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
+            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusServerDisabled") or "Server Disabled")
         elseif isPositive and modGranted[traitId] then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
+            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusEarned") or "Already Earned")
         elseif not isPositive and modRemoved[traitId] then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
+            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusRemoved") or "Already Removed")
         elseif isPositive and BCR.PlayerHasTrait(self.player, traitId) then
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
+            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
             line = line .. (getText("UI_BCR_StatusOwned") or "Already Owned")
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
             line = line .. colorTag(COLORS.disabled)
-            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
+            line = line .. displayName .. " (" .. rarityLabel .. ", " .. tostring(cost) .. ")" .. sourceTag .. " - "
             if isPositive and hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
                 line = line .. getText("UI_BCR_StatusConflict", blockerName)
@@ -519,6 +520,17 @@ function BCRStatsWindow:updateCatalog()
     end
 
     local text = ""
+
+    local function sortByDisplayName(t)
+        if not t then return end
+        table.sort(t, function(a, b)
+            local na = BCR.GetTraitDisplayName(a.id) or a.id
+            local nb = BCR.GetTraitDisplayName(b.id) or b.id
+            return na < nb
+        end)
+    end
+    sortByDisplayName(BCR.CustomPositiveTraits)
+    sortByDisplayName(BCR.CustomNegativeTraits)
 
     text = text .. colorTag(COLORS.sectionHead)
     text = text .. " <H2> " .. (getText("UI_BCR_CatalogPositive") or "Earnable Positive Traits")
@@ -574,25 +586,30 @@ function BCRStatsWindow:updateCatalog()
             end
         end
         if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
-            text = text .. " <INDENT:16> <LINE> "
-            text = text .. colorTag(COLORS.addonHead)
-            text = text .. (getText("UI_BCR_AddonTraits") or "--- Addon Traits ---")
-            text = text .. " <LINE> "
+            local addonText = ""
             local lastSource = nil
             for _, entry in ipairs(BCR.CustomNegativeTraits) do
                 local traitId = entry.id
-                local isRelevant = BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId]
-                if isRelevant then
+                if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                     hasRelevantTraits = true
+                    if not addonText then
+                        addonText = ""
+                    end
                     local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
                     if source and source ~= lastSource then
                         lastSource = source
-                        text = text .. " <INDENT:24> " .. colorTag(COLORS.addonSubHead)
-                        text = text .. source
-                        text = text .. " <LINE> "
+                        addonText = addonText .. " <INDENT:24> " .. colorTag(COLORS.addonSubHead)
+                        addonText = addonText .. source
+                        addonText = addonText .. " <LINE> "
                     end
-                    text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
+                    addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false)
                 end
+            end
+            if addonText and #addonText > 0 then
+                text = text .. " <INDENT:16> <LINE> "
+                text = text .. colorTag(COLORS.addonHead)
+                text = text .. (getText("UI_BCR_AddonTraits") or "--- Addon Traits ---")
+                text = text .. " <LINE> " .. addonText
             end
         end
 
