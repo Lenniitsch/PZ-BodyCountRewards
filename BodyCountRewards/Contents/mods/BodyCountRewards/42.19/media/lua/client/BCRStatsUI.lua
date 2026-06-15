@@ -521,16 +521,19 @@ function BCRStatsWindow:updateCatalog()
 
     local text = ""
 
-    local function sortByDisplayName(t)
+    local function sortByCost(t)
         if not t then return end
         table.sort(t, function(a, b)
+            local ca = math.abs(a.cost or 0)
+            local cb = math.abs(b.cost or 0)
+            if ca ~= cb then return ca > cb end
             local na = BCR.GetTraitDisplayName(a.id) or a.id
             local nb = BCR.GetTraitDisplayName(b.id) or b.id
             return na < nb
         end)
     end
-    sortByDisplayName(BCR.CustomPositiveTraits)
-    sortByDisplayName(BCR.CustomNegativeTraits)
+    sortByCost(BCR.CustomPositiveTraits)
+    sortByCost(BCR.CustomNegativeTraits)
 
     text = text .. colorTag(COLORS.sectionHead)
     text = text .. " <H2> " .. (getText("UI_BCR_CatalogPositive") or "Earnable Positive Traits")
