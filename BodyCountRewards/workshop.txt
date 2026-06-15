@@ -89,7 +89,5 @@ description=
 description=[i]Found a bug? Got a suggestion? Leave a comment or open an issue on [url=https://github.com/Lenniitsch/PZ-BodyCountRewards/issues]GitHub[/url]![/i]
 description=[i]If this made your apocalypse more rewarding, a thumbs up is always appreciated.[/i]
 description=
-description=Workshop ID: 3660382016
-description=Mod ID: BCR
 tags=Build 42;Balance;Multiplayer;Traits
 visibility=public
