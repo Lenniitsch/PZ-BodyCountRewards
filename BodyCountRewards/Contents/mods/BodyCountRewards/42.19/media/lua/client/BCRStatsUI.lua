@@ -475,7 +475,8 @@ function BCRStatsWindow:updateCatalog()
 
         if isInPool then
             line = line .. " <INDENT:16> " .. colorTag(COLORS.text)
-            line = line .. "- " .. displayName .. "  |" .. colorTag(rarityColor(rarity)) .. " " .. rarityLabel
+            line = line .. "- " .. displayName .. "  " .. colorTag(rarityColor(rarity))
+            line = line .. "| " .. rarityLabel
             line = line .. " <LINE> "
             return line
         end
@@ -500,9 +501,10 @@ function BCRStatsWindow:updateCatalog()
         end
 
         line = line .. " <INDENT:16> " .. colorTag(COLORS.dim)
-        line = line .. "- " .. displayName .. "  |" .. colorTag(rarityColor(rarity)) .. " " .. rarityLabel
+        line = line .. "- " .. displayName .. "  " .. colorTag(rarityColor(rarity))
+        line = line .. "| " .. rarityLabel
         line = line .. " <LINE> "
-        line = line .. " <INDENT:24> " .. statusReason
+        line = line .. " <INDENT:24> " .. colorTag(COLORS.dim) .. statusReason
         line = line .. " <LINE> "
         return line
     end
