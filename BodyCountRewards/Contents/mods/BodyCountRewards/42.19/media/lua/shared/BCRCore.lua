@@ -59,7 +59,7 @@ function BCR.GetPlayerTraitsList(player)
     if not ok2 or not knownTraits then return nil end
     local result = {}
     local ok3, size = pcall(function() return knownTraits:size() end)
-    if not ok3 then     return result == true
+    if not ok3 then return result end
 end
     for i = 0, size - 1 do
         local ok4, trait = pcall(function() return knownTraits:get(i) end)

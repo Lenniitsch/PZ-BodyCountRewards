@@ -127,7 +127,7 @@ function BCR.ProcessRewardDirect(player)
     end
     local canClaim, missedCount = validateMilestone(player, bcrData, opts)
     if not canClaim then return nil end
-    local rewardsToGive = math.min(missedCount, 1)
+    local rewardsToGive = missedCount
     if not opts.grantMissedOpportunities then
         rewardsToGive = 1
     end
