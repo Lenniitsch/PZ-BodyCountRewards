@@ -43,6 +43,20 @@ end
 
 function BCR.RefreshConfig()
     local sv = SandboxVars.BCR or {}
+    if sv.allow_SPEED_DEMON ~= nil then
+        local migrated = 0
+        if BCR.TRAIT_ID_MIGRATION then
+            for oldId, newId in pairs(BCR.TRAIT_ID_MIGRATION) do
+                local oldKey = "allow_" .. oldId
+                local newKey = "allow_" .. string.gsub(newId, ":", "_")
+                if sv[oldKey] ~= nil and sv[newKey] == nil then
+                    sv[newKey] = sv[oldKey]
+                    migrated = migrated + 1
+                end
+            end
+        end
+        print("[BCR] v1.3.1: Migrated " .. tostring(migrated) .. " sandbox trait toggle(s) to new format. Verify in the Traits page if needed.")
+    end
     BCR.opts = {
         bodyCount                = sv.BodyCount or 1000,
         enablePositive           = sv.enablePositiveTraits ~= false,

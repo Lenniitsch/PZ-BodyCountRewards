@@ -69,7 +69,7 @@ BCR.NegativeTraits = {
 }
 
 -- ============================================================
--- MUTUAL EXCLUSIONS -- symmetric (A excludes B ⇔ B excludes A)
+-- MUTUAL EXCLUSIONS -- symmetric (A excludes B <-> B excludes A)
 -- ============================================================
 
 BCR.Exclusions = {
@@ -106,6 +106,60 @@ BCR.Exclusions = {
     ["base:ThickSkinned"]      = { "base:ThinSkinned" },
     ["base:ThinSkinned"]       = { "base:ThickSkinned" },
     ["base:WeakStomach"]       = { "base:IronGut" },
+}
+
+-- ============================================================
+-- TEMPORARY: v1.3.1 migration table. Maps pre-v1.3.1
+-- UPPER_SNAKE_CASE trait IDs to ResourceLocation format.
+-- Used by GetTraitDisplayName (history fallback) and
+-- RefreshConfig (sandbox key migration).
+-- Remove after a few releases when old saves cycle out.
+-- ============================================================
+
+BCR.TRAIT_ID_MIGRATION = {
+    SPEED_DEMON      = "base:SpeedDemon",
+    NIGHT_VISION     = "base:NightVision",
+    DEXTROUS         = "base:Dextrous",
+    FAST_READER      = "base:FastReader",
+    INVENTIVE        = "base:Inventive",
+    LIGHT_EATER      = "base:LightEater",
+    LOW_THIRST       = "base:LowThirst",
+    OUTDOORSMAN      = "base:Outdoorsman",
+    NEEDS_LESS_SLEEP = "base:NeedsLessSleep",
+    IRON_GUT         = "base:IronGut",
+    ADRENALINE_JUNKIE= "base:AdrenalineJunkie",
+    EAGLE_EYED       = "base:EagleEyed",
+    GRACEFUL         = "base:Graceful",
+    INCONSPICUOUS    = "base:Inconspicuous",
+    NUTRITIONIST     = "base:Nutritionist",
+    ORGANIZED        = "base:Organized",
+    RESILIENT        = "base:Resilient",
+    FAST_HEALER      = "base:FastHealer",
+    FAST_LEARNER     = "base:FastLearner",
+    KEEN_HEARING     = "base:KeenHearing",
+    THICK_SKINNED    = "base:ThickSkinned",
+    HIGH_THIRST      = "base:HighThirst",
+    SUNDAY_DRIVER    = "base:SundayDriver",
+    ALL_THUMBS       = "base:AllThumbs",
+    CLUMSY           = "base:Clumsy",
+    COWARDLY         = "base:Cowardly",
+    SLOW_READER      = "base:SlowReader",
+    SLOW_HEALER      = "base:SlowHealer",
+    WEAK_STOMACH     = "base:WeakStomach",
+    SMOKER           = "base:Smoker",
+    AGORAPHOBIC      = "base:Agoraphobic",
+    CLAUSTROPHOBIC   = "base:Claustrophobic",
+    CONSPICUOUS      = "base:Conspicuous",
+    HEARTY_APPETITE  = "base:HeartyAppetite",
+    PACIFIST         = "base:Pacifist",
+    PRONE_TO_ILLNESS = "base:ProneToIllness",
+    NEEDS_MORE_SLEEP = "base:NeedsMoreSleep",
+    ASTHMATIC        = "base:Asthmatic",
+    HEMOPHOBIC       = "base:Hemophobic",
+    DISORGANIZED     = "base:Disorganized",
+    SLOW_LEARNER     = "base:SlowLearner",
+    ILLITERATE       = "base:Illiterate",
+    THIN_SKINNED     = "base:ThinSkinned",
 }
 
 -- ============================================================

@@ -344,6 +344,10 @@ function BCR.GetTraitDisplayName(traitId)
     local colonPos = string.find(traitId, ":")
     local path = colonPos and string.sub(traitId, colonPos + 1) or nil
     if not path then
+        local newId = BCR.TRAIT_ID_MIGRATION and BCR.TRAIT_ID_MIGRATION[traitId]
+        if newId then
+            return BCR.GetTraitDisplayName(newId)
+        end
         local formatted = string.gsub(traitId, "_", " ")
         local words = {}
         for word in string.gmatch(formatted, "%S+") do
