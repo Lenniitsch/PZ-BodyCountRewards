@@ -48,4 +48,5 @@
     "UI_BCR_StatusUnavailable": "Недоступно",
     "UI_BCR_Option_ShowMenu": "Показати Контекстне Меню",
     "UI_BCR_Option_ShowMenu_tooltip": "При ввімкненні правий клік показує прогрес Body Count Rewards у контекстному меню."
+	"UI_BCR_AddonTraits": "--- Addon Traits ---"
 }

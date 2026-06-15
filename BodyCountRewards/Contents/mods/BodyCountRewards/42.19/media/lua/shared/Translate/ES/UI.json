@@ -48,4 +48,5 @@
     "UI_BCR_StatusUnavailable": "No Disponible",
     "UI_BCR_Option_ShowMenu": "Mostrar Men\u00fa Contextual",
     "UI_BCR_Option_ShowMenu_tooltip": "Al activarlo, hacer clic derecho muestra el progreso de Body Count Rewards en el men\u00fa contextual."
+	"UI_BCR_AddonTraits": "--- Addon Traits ---"
 }

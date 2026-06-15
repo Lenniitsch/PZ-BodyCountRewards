@@ -32,6 +32,8 @@ local COLORS = {
     rare = { r = 1.00, g = 0.60, b = 0.20 },
     veryRare = { r = 0.80, g = 0.30, b = 1.00 },
     sectionHead = { r = 1.00, g = 0.85, b = 0.40 },
+    addonHead = { r = 0.40, g = 0.80, b = 1.00 },
+    addonSubHead = { r = 0.50, g = 0.70, b = 0.85 },
     label = { r = 0.75, g = 0.75, b = 0.75 },
     value = { r = 1.00, g = 1.00, b = 1.00 },
     added = { r = 0.40, g = 1.00, b = 0.40 },
@@ -408,14 +410,18 @@ function BCRStatsWindow:updateHistory()
         local displayName = BCR.GetTraitDisplayName(entry.id) or entry.id
         local rarity = entry.rarity or "common"
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
+        local sourceTag = ""
+        if entry.source then
+            sourceTag = " [" .. entry.source .. "]"
+        end
 
         text = text .. "<INDENT:16>"
         if entry.action == "added" then
             text = text .. colorTag(COLORS.added)
-            text = text .. "+ " .. displayName .. " (" .. rarityLabel .. ")"
+            text = text .. "+ " .. displayName .. sourceTag .. " (" .. rarityLabel .. ")"
         else
             text = text .. colorTag(COLORS.removed)
-            text = text .. "- " .. displayName .. " (" .. rarityLabel .. ")"
+            text = text .. "- " .. displayName .. sourceTag .. " (" .. rarityLabel .. ")"
         end
         text = text .. " <LINE> "
     end
@@ -478,7 +484,7 @@ function BCRStatsWindow:updateCatalog()
 
         if isInPool then
             line = line .. colorTag(rarityColor(rarity))
-            line = line .. displayName .. " (" .. rarityLabel .. ")"
+            line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag
         elseif not isAllowed then
             line = line .. colorTag(COLORS.disabled)
             line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
@@ -526,9 +532,21 @@ function BCRStatsWindow:updateCatalog()
             local traitId = entry.id
             text = text .. renderTraitLine(traitId, entry.cost, earnablePool, true)
         end
-        if BCR.CustomPositiveTraits then
+        if BCR.CustomPositiveTraits and #BCR.CustomPositiveTraits > 0 then
+            text = text .. " <INDENT:16> <LINE> "
+            text = text .. colorTag(COLORS.addonHead)
+            text = text .. (getText("UI_BCR_AddonTraits") or "--- Addon Traits ---")
+            text = text .. " <LINE> "
+            local lastSource = nil
             for _, entry in ipairs(BCR.CustomPositiveTraits) do
                 local traitId = entry.id
+                local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
+                if source and source ~= lastSource then
+                    lastSource = source
+                    text = text .. " <INDENT:24> " .. colorTag(COLORS.addonSubHead)
+                    text = text .. source
+                    text = text .. " <LINE> "
+                end
                 text = text .. renderTraitLine(traitId, entry.cost, earnablePool, true)
             end
         end
@@ -554,12 +572,24 @@ function BCRStatsWindow:updateCatalog()
                 text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
             end
         end
-        if BCR.CustomNegativeTraits then
+        if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
+            text = text .. " <INDENT:16> <LINE> "
+            text = text .. colorTag(COLORS.addonHead)
+            text = text .. (getText("UI_BCR_AddonTraits") or "--- Addon Traits ---")
+            text = text .. " <LINE> "
+            local lastSource = nil
             for _, entry in ipairs(BCR.CustomNegativeTraits) do
                 local traitId = entry.id
                 local isRelevant = BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId]
                 if isRelevant then
                     hasRelevantTraits = true
+                    local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
+                    if source and source ~= lastSource then
+                        lastSource = source
+                        text = text .. " <INDENT:24> " .. colorTag(COLORS.addonSubHead)
+                        text = text .. source
+                        text = text .. " <LINE> "
+                    end
                     text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
                 end
             end

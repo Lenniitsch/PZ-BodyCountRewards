@@ -58,6 +58,7 @@ local function recordTraitHistory(bcrData, result)
         action = result.action,
         rarity = result.rarity,
         timestamp = getWorldAgeHoursSafe(),
+        source = BCR.CustomTraitSources and BCR.CustomTraitSources[result.id],
     })
 end
 
