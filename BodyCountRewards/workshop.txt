@@ -59,9 +59,6 @@ description=
 description=[b]Q: Works with mod traits?[/b]
 description=A: Yes. BCR has a third-party addon API. Check out the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3745224257]I Am Not Your Mom[/url] addon for a working example, or build your own trait pack.
 description=
-description=[b]Q: Removed Short Sighted but still can't see far?[/b]
-description=A: The trait is removed correctly, but the visual effect does not refresh until you reload the game. This is a PZ engine limitation, not a BCR bug. Quit to main menu and reload your save for the full vision range to apply.
-description=
 description=[b]Q: Athletic / Strong / Fit?[/b]
 description=A: Those grant perk points and need extra work. If enough people ask, I will look into it.
 description=
