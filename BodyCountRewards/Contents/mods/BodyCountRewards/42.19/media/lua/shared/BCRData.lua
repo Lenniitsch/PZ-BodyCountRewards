@@ -247,5 +247,8 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
 
     print("[BCR] \"" .. sourceName .. "\" -- " .. statusStr)
     BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] detail -- " .. registeredStr)
+    if totalRegistered > 0 then
+        BCR.RebuildMergedTraits()
+    end
     return totalRegistered
 end

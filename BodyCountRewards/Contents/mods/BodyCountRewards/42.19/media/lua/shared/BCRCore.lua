@@ -185,6 +185,9 @@ end
 -- POOL BUILDING
 -- ============================================================
 
+BCR.MergedPositiveTraits = BCR.PositiveTraits
+BCR.MergedNegativeTraits = BCR.NegativeTraits
+
 local function mergeTraitTables(base, custom)
     if not custom then return base end
     if #custom == 0 then return base end
@@ -198,10 +201,17 @@ local function mergeTraitTables(base, custom)
     return merged
 end
 
+function BCR.RebuildMergedTraits()
+    BCR.MergedPositiveTraits = mergeTraitTables(BCR.PositiveTraits, BCR.CustomPositiveTraits)
+    BCR.MergedNegativeTraits = mergeTraitTables(BCR.NegativeTraits, BCR.CustomNegativeTraits)
+end
+
 function BCR.BuildEarnablePool(player, customTraits)
     if not player then return nil end
-    local allTraits = mergeTraitTables(BCR.PositiveTraits, BCR.CustomPositiveTraits)
-    allTraits = mergeTraitTables(allTraits, customTraits)
+    local allTraits = BCR.MergedPositiveTraits
+    if customTraits then
+        allTraits = mergeTraitTables(allTraits, customTraits)
+    end
     local pool = {}
     for _, entry in ipairs(allTraits) do
         local traitId = entry.id
@@ -234,8 +244,10 @@ end
 
 function BCR.BuildRemovablePool(player, customTraits)
     if not player then return nil end
-    local allTraits = mergeTraitTables(BCR.NegativeTraits, BCR.CustomNegativeTraits)
-    allTraits = mergeTraitTables(allTraits, customTraits)
+    local allTraits = BCR.MergedNegativeTraits
+    if customTraits then
+        allTraits = mergeTraitTables(allTraits, customTraits)
+    end
     local pool = {}
     for _, entry in ipairs(allTraits) do
         local traitId = entry.id
