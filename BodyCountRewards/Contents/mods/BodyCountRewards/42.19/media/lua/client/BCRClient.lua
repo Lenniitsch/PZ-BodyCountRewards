@@ -18,7 +18,6 @@ BCR = BCR or {}
 
 local PENDING_REWARD_DELAY_TICKS = 90
 local NOTIFICATION_DELAY_TICKS = 200
-local REEXHAUST_RECHECK_TICKS = 300
 
 -- ============================================================
 -- STATE VARIABLES
@@ -32,7 +31,6 @@ local hasShownAllTraitsMessage = false
 local shouldShowFinalMessage = false
 local showFinalMessageTimer = 0
 local rewardsExhausted = false
-local exhaustedRecheckTimer = 0
 
 -- ============================================================
 -- HELPERS
@@ -55,7 +53,6 @@ local function resetState()
     shouldShowFinalMessage = false
     showFinalMessageTimer = 0
     rewardsExhausted = false
-    exhaustedRecheckTimer = 0
 end
 
 local function countMissedMilestones(bcrData, opts)
@@ -66,6 +63,14 @@ local function countMissedMilestones(bcrData, opts)
     local milestonesAtKills = BCR.GetMilestonesAtKills(kills, opts)
     local currentRewards = bcrData.rewardsGiven or 0
     return math.max(0, milestonesAtKills - currentRewards)
+end
+
+local function tryReexhaust(player)
+    if hasShownAllTraitsMessage and BCR.HasAvailableRewards(player) then
+        BCR.DebugPrint("[Client] Re-exhaust check: rewards available again — resuming")
+        hasShownAllTraitsMessage = false
+        rewardsExhausted = false
+    end
 end
 
 -- ============================================================
@@ -128,18 +133,7 @@ end
 function BCR_OnPlayerUpdate(player)
     if not player then return end
     if player:isDead() then return end
-    if hasShownAllTraitsMessage then
-        exhaustedRecheckTimer = exhaustedRecheckTimer + 1
-        if exhaustedRecheckTimer >= REEXHAUST_RECHECK_TICKS then
-            exhaustedRecheckTimer = 0
-            if BCR.HasAvailableRewards(player) then
-                BCR.DebugPrint("[Client] Re-exhaust check: rewards available again — resuming")
-                hasShownAllTraitsMessage = false
-                rewardsExhausted = false
-            end
-        end
-        return
-    end
+    if hasShownAllTraitsMessage then return end
     if BCR.opts == nil then
         BCR.RefreshConfig()
     end
@@ -301,6 +295,8 @@ function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test
         player,
         BCR.ShowStatsWindow
     )
+
+    tryReexhaust(player)
 
     if hasShownAllTraitsMessage or not BCR.HasAvailableRewards(player) then
         local exhaustedText = getText("UI_BCR_AllRewardsGranted") or "All rewards granted!"
