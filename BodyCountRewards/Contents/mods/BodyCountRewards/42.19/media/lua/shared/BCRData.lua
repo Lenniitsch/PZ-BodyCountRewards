@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRData (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRData (Build 42.19+)
 -- Pure data tables. No functions. No logic. Edit trait lists here.
 -- ============================================================
 
@@ -12,100 +12,100 @@ BCR = BCR or {}
 BCR.MAX_WEIGHT_COST = 8
 
 -- ============================================================
--- POSITIVE TRAITS — earnable (cost = negative number)
+-- POSITIVE TRAITS -- earnable (cost = negative number)
 -- ============================================================
 
 BCR.PositiveTraits = {
-    { id = "SPEED_DEMON",      cost = -1 },
-    { id = "NIGHT_VISION",     cost = -3 },
-    { id = "DEXTROUS",         cost = -2 },
-    { id = "FAST_READER",      cost = -2 },
-    { id = "INVENTIVE",        cost = -2 },
-    { id = "LIGHT_EATER",      cost = -2 },
-    { id = "LOW_THIRST",       cost = -2 },
-    { id = "OUTDOORSMAN",      cost = -2 },
-    { id = "NEEDS_LESS_SLEEP", cost = -3 },
-    { id = "IRON_GUT",         cost = -2 },
-    { id = "ADRENALINE_JUNKIE",cost = -4 },
-    { id = "EAGLE_EYED",       cost = -4 },
-    { id = "GRACEFUL",         cost = -4 },
-    { id = "INCONSPICUOUS",    cost = -4 },
-    { id = "NUTRITIONIST",     cost = -2 },
-    { id = "ORGANIZED",        cost = -4 },
-    { id = "RESILIENT",        cost = -4 },
-    { id = "FAST_HEALER",      cost = -6 },
-    { id = "FAST_LEARNER",     cost = -6 },
-    { id = "KEEN_HEARING",     cost = -6 },
-    { id = "THICK_SKINNED",    cost = -8 },
+    { id = "base:SpeedDemon",      cost = -1 },
+    { id = "base:NightVision",     cost = -3 },
+    { id = "base:Dextrous",         cost = -2 },
+    { id = "base:FastReader",      cost = -2 },
+    { id = "base:Inventive",        cost = -2 },
+    { id = "base:LightEater",      cost = -2 },
+    { id = "base:LowThirst",       cost = -2 },
+    { id = "base:Outdoorsman",      cost = -2 },
+    { id = "base:NeedsLessSleep", cost = -3 },
+    { id = "base:IronGut",         cost = -2 },
+    { id = "base:AdrenalineJunkie",cost = -4 },
+    { id = "base:EagleEyed",       cost = -4 },
+    { id = "base:Graceful",         cost = -4 },
+    { id = "base:Inconspicuous",    cost = -4 },
+    { id = "base:Nutritionist",     cost = -2 },
+    { id = "base:Organized",        cost = -4 },
+    { id = "base:Resilient",        cost = -4 },
+    { id = "base:FastHealer",      cost = -6 },
+    { id = "base:FastLearner",     cost = -6 },
+    { id = "base:KeenHearing",     cost = -6 },
+    { id = "base:ThickSkinned",    cost = -8 },
 }
 
 -- ============================================================
--- NEGATIVE TRAITS — removable (cost = positive number)
+-- NEGATIVE TRAITS -- removable (cost = positive number)
 -- ============================================================
 
 BCR.NegativeTraits = {
-    { id = "HIGH_THIRST",      cost = 2 },
-    { id = "SUNDAY_DRIVER",    cost = 1 },
-    { id = "ALL_THUMBS",       cost = 2 },
-    { id = "CLUMSY",           cost = 2 },
-    { id = "COWARDLY",         cost = 2 },
-    { id = "SLOW_READER",      cost = 2 },
-    { id = "SLOW_HEALER",      cost = 3 },
-    { id = "WEAK_STOMACH",     cost = 2 },
-    { id = "SMOKER",           cost = 3 },
-    { id = "AGORAPHOBIC",      cost = 4 },
-    { id = "CLAUSTROPHOBIC",   cost = 4 },
-    { id = "CONSPICUOUS",      cost = 4 },
-    { id = "HEARTY_APPETITE",  cost = 4 },
-    { id = "PACIFIST",         cost = 5 },
-    { id = "PRONE_TO_ILLNESS", cost = 4 },
-    { id = "NEEDS_MORE_SLEEP", cost = 4 },
-    { id = "ASTHMATIC",        cost = 5 },
-    { id = "HEMOPHOBIC",       cost = 5 },
-    { id = "DISORGANIZED",     cost = 6 },
-    { id = "SLOW_LEARNER",     cost = 6 },
-    { id = "ILLITERATE",       cost = 10 },
-    { id = "THIN_SKINNED",     cost = 8 },
+    { id = "base:HighThirst",      cost = 2 },
+    { id = "base:SundayDriver",    cost = 1 },
+    { id = "base:AllThumbs",       cost = 2 },
+    { id = "base:Clumsy",           cost = 2 },
+    { id = "base:Cowardly",         cost = 2 },
+    { id = "base:SlowReader",      cost = 2 },
+    { id = "base:SlowHealer",      cost = 3 },
+    { id = "base:WeakStomach",     cost = 2 },
+    { id = "base:Smoker",           cost = 3 },
+    { id = "base:Agoraphobic",      cost = 4 },
+    { id = "base:Claustrophobic",   cost = 4 },
+    { id = "base:Conspicuous",      cost = 4 },
+    { id = "base:HeartyAppetite",  cost = 4 },
+    { id = "base:Pacifist",         cost = 5 },
+    { id = "base:ProneToIllness", cost = 4 },
+    { id = "base:NeedsMoreSleep", cost = 4 },
+    { id = "base:Asthmatic",        cost = 5 },
+    { id = "base:Hemophobic",       cost = 5 },
+    { id = "base:Disorganized",     cost = 6 },
+    { id = "base:SlowLearner",     cost = 6 },
+    { id = "base:Illiterate",       cost = 10 },
+    { id = "base:ThinSkinned",     cost = 8 },
 }
 
 -- ============================================================
--- MUTUAL EXCLUSIONS — symmetric (A excludes B ⇔ B excludes A)
+-- MUTUAL EXCLUSIONS -- symmetric (A excludes B ⇔ B excludes A)
 -- ============================================================
 
 BCR.Exclusions = {
-    ["ADRENALINE_JUNKIE"]  = { "AGORAPHOBIC", "CLAUSTROPHOBIC", "COWARDLY" },
-    ["AGORAPHOBIC"]        = { "ADRENALINE_JUNKIE", "CLAUSTROPHOBIC" },
-    ["ALL_THUMBS"]         = { "DEXTROUS" },
-    ["CLAUSTROPHOBIC"]     = { "ADRENALINE_JUNKIE", "AGORAPHOBIC" },
-    ["CLUMSY"]             = { "GRACEFUL" },
-    ["CONSPICUOUS"]        = { "INCONSPICUOUS" },
-    ["COWARDLY"]           = { "ADRENALINE_JUNKIE" },
-    ["DEXTROUS"]           = { "ALL_THUMBS" },
-    ["DISORGANIZED"]       = { "ORGANIZED" },
-    ["FAST_HEALER"]        = { "SLOW_HEALER" },
-    ["FAST_LEARNER"]       = { "SLOW_LEARNER" },
-    ["FAST_READER"]        = { "ILLITERATE", "SLOW_READER" },
-    ["GRACEFUL"]           = { "CLUMSY" },
-    ["HEARTY_APPETITE"]    = { "LIGHT_EATER" },
-    ["HIGH_THIRST"]        = { "LOW_THIRST" },
-    ["ILLITERATE"]         = { "FAST_READER", "SLOW_READER" },
-    ["INCONSPICUOUS"]      = { "CONSPICUOUS" },
-    ["IRON_GUT"]           = { "WEAK_STOMACH" },
-    ["LIGHT_EATER"]        = { "HEARTY_APPETITE" },
-    ["LOW_THIRST"]         = { "HIGH_THIRST" },
-    ["ORGANIZED"]          = { "DISORGANIZED" },
-    ["PRONE_TO_ILLNESS"]   = { "RESILIENT" },
-    ["RESILIENT"]          = { "PRONE_TO_ILLNESS" },
-    ["NEEDS_MORE_SLEEP"]   = { "NEEDS_LESS_SLEEP" },
-    ["NEEDS_LESS_SLEEP"]   = { "NEEDS_MORE_SLEEP" },
-    ["SLOW_HEALER"]        = { "FAST_HEALER" },
-    ["SLOW_LEARNER"]       = { "FAST_LEARNER" },
-    ["SLOW_READER"]        = { "FAST_READER", "ILLITERATE" },
-    ["SPEED_DEMON"]        = { "SUNDAY_DRIVER" },
-    ["SUNDAY_DRIVER"]      = { "SPEED_DEMON" },
-    ["THICK_SKINNED"]      = { "THIN_SKINNED" },
-    ["THIN_SKINNED"]       = { "THICK_SKINNED" },
-    ["WEAK_STOMACH"]       = { "IRON_GUT" },
+    ["base:AdrenalineJunkie"]  = { "base:Agoraphobic", "base:Claustrophobic", "base:Cowardly" },
+    ["base:Agoraphobic"]        = { "base:AdrenalineJunkie", "base:Claustrophobic" },
+    ["base:AllThumbs"]         = { "base:Dextrous" },
+    ["base:Claustrophobic"]     = { "base:AdrenalineJunkie", "base:Agoraphobic" },
+    ["base:Clumsy"]             = { "base:Graceful" },
+    ["base:Conspicuous"]        = { "base:Inconspicuous" },
+    ["base:Cowardly"]           = { "base:AdrenalineJunkie" },
+    ["base:Dextrous"]           = { "base:AllThumbs" },
+    ["base:Disorganized"]       = { "base:Organized" },
+    ["base:FastHealer"]        = { "base:SlowHealer" },
+    ["base:FastLearner"]       = { "base:SlowLearner" },
+    ["base:FastReader"]        = { "base:Illiterate", "base:SlowReader" },
+    ["base:Graceful"]           = { "base:Clumsy" },
+    ["base:HeartyAppetite"]    = { "base:LightEater" },
+    ["base:HighThirst"]        = { "base:LowThirst" },
+    ["base:Illiterate"]         = { "base:FastReader", "base:SlowReader" },
+    ["base:Inconspicuous"]      = { "base:Conspicuous" },
+    ["base:IronGut"]           = { "base:WeakStomach" },
+    ["base:LightEater"]        = { "base:HeartyAppetite" },
+    ["base:LowThirst"]         = { "base:HighThirst" },
+    ["base:Organized"]          = { "base:Disorganized" },
+    ["base:ProneToIllness"]   = { "base:Resilient" },
+    ["base:Resilient"]          = { "base:ProneToIllness" },
+    ["base:NeedsMoreSleep"]   = { "base:NeedsLessSleep" },
+    ["base:NeedsLessSleep"]   = { "base:NeedsMoreSleep" },
+    ["base:SlowHealer"]        = { "base:FastHealer" },
+    ["base:SlowLearner"]       = { "base:FastLearner" },
+    ["base:SlowReader"]        = { "base:FastReader", "base:Illiterate" },
+    ["base:SpeedDemon"]        = { "base:SundayDriver" },
+    ["base:SundayDriver"]      = { "base:SpeedDemon" },
+    ["base:ThickSkinned"]      = { "base:ThinSkinned" },
+    ["base:ThinSkinned"]       = { "base:ThickSkinned" },
+    ["base:WeakStomach"]       = { "base:IronGut" },
 }
 
 -- ============================================================
@@ -120,7 +120,7 @@ BCR.RarityTiers = {
 }
 
 -- ============================================================
--- EXTENSIBILITY — third-party addon trait registration
+-- EXTENSIBILITY -- third-party addon trait registration
 -- ============================================================
 
 BCR.CustomPositiveTraits = BCR.CustomPositiveTraits or {}
@@ -146,20 +146,20 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         for _, entry in ipairs(list) do
             local traitId = entry.id
             if not traitId then
-                print("[BCR] \"" .. sourceName .. "\" — trait entry missing id, skipped")
+                print("[BCR] \"" .. sourceName .. "\" -- trait entry missing id, skipped")
                 rejected = rejected + 1
             elseif type(entry.cost) ~= "number" then
-                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " has no numeric cost, skipped")
+                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost, skipped")
                 rejected = rejected + 1
             elseif isPositive and entry.cost > 0 then
-                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " positive trait with positive cost " .. tostring(entry.cost) .. " (expected negative); registered anyway")
+                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " positive trait with positive cost " .. tostring(entry.cost) .. " (expected negative); registered anyway")
             elseif not isPositive and entry.cost < 0 then
-                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " negative trait with negative cost " .. tostring(entry.cost) .. " (expected positive); registered anyway")
+                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " negative trait with negative cost " .. tostring(entry.cost) .. " (expected positive); registered anyway")
             elseif not BCR.GetTraitUserdata(traitId) then
-                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
+                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
                 rejected = rejected + 1
             elseif BCR.CustomTraitSources[traitId] then
-                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
+                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
                 rejected = rejected + 1
             else
                 local alreadyInBase = false
@@ -179,7 +179,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
                     end
                 end
                 if alreadyInBase then
-                    print("[BCR] \"" .. sourceName .. "\" — " .. traitId .. " is already a base BCR trait, skipped")
+                    print("[BCR] \"" .. sourceName .. "\" -- " .. traitId .. " is already a base BCR trait, skipped")
                     rejected = rejected + 1
                 else
                     BCR.CustomTraitSources[traitId] = sourceName
@@ -200,7 +200,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
             if type(traitId) == "string" and type(excludeList) == "table" then
                 for _, excludedId in ipairs(excludeList) do
                     if type(excludedId) ~= "string" or excludedId == "" then
-                        print("[BCR] \"" .. sourceName .. "\" — invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
+                        print("[BCR] \"" .. sourceName .. "\" -- invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
                     else
                         if not BCR.Exclusions[traitId] then
                             BCR.Exclusions[traitId] = {}

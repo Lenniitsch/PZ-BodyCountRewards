@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRStatsUI (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRStatsUI (Build 42.19+)
 -- Stats window: ISCollapsableWindow with 3 tabs
 -- (progress, history, catalog).
 -- ============================================================
@@ -77,7 +77,7 @@ local function formatNumber(number)
 end
 
 -- ============================================================
--- BCRProgressPanel — ISPanel subclass with dirty-flag prerender
+-- BCRProgressPanel -- ISPanel subclass with dirty-flag prerender
 -- ============================================================
 
 BCRProgressPanel = ISPanel:derive("BCRProgressPanel")
@@ -297,7 +297,7 @@ function BCRProgressPanel:drawProgressContent()
 end
 
 -- ============================================================
--- BCRStatsWindow — ISCollapsableWindow subclass
+-- BCRStatsWindow -- ISCollapsableWindow subclass
 -- ============================================================
 
 BCRStatsWindow = ISCollapsableWindow:derive("BCRStatsWindow")

@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRCore (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRCore (Build 42.19+)
 -- Engine: trait registry, pool builder, weighted selection,
 -- milestone math, display names, ModData, trait add/remove.
 -- ============================================================
@@ -16,15 +16,20 @@ BCR = BCR or {}
 local traitUserdataCache = {}
 
 function BCR.GetTraitUserdata(traitId)
+    if not traitId or traitId == "" then
+        return nil
+    end
     local cached = traitUserdataCache[traitId]
     if cached ~= nil then return cached end
-    local userdata = CharacterTrait[traitId]
-    if userdata then
+    local ok, userdata = pcall(function()
+        return CharacterTrait.get(ResourceLocation.of(traitId))
+    end)
+    if ok and userdata then
         traitUserdataCache[traitId] = userdata
-    else
-        traitUserdataCache[traitId] = false
+        return userdata
     end
-    return userdata
+    traitUserdataCache[traitId] = false
+    return nil
 end
 
 -- ============================================================
@@ -70,7 +75,7 @@ function BCR.GetPlayerTraitsList(player)
 end
 
 -- ============================================================
--- TRAIT MODIFICATION — unified internal function
+-- TRAIT MODIFICATION -- unified internal function
 -- ============================================================
 
 local function canModifyTraits()
@@ -336,15 +341,19 @@ function BCR.GetTraitDisplayName(traitId)
         local text = getText(override)
         if text and text ~= override then return text end
     end
-    local formatted = string.gsub(traitId, "_", " ")
-    local words = {}
-    for word in string.gmatch(formatted, "%S+") do
-        local first = string.upper(string.sub(word, 1, 1))
-        local rest = string.lower(string.sub(word, 2))
-        table.insert(words, first .. rest)
+    local colonPos = string.find(traitId, ":")
+    local path = colonPos and string.sub(traitId, colonPos + 1) or nil
+    if not path then
+        local formatted = string.gsub(traitId, "_", " ")
+        local words = {}
+        for word in string.gmatch(formatted, "%S+") do
+            local first = string.upper(string.sub(word, 1, 1))
+            local rest = string.lower(string.sub(word, 2))
+            table.insert(words, first .. rest)
+        end
+        return #words > 0 and table.concat(words, " ") or "Unknown"
     end
-    local pascalCase = table.concat(words, "")
-    local translationKey = "UI_trait_" .. pascalCase
+    local translationKey = "UI_trait_" .. path
     local text = getText(translationKey)
     if text and text ~= translationKey then
         return text
@@ -360,7 +369,8 @@ function BCR.GetTraitDisplayName(traitId)
             end
         end
     end
-    return #words > 0 and table.concat(words, " ") or "Unknown"
+    local readable = string.gsub(path, "([a-z])([A-Z])", "%1 %2")
+    return readable ~= "" and readable or "Unknown"
 end
 
 -- ============================================================

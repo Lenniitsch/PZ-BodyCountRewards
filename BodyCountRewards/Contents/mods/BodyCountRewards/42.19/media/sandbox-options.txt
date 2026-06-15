@@ -70,346 +70,346 @@ option BCR.ProgressiveScalingFactor
     translation = BCR_ProgressiveScalingFactor,
 }
 
-option BCR.allow_SPEED_DEMON
+option BCR.allow_base_SpeedDemon
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_SPEED_DEMON,
+    translation = BCR_enable_base_SpeedDemon,
 }
 
-option BCR.allow_NIGHT_VISION
+option BCR.allow_base_NightVision
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_NIGHT_VISION,
+    translation = BCR_enable_base_NightVision,
 }
 
-option BCR.allow_DEXTROUS
+option BCR.allow_base_Dextrous
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_DEXTROUS,
+    translation = BCR_enable_base_Dextrous,
 }
 
-option BCR.allow_FAST_READER
+option BCR.allow_base_FastReader
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_FAST_READER,
+    translation = BCR_enable_base_FastReader,
 }
 
-option BCR.allow_INVENTIVE
+option BCR.allow_base_Inventive
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_INVENTIVE,
+    translation = BCR_enable_base_Inventive,
 }
 
-option BCR.allow_LIGHT_EATER
+option BCR.allow_base_LightEater
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_LIGHT_EATER,
+    translation = BCR_enable_base_LightEater,
 }
 
-option BCR.allow_LOW_THIRST
+option BCR.allow_base_LowThirst
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_LOW_THIRST,
+    translation = BCR_enable_base_LowThirst,
 }
 
-option BCR.allow_OUTDOORSMAN
+option BCR.allow_base_Outdoorsman
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_OUTDOORSMAN,
+    translation = BCR_enable_base_Outdoorsman,
 }
 
-option BCR.allow_NEEDS_LESS_SLEEP
+option BCR.allow_base_NeedsLessSleep
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_NEEDS_LESS_SLEEP,
+    translation = BCR_enable_base_NeedsLessSleep,
 }
 
-option BCR.allow_IRON_GUT
+option BCR.allow_base_IronGut
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_IRON_GUT,
+    translation = BCR_enable_base_IronGut,
 }
 
-option BCR.allow_ADRENALINE_JUNKIE
+option BCR.allow_base_AdrenalineJunkie
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_ADRENALINE_JUNKIE,
+    translation = BCR_enable_base_AdrenalineJunkie,
 }
 
-option BCR.allow_EAGLE_EYED
+option BCR.allow_base_EagleEyed
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_EAGLE_EYED,
+    translation = BCR_enable_base_EagleEyed,
 }
 
-option BCR.allow_GRACEFUL
+option BCR.allow_base_Graceful
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_GRACEFUL,
+    translation = BCR_enable_base_Graceful,
 }
 
-option BCR.allow_INCONSPICUOUS
+option BCR.allow_base_Inconspicuous
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_INCONSPICUOUS,
+    translation = BCR_enable_base_Inconspicuous,
 }
 
-option BCR.allow_NUTRITIONIST
+option BCR.allow_base_Nutritionist
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_NUTRITIONIST,
+    translation = BCR_enable_base_Nutritionist,
 }
 
-option BCR.allow_ORGANIZED
+option BCR.allow_base_Organized
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_ORGANIZED,
+    translation = BCR_enable_base_Organized,
 }
 
-option BCR.allow_RESILIENT
+option BCR.allow_base_Resilient
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_RESILIENT,
+    translation = BCR_enable_base_Resilient,
 }
 
-option BCR.allow_FAST_HEALER
+option BCR.allow_base_FastHealer
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_FAST_HEALER,
+    translation = BCR_enable_base_FastHealer,
 }
 
-option BCR.allow_FAST_LEARNER
+option BCR.allow_base_FastLearner
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_FAST_LEARNER,
+    translation = BCR_enable_base_FastLearner,
 }
 
-option BCR.allow_KEEN_HEARING
+option BCR.allow_base_KeenHearing
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_KEEN_HEARING,
+    translation = BCR_enable_base_KeenHearing,
 }
 
-option BCR.allow_THICK_SKINNED
+option BCR.allow_base_ThickSkinned
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_THICK_SKINNED,
+    translation = BCR_enable_base_ThickSkinned,
 }
 
-option BCR.allow_HIGH_THIRST
+option BCR.allow_base_HighThirst
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_HIGH_THIRST,
+    translation = BCR_enable_base_HighThirst,
 }
 
-option BCR.allow_SUNDAY_DRIVER
+option BCR.allow_base_SundayDriver
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_SUNDAY_DRIVER,
+    translation = BCR_enable_base_SundayDriver,
 }
 
-option BCR.allow_ALL_THUMBS
+option BCR.allow_base_AllThumbs
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_ALL_THUMBS,
+    translation = BCR_enable_base_AllThumbs,
 }
 
-option BCR.allow_CLUMSY
+option BCR.allow_base_Clumsy
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_CLUMSY,
+    translation = BCR_enable_base_Clumsy,
 }
 
-option BCR.allow_COWARDLY
+option BCR.allow_base_Cowardly
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_COWARDLY,
+    translation = BCR_enable_base_Cowardly,
 }
 
-option BCR.allow_SLOW_READER
+option BCR.allow_base_SlowReader
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_SLOW_READER,
+    translation = BCR_enable_base_SlowReader,
 }
 
-option BCR.allow_SLOW_HEALER
+option BCR.allow_base_SlowHealer
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_SLOW_HEALER,
+    translation = BCR_enable_base_SlowHealer,
 }
 
-option BCR.allow_WEAK_STOMACH
+option BCR.allow_base_WeakStomach
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_WEAK_STOMACH,
+    translation = BCR_enable_base_WeakStomach,
 }
 
-option BCR.allow_SMOKER
+option BCR.allow_base_Smoker
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_SMOKER,
+    translation = BCR_enable_base_Smoker,
 }
 
-option BCR.allow_AGORAPHOBIC
+option BCR.allow_base_Agoraphobic
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_AGORAPHOBIC,
+    translation = BCR_enable_base_Agoraphobic,
 }
 
-option BCR.allow_CLAUSTROPHOBIC
+option BCR.allow_base_Claustrophobic
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_CLAUSTROPHOBIC,
+    translation = BCR_enable_base_Claustrophobic,
 }
 
-option BCR.allow_CONSPICUOUS
+option BCR.allow_base_Conspicuous
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_CONSPICUOUS,
+    translation = BCR_enable_base_Conspicuous,
 }
 
-option BCR.allow_HEARTY_APPETITE
+option BCR.allow_base_HeartyAppetite
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_HEARTY_APPETITE,
+    translation = BCR_enable_base_HeartyAppetite,
 }
 
-option BCR.allow_PACIFIST
+option BCR.allow_base_Pacifist
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_PACIFIST,
+    translation = BCR_enable_base_Pacifist,
 }
 
-option BCR.allow_PRONE_TO_ILLNESS
+option BCR.allow_base_ProneToIllness
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_PRONE_TO_ILLNESS,
+    translation = BCR_enable_base_ProneToIllness,
 }
 
-option BCR.allow_NEEDS_MORE_SLEEP
+option BCR.allow_base_NeedsMoreSleep
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_NEEDS_MORE_SLEEP,
+    translation = BCR_enable_base_NeedsMoreSleep,
 }
 
-option BCR.allow_ASTHMATIC
+option BCR.allow_base_Asthmatic
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_ASTHMATIC,
+    translation = BCR_enable_base_Asthmatic,
 }
 
-option BCR.allow_HEMOPHOBIC
+option BCR.allow_base_Hemophobic
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_HEMOPHOBIC,
+    translation = BCR_enable_base_Hemophobic,
 }
 
-option BCR.allow_DISORGANIZED
+option BCR.allow_base_Disorganized
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_DISORGANIZED,
+    translation = BCR_enable_base_Disorganized,
 }
 
-option BCR.allow_SLOW_LEARNER
+option BCR.allow_base_SlowLearner
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_SLOW_LEARNER,
+    translation = BCR_enable_base_SlowLearner,
 }
 
-option BCR.allow_ILLITERATE
+option BCR.allow_base_Illiterate
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_ILLITERATE,
+    translation = BCR_enable_base_Illiterate,
 }
 
-option BCR.allow_THIN_SKINNED
+option BCR.allow_base_ThinSkinned
 {
     type = boolean,
     default = true,
     page = BodyCountRewardsTraits,
-    translation = BCR_enable_THIN_SKINNED,
+    translation = BCR_enable_base_ThinSkinned,
 }

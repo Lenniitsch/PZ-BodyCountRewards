@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRConfig (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRConfig (Build 42.19+)
 -- Constants, sandbox option cache, debug flag. No game logic here.
 -- ============================================================
 
@@ -23,14 +23,14 @@ BCR.opts = nil
 BCR.DEBUG = false
 
 -- ============================================================
--- DISPLAY NAME OVERRIDES — PZ trait names that don't follow the
+-- DISPLAY NAME OVERRIDES -- PZ trait names that don't follow the
 -- UI_trait_<PascalCase> convention
 -- ============================================================
 
 BCR.DISPLAY_OVERRIDES = {
-    NEEDS_LESS_SLEEP = "UI_trait_LessSleep",
-    NEEDS_MORE_SLEEP = "UI_trait_MoreSleep",
-    DEXTROUS         = "UI_trait_Dexterous",
+    ["base:NeedsLessSleep"] = "UI_trait_LessSleep",
+    ["base:NeedsMoreSleep"] = "UI_trait_MoreSleep",
+    ["base:Dextrous"]       = "UI_trait_Dexterous",
 }
 
 -- ============================================================
@@ -56,17 +56,17 @@ function BCR.RefreshConfig()
 end
 
 function BCR.IsTraitAllowed(id)
+    local key = "allow_" .. string.gsub(id, ":", "_")
     local namespace = BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[id]
     if namespace then
         local sv = SandboxVars[namespace]
-        if sv and sv["allow_" .. id] == false then
+        if sv and sv[key] == false then
             BCR.DebugPrint("Trait blocked by sandbox [" .. namespace .. "]: " .. id)
             return false
         end
         return true
     end
     local sv = SandboxVars.BCR or {}
-    local key = "allow_" .. id
     if sv[key] == false then
         BCR.DebugPrint("Trait blocked by sandbox: " .. id)
         return false

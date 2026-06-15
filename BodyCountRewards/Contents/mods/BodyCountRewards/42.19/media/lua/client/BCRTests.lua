@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRTests (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRTests (Build 42.19+)
 -- Unit tests, 10 suites. Run in-game: BCRRunTests()
 -- ============================================================
 
@@ -139,12 +139,12 @@ local function suiteTraitRegistry()
     end
 
     local unknown = BCR.GetTraitUserdata("FAKE_TRAIT_XYZ")
-    assertTrue(unknown == nil or unknown == false, "Unknown trait → nil/false")
+    assertTrue(unknown == nil or unknown == false, "Unknown trait -> nil/false")
 
     assertTrue(BCR.GetTraitUserdata(nil) == nil or BCR.GetTraitUserdata(nil) == false,
-        "Nil input → nil/false")
+        "Nil input -> nil/false")
     assertTrue(BCR.GetTraitUserdata("") == nil or BCR.GetTraitUserdata("") == false,
-        "Empty string → nil/false")
+        "Empty string -> nil/false")
 end
 
 -- ============================================================
@@ -222,6 +222,12 @@ local function suiteMutualExclusion()
     local allIds = {}
     for _, e in ipairs(BCR.PositiveTraits) do allIds[e.id] = true end
     for _, e in ipairs(BCR.NegativeTraits) do allIds[e.id] = true end
+    if BCR.CustomPositiveTraits then
+        for _, e in ipairs(BCR.CustomPositiveTraits) do allIds[e.id] = true end
+    end
+    if BCR.CustomNegativeTraits then
+        for _, e in ipairs(BCR.CustomNegativeTraits) do allIds[e.id] = true end
+    end
     for _, excludedList in pairs(BCR.Exclusions) do
         for _, excludedId in ipairs(excludedList) do
             assertTrue(allIds[excludedId], excludedId .. " in exclusion must be a real trait")
@@ -242,8 +248,8 @@ end
 -- ============================================================
 
 local function suiteWeightedSelection()
-    assertTrue(BCR.WeightedRandomSelect(nil) == nil, "Nil pool → nil")
-    assertTrue(BCR.WeightedRandomSelect({}) == nil, "Empty pool → nil")
+    assertTrue(BCR.WeightedRandomSelect(nil) == nil, "Nil pool -> nil")
+    assertTrue(BCR.WeightedRandomSelect({}) == nil, "Empty pool -> nil")
 
     local single = { id = "ONLY", traitUserdata = nil, cost = 1, rarity = "common", weight = 1 }
     for _ = 1, 5 do
@@ -272,7 +278,7 @@ local function suiteWeightedSelection()
     end
 
     local sel = BCR.WeightedRandomSelect({ { id = "ZERO", weight = 0 } })
-    assertNotNil(sel, "Single zero-weight → fallback")
+    assertNotNil(sel, "Single zero-weight -> fallback")
     assertEqual("ZERO", sel.id)
 end
 
@@ -281,7 +287,7 @@ end
 -- ============================================================
 
 local function suiteDisplayNames()
-    local overrides = { "NEEDS_LESS_SLEEP", "NEEDS_MORE_SLEEP", "DEXTROUS" }
+    local overrides = { "base:NeedsLessSleep", "base:NeedsMoreSleep", "base:Dextrous" }
     for _, tid in ipairs(overrides) do
         local name = BCR.GetTraitDisplayName(tid)
         assertNotNil(name, tid .. " override name not nil")
@@ -300,12 +306,12 @@ local function suiteDisplayNames()
         assertNotEqual(tid, name, tid .. " name differs from ID")
     end
 
-    assertEqual("Unknown", BCR.GetTraitDisplayName(nil), "Nil → 'Unknown'")
-    assertNotNil(BCR.GetTraitDisplayName(""), "Empty string → not nil")
+    assertEqual("Unknown", BCR.GetTraitDisplayName(nil), "Nil -> 'Unknown'")
+    assertNotNil(BCR.GetTraitDisplayName(""), "Empty string -> not nil")
 
-    local sd = BCR.GetTraitDisplayName("SPEED_DEMON")
-    assertTrue(#sd > 0 and not string.find(sd, "SPEED_DEMON"),
-        "SPEED_DEMON display is translated, not raw ID: " .. sd)
+    local sd = BCR.GetTraitDisplayName("base:SpeedDemon")
+    assertTrue(#sd > 0 and not string.find(sd, "base:SpeedDemon"),
+        "base:SpeedDemon display is translated, not raw ID: " .. sd)
 end
 
 -- ============================================================
@@ -342,9 +348,9 @@ local function suiteDataIntegrity()
         assertTrue(e.cost > 0, e.id .. " negative cost > 0, got " .. e.cost)
     end
 
-    assertFalse(BCR.HasAvailableRewards(nil), "nil → false")
-    assertTrue(BCR.EnsureModData(nil) == nil, "nil → nil ModData")
-    assertTrue(BCR.PlayerHasTrait(nil, "SPEED_DEMON") == nil, "nil → nil hasTrait")
+    assertFalse(BCR.HasAvailableRewards(nil), "nil -> false")
+    assertTrue(BCR.EnsureModData(nil) == nil, "nil -> nil ModData")
+    assertTrue(BCR.PlayerHasTrait(nil, "base:SpeedDemon") == nil, "nil -> nil hasTrait")
 
     -- Exclusions count check (informational, won't fail on count mismatch unless it's 0)
     local exCount = 0
@@ -394,7 +400,7 @@ local function suiteConfigDebug()
     BCR.DebugPrint(nil)
     BCR.DEBUG = oldDebug
 
-    assertType("boolean", BCR.IsTraitAllowed("SPEED_DEMON"), "IsTraitAllowed returns bool")
+    assertType("boolean", BCR.IsTraitAllowed("base:SpeedDemon"), "IsTraitAllowed returns bool")
     -- Bogus ID should still return a boolean (nil SandboxVars means default true)
     local bogus = BCR.IsTraitAllowed("NOT_A_REAL_TRAIT_12345")
     assertTrue(bogus == true or bogus == false, "IsTraitAllowed returns bool for bogus")
@@ -405,30 +411,30 @@ end
 -- ============================================================
 
 local function suiteFilterPool()
-    assertNotNil(BCR.FilterPoolByExclusion(nil, {}), "Nil pool → empty table (not nil)")
-    assertNotNil(BCR.FilterPoolByExclusion(nil, nil), "Nil pool + nil exclude → empty table")
+    assertNotNil(BCR.FilterPoolByExclusion(nil, {}), "Nil pool -> empty table (not nil)")
+    assertNotNil(BCR.FilterPoolByExclusion(nil, nil), "Nil pool + nil exclude -> empty table")
 
     local pool = {
         { id = "A", traitUserdata = nil, cost = 1, rarity = "common", weight = 1 },
         { id = "B", traitUserdata = nil, cost = 2, rarity = "common", weight = 2 },
         { id = "C", traitUserdata = nil, cost = 3, rarity = "uncommon", weight = 1 },
     }
-    assertEqual(3, #BCR.FilterPoolByExclusion(pool, nil), "Nil exclude → full pool")
-    assertEqual(3, #BCR.FilterPoolByExclusion(pool, {}), "Empty exclude → full pool")
+    assertEqual(3, #BCR.FilterPoolByExclusion(pool, nil), "Nil exclude -> full pool")
+    assertEqual(3, #BCR.FilterPoolByExclusion(pool, {}), "Empty exclude -> full pool")
 
     local f1 = BCR.FilterPoolByExclusion(pool, { A = true })
-    assertEqual(2, #f1, "Exclude A → 2 entries")
+    assertEqual(2, #f1, "Exclude A -> 2 entries")
     for _, e in ipairs(f1) do assertNotEqual("A", e.id) end
 
     local f2 = BCR.FilterPoolByExclusion(pool, { A = true, C = true })
-    assertEqual(1, #f2, "Exclude A+C → 1 entry")
+    assertEqual(1, #f2, "Exclude A+C -> 1 entry")
     assertEqual("B", f2[1].id)
 
     assertEqual(0, #BCR.FilterPoolByExclusion(pool, { A = true, B = true, C = true }),
-        "All excluded → empty")
+        "All excluded -> empty")
 
     assertEqual(3, #BCR.FilterPoolByExclusion(pool, { Z = true }),
-        "Exclude nonexistent Z → unchanged")
+        "Exclude nonexistent Z -> unchanged")
 
     -- FilterPoolByExclusion checks excludeSet[id] == nil (excluded if key present, regardless of value)
     local f3 = BCR.FilterPoolByExclusion(pool, { A = false, B = true })
@@ -501,30 +507,30 @@ local function suiteAddRemove()
     end
     local player = getPlayerForTests()
 
-    local speedEntry = { id = "SPEED_DEMON", cost = -1 }
+    local speedEntry = { id = "base:SpeedDemon", cost = -1 }
     BCR.RemoveTrait(player, speedEntry)
 
-    assertTrue(BCR.AddTrait(player, speedEntry), "Add SPEED_DEMON")
+    assertTrue(BCR.AddTrait(player, speedEntry), "Add base:SpeedDemon")
     assertFalse(BCR.AddTrait(player, speedEntry), "Duplicate add fails")
-    assertTrue(BCR.RemoveTrait(player, speedEntry), "Remove SPEED_DEMON")
+    assertTrue(BCR.RemoveTrait(player, speedEntry), "Remove base:SpeedDemon")
     assertFalse(BCR.RemoveTrait(player, speedEntry), "Remove absent fails")
 
-    assertFalse(BCR.AddTrait(nil, speedEntry), "nil player → false")
-    assertFalse(BCR.RemoveTrait(nil, speedEntry), "nil player → false")
-    assertFalse(BCR.AddTrait(player, nil), "nil entry → false")
-    assertFalse(BCR.RemoveTrait(player, nil), "nil entry → false")
+    assertFalse(BCR.AddTrait(nil, speedEntry), "nil player -> false")
+    assertFalse(BCR.RemoveTrait(nil, speedEntry), "nil player -> false")
+    assertFalse(BCR.AddTrait(player, nil), "nil entry -> false")
+    assertFalse(BCR.RemoveTrait(player, nil), "nil entry -> false")
 
     -- Entry with no .id field
-    assertFalse(BCR.AddTrait(player, { cost = -1 }), "No id/trait field → false")
-    assertFalse(BCR.RemoveTrait(player, { cost = 2 }), "No id/trait field → false")
+    assertFalse(BCR.AddTrait(player, { cost = -1 }), "No id/trait field -> false")
+    assertFalse(BCR.RemoveTrait(player, { cost = 2 }), "No id/trait field -> false")
 
     -- Bogus trait ID (won't resolve to userdata)
     assertFalse(BCR.AddTrait(player, { id = "NOT_A_REAL_TRAIT" }),
-        "Bogus ID → add fails")
+        "Bogus ID -> add fails")
     assertFalse(BCR.RemoveTrait(player, { id = "NOT_A_REAL_TRAIT" }),
-        "Bogus ID → remove fails")
+        "Bogus ID -> remove fails")
 
-    assertTrue(BCR.AddTrait(player, { id = "SPEED_DEMON" }),
+    assertTrue(BCR.AddTrait(player, { id = "base:SpeedDemon" }),
         "Re-add after remove-absent cycle should succeed")
     BCR.RemoveTrait(player, speedEntry)
 end
@@ -540,46 +546,50 @@ local function suiteExclusions()
     end
     local player = getPlayerForTests()
 
-    local adrEntry = { id = "ADRENALINE_JUNKIE", cost = -4 }
-    local agoEntry = { id = "AGORAPHOBIC", cost = 4 }
+    local adrEntry = { id = "base:AdrenalineJunkie", cost = -4 }
+    local agoEntry = { id = "base:Agoraphobic", cost = 4 }
     BCR.RemoveTrait(player, adrEntry)
     BCR.RemoveTrait(player, agoEntry)
 
-    assertTrue(BCR.AddTrait(player, adrEntry), "Add ADRENALINE_JUNKIE")
-    assertFalse(BCR.AddTrait(player, agoEntry), "AGORAPHOBIC blocked")
+    assertTrue(BCR.AddTrait(player, adrEntry), "Add base:AdrenalineJunkie")
+    assertFalse(BCR.AddTrait(player, agoEntry), "base:Agoraphobic blocked")
 
-    local blocked, blocker = BCR.HasMutuallyExclusiveTrait(player, "AGORAPHOBIC")
-    assertTrue(blocked, "AGORAPHOBIC is blocked")
-    assertEqual("ADRENALINE_JUNKIE", blocker)
+    local blocked, blocker = BCR.HasMutuallyExclusiveTrait(player, "base:Agoraphobic")
+    assertTrue(blocked, "base:Agoraphobic is blocked")
+    assertEqual("base:AdrenalineJunkie", blocker)
 
     -- Non-excluded trait
-    assertFalse(BCR.HasMutuallyExclusiveTrait(player, "SMOKER"), "SMOKER not blocked")
+    assertFalse(BCR.HasMutuallyExclusiveTrait(player, "base:Smoker"), "base:Smoker not blocked")
 
     -- Nil player
-    assertFalse(BCR.HasMutuallyExclusiveTrait(nil, "SPEED_DEMON"), "nil → false")
+    assertFalse(BCR.HasMutuallyExclusiveTrait(nil, "base:SpeedDemon"), "nil -> false")
 
     -- Nonexistent trait
     assertFalse(BCR.HasMutuallyExclusiveTrait(player, "FAKETRAIT_XYZ"),
-        "Nonexistent trait → false")
+        "Nonexistent trait -> false")
 
     BCR.RemoveTrait(player, adrEntry)
-    assertTrue(BCR.AddTrait(player, agoEntry), "AGORAPHOBIC addable after removal")
-    assertFalse(BCR.AddTrait(player, adrEntry), "ADRENALINE blocked by AGORAPHOBIC (symmetry)")
+    local braveEntry = { id = "base:Brave", cost = -4 }
+    local hadBrave = BCR.PlayerHasTrait(player, "base:Brave")
+    BCR.RemoveTrait(player, braveEntry)
+    assertTrue(BCR.AddTrait(player, agoEntry), "base:Agoraphobic addable after removal")
+    assertFalse(BCR.AddTrait(player, adrEntry), "ADRENALINE blocked by base:Agoraphobic (symmetry)")
 
     BCR.RemoveTrait(player, agoEntry)
     BCR.RemoveTrait(player, adrEntry)
+    if hadBrave == true then BCR.AddTrait(player, braveEntry) end
 
-    -- 3-way: FAST_READER
-    local frEntry = { id = "FAST_READER", cost = -2 }
-    local srEntry = { id = "SLOW_READER", cost = 2 }
-    local illEntry = { id = "ILLITERATE", cost = 10 }
+    -- 3-way: base:FastReader
+    local frEntry = { id = "base:FastReader", cost = -2 }
+    local srEntry = { id = "base:SlowReader", cost = 2 }
+    local illEntry = { id = "base:Illiterate", cost = 10 }
     BCR.RemoveTrait(player, frEntry)
     BCR.RemoveTrait(player, srEntry)
     BCR.RemoveTrait(player, illEntry)
 
-    assertTrue(BCR.AddTrait(player, frEntry), "Add FAST_READER")
-    assertFalse(BCR.AddTrait(player, srEntry), "SLOW_READER blocked")
-    assertFalse(BCR.AddTrait(player, illEntry), "ILLITERATE blocked")
+    assertTrue(BCR.AddTrait(player, frEntry), "Add base:FastReader")
+    assertFalse(BCR.AddTrait(player, srEntry), "base:SlowReader blocked")
+    assertFalse(BCR.AddTrait(player, illEntry), "base:Illiterate blocked")
     BCR.RemoveTrait(player, frEntry)
 end
 
@@ -595,8 +605,8 @@ local function suitePoolBuildingPlayerState()
     local player = getPlayerForTests()
 
     -- === BuildEarnablePool ===
-    assertTrue(BCR.BuildEarnablePool(nil) == nil, "nil player → nil earnable")
-    assertTrue(BCR.BuildRemovablePool(nil) == nil, "nil player → nil removable")
+    assertTrue(BCR.BuildEarnablePool(nil) == nil, "nil player -> nil earnable")
+    assertTrue(BCR.BuildRemovablePool(nil) == nil, "nil player -> nil removable")
 
     local earnable = BCR.BuildEarnablePool(player)
     assertNotNil(earnable, "Earnable pool not nil")
@@ -626,10 +636,10 @@ local function suitePoolBuildingPlayerState()
     end
 
     -- === Custom traits merge ===
-    local custom = { { id = "HEMOPHOBIC", cost = -3 } }
+    local custom = { { id = "base:Hemophobic", cost = -3 } }
     local e1 = BCR.BuildEarnablePool(player)
     local e2 = BCR.BuildEarnablePool(player, custom)
-    local hasHemophobic = BCR.PlayerHasTrait(player, "HEMOPHOBIC")
+    local hasHemophobic = BCR.PlayerHasTrait(player, "base:Hemophobic")
     if hasHemophobic == true then
         assertEqual(#e1, #e2, "Custom already-owned trait excluded")
     else
@@ -644,7 +654,7 @@ local function suitePoolBuildingPlayerState()
     assertType("boolean", hasAvailable, "HasAvailableRewards returns bool")
 
     -- === PlayerHasTrait ===
-    local hasResult = BCR.PlayerHasTrait(player, "SPEED_DEMON")
+    local hasResult = BCR.PlayerHasTrait(player, "base:SpeedDemon")
     assertTrue(hasResult == true or hasResult == false,
         "PlayerHasTrait returns true or false for valid player+trait, got " .. tostring(hasResult))
 
@@ -660,7 +670,7 @@ local function suitePoolBuildingPlayerState()
     -- Player should have at least their profession traits
     assertTrue(listCount > 0, "Player should have some traits")
 
-    assertTrue(BCR.GetPlayerTraitsList(nil) == nil, "nil player → nil traits list")
+    assertTrue(BCR.GetPlayerTraitsList(nil) == nil, "nil player -> nil traits list")
 
     -- === EnsureModData ===
     local bcrData = BCR.EnsureModData(player)
@@ -695,7 +705,7 @@ local function suiteCatchUpProcessReward()
     assertNotNil(bcrData, "Should have ModData")
 
     -- Test: ProcessRewardDirect with nil player
-    assertTrue(BCR.ProcessRewardDirect(nil) == nil, "nil player → nil")
+    assertTrue(BCR.ProcessRewardDirect(nil) == nil, "nil player -> nil")
 
     -- Test: ProcessRewardDirect returns nil when no milestone reached
     local originalKills = bcrData.kills
@@ -739,7 +749,7 @@ local function suiteNotificationQueue()
     assertTrue(ok1, "EnqueueNotification(nil) does not crash")
 
     local sample = {
-        id = "SPEED_DEMON",
+        id = "base:SpeedDemon",
         displayName = "Speed Demon",
         action = "added",
         rarity = "common",

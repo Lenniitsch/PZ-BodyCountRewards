@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRClient (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRClient (Build 42.19+)
 -- Update loop, kill tracking, reward requesting, context menu,
 -- event registration.
 -- ============================================================
@@ -73,7 +73,7 @@ end
 
 local function tryReexhaust(player)
     if hasShownAllTraitsMessage and BCR.HasAvailableRewards(player) then
-        BCR.DebugPrint("[Client] Re-exhaust check: rewards available again — resuming")
+        BCR.DebugPrint("[Client] Re-exhaust check: rewards available again -- resuming")
         hasShownAllTraitsMessage = false
         rewardsExhausted = false
     end
@@ -110,7 +110,7 @@ function BCR_OnCreatePlayer(playerNum, player)
 
     if not BCR.HasAvailableRewards(player) then
         hasShownAllTraitsMessage = true
-        BCR.DebugPrint("[Client] onCreatePlayer: all rewards exhausted — skipping future processing")
+        BCR.DebugPrint("[Client] onCreatePlayer: all rewards exhausted -- skipping future processing")
     end
 end
 
@@ -150,7 +150,7 @@ function BCR_OnPlayerUpdate(player)
     if isPendingRequestInFlight and not isSinglePlayer() then
         pendingRequestTimer = pendingRequestTimer + 1
         if pendingRequestTimer >= MP_REQUEST_TIMEOUT_TICKS then
-            print("[BCR] [Client] MP request timed out — resetting")
+            print("[BCR] [Client] MP request timed out -- resetting")
             isPendingRequestInFlight = false
             pendingRequestTimer = 0
             pendingRewardsCount = 0
@@ -217,7 +217,7 @@ function BCR_OnPlayerUpdate(player)
                     else
                         pendingStallCount = pendingStallCount + 1
                         if pendingStallCount >= 3 then
-                            BCR.DebugPrint("[Client] Stalled on empty ProcessRewardDirect — aborting pending loop")
+                            BCR.DebugPrint("[Client] Stalled on empty ProcessRewardDirect -- aborting pending loop")
                             pendingRewardsCount = 0
                             pendingStallCount = 0
                         end

@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRModOptions (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRModOptions (Build 42.19+)
 -- Per-user UI preferences (showContextMenu toggle).
 -- Returns config table. Nil-guarded PZAPI.ModOptions integration.
 -- ============================================================

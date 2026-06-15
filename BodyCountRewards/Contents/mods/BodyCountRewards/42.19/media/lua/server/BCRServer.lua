@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 — BCRServer (Build 42.19+)
+-- BodyCountRewards v1.3.0 -- BCRServer (Build 42.19+)
 -- Reward processor, milestone validation, batch logic,
 -- MP commands, SP direct path, kill sync, anti-cheat.
 -- ============================================================
