@@ -1,6 +1,7 @@
 {
     "Sandbox_BodyCountRewards": "BodyCountRewards",
     "Sandbox_BodyCountRewardsTraits": "BodyCountRewards - Atributos",
+    "Sandbox_BodyCountRewardsThirdPartyTraits": "BodyCountRewards - Third Party Traits",
     "Sandbox_BCR_BodyCount": "Corpos por Conquista",
     "Sandbox_BCR_BodyCount_tooltip": "Quantos zumbis abater antes de ganhar uma recompensa. <LINE><LINE> <RGB:0.6,1.0,0.2> Menor = Recompensas mais r\u00e1pidas <LINE> <RGB:1.0,0.6,0.2> Maior = Recompensas mais lentas",
     "Sandbox_BCR_enablePositiveTraits": "Ativar Atributos Positivos",

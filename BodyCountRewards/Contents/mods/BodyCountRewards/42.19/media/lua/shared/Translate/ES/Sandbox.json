@@ -1,6 +1,7 @@
 {
     "Sandbox_BodyCountRewards": "BodyCountRewards",
     "Sandbox_BodyCountRewardsTraits": "BodyCountRewards - Rasgos",
+    "Sandbox_BodyCountRewardsThirdPartyTraits": "BodyCountRewards - Third Party Traits",
     "Sandbox_BCR_BodyCount": "Cuerpos por Hito",
     "Sandbox_BCR_BodyCount_tooltip": "Cu\u00e1ntas bajas de zombis antes de ganar una recompensa. <LINE><LINE> <RGB:0.6,1.0,0.2> M\u00e1s bajo = Recompensas m\u00e1s r\u00e1pidas <LINE> <RGB:1.0,0.6,0.2> M\u00e1s alto = Recompensas m\u00e1s lentas",
     "Sandbox_BCR_enablePositiveTraits": "Activar Rasgos Positivos",
