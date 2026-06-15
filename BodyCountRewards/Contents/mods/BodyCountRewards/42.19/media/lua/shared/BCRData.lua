@@ -221,7 +221,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         mergeExclusions()
     end)
     if not ok then
-        print("[BCR] \"" .. sourceName .. "\" — internal error during registration: " .. tostring(err))
+        print("[BCR] \"" .. sourceName .. "\" -- internal error during registration: " .. tostring(err))
         return registeredPos + registeredNeg
     end
 
@@ -233,7 +233,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
 
     local statusStr
     if totalRegistered == 0 then
-        statusStr = "nothing registered — check messages above"
+        statusStr = "nothing registered -- check messages above"
     else
         statusStr = registeredStr
         if rejected > 0 then
@@ -241,7 +241,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         end
     end
 
-    print("[BCR] \"" .. sourceName .. "\" — " .. statusStr)
-    BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] detail — " .. registeredStr)
+    print("[BCR] \"" .. sourceName .. "\" -- " .. statusStr)
+    BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] detail -- " .. registeredStr)
     return totalRegistered
 end
