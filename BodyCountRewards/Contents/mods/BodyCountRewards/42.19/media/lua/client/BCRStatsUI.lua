@@ -513,7 +513,7 @@ function BCRStatsWindow:updateCatalog()
             local source = BCR.CustomTraitSources and BCR.CustomTraitSources[entry.id]
             if source ~= lastSource then
                 lastSource = source
-                t = t .. " <LINE> " .. colorTag(COLORS.dim) .. "Trait Source: " .. source .. "-Mod <LINE> "
+                t = t .. " <LINE> " .. colorTag(COLORS.dim) .. "Trait Source: \"" .. source .. "\"-Mod <LINE> "
             end
             t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive)
         end
@@ -582,7 +582,7 @@ function BCRStatsWindow:updateCatalog()
                     local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
                     if source ~= lastSource then
                         lastSource = source
-                        addonText = addonText .. " <LINE> " .. colorTag(COLORS.dim) .. "Trait Source: " .. source .. "-Mod <LINE> "
+                        addonText = addonText .. " <LINE> " .. colorTag(COLORS.dim) .. "Trait Source: \"" .. source .. "\"-Mod <LINE> "
                     end
                     addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false)
                 end
