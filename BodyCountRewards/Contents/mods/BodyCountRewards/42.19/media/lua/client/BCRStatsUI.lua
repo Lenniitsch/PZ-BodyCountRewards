@@ -30,6 +30,7 @@ local INFO_COLUMN = 280
 local COLORS = {
     text = { r = 0.85, g = 0.85, b = 0.85 },
     dim = { r = 0.55, g = 0.55, b = 0.55 },
+    disabled = { r = 0.45, g = 0.45, b = 0.45 },
     sectionHead = { r = 1.00, g = 0.85, b = 0.40 },
     accent = {
         common = { r = 0.80, g = 0.80, b = 0.80 },
@@ -37,10 +38,8 @@ local COLORS = {
         rare = { r = 1.00, g = 0.60, b = 0.20 },
         veryRare = { r = 0.80, g = 0.30, b = 1.00 },
     },
-    addonHead = { r = 0.40, g = 0.80, b = 1.00 },
     added = { r = 0.40, g = 1.00, b = 0.40 },
     removed = { r = 1.00, g = 0.45, b = 0.45 },
-    disabled = { r = 0.35, g = 0.35, b = 0.35 },
     empty = { r = 0.55, g = 0.55, b = 0.55 },
     barBg = { r = 0.15, g = 0.15, b = 0.15, a = 0.6 },
     barBorder = { r = 0.40, g = 0.40, b = 0.40, a = 0.6 },
@@ -474,33 +473,19 @@ function BCRStatsWindow:updateCatalog()
         end
     end
 
-    local function renderTraitLine(traitId, cost, poolLookup, isPositive)
+    local function renderTraitLine(traitId, cost, poolLookup, isPositive, sourceName)
         local line = ""
         local displayName = BCR.GetTraitDisplayName(traitId) or traitId
         local rarity = BCR.GetRarity(cost)
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local isInPool = poolLookup[traitId] ~= nil
         local isAllowed = BCR.IsTraitAllowed(traitId)
-        local isCustom = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
-        local sourceSuffix = ""
-        if isCustom then
-            sourceSuffix = " " .. colorTag(COLORS.dim) .. "· " .. BCR.CustomTraitSources[traitId]
-        end
 
-        local infoStr = colorTag(COLORS.dim) .. " " .. rarityLabel .. " · " .. (getText("UI_BCR_Cost") or "cost")
-            .. ": " .. tostring(cost) .. sourceSuffix
+        local infoStr = colorTag(COLORS.dim) .. rarityLabel .. "  "
+            .. (getText("UI_BCR_Cost") or "cost") .. ": " .. tostring(cost)
 
         if isInPool then
-            local accentColor
-            if isCustom then
-                accentColor = colorTag(rarityColor(rarity))
-                line = line .. " <INDENT:16> " .. accentColor .. "<SIZE:medium> ◇</SIZE> "
-                    .. colorTag(COLORS.text) .. displayName
-            else
-                accentColor = colorTag(rarityColor(rarity))
-                line = line .. " <INDENT:16> " .. accentColor .. "<SIZE:medium> ●</SIZE> "
-                    .. colorTag(COLORS.text) .. displayName
-            end
+            line = line .. " <INDENT:16> " .. colorTag(rarityColor(rarity)) .. displayName
             line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. infoStr
             line = line .. " <LINE> "
             return line
@@ -525,13 +510,28 @@ function BCRStatsWindow:updateCatalog()
             end
         end
 
-        line = line .. " <INDENT:16> " .. colorTag(COLORS.disabled) .. "<SIZE:medium> -</SIZE> "
-            .. colorTag(COLORS.disabled) .. displayName
-        line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. colorTag(COLORS.disabled) .. infoStr
+        line = line .. " <INDENT:16> " .. colorTag(COLORS.disabled) .. displayName
+        line = line .. " <SETX:" .. INFO_COLUMN .. "> " .. colorTag(COLORS.dim) .. infoStr
         line = line .. " <LINE> "
-        line = line .. " <INDENT:32> " .. colorTag(COLORS.dim) .. "<SIZE:small> " .. statusReason .. " </SIZE> "
+        line = line .. " <INDENT:32> " .. colorTag(COLORS.dim)
+            .. "<SIZE:small> " .. statusReason .. " </SIZE> "
         line = line .. " <LINE> "
         return line
+    end
+
+    local function renderCustomSection(list, poolLookup, isPositive)
+        if not list or #list == 0 then return "" end
+        local t = ""
+        local lastSource = nil
+        for _, entry in ipairs(list) do
+            local source = BCR.CustomTraitSources and BCR.CustomTraitSources[entry.id]
+            if source ~= lastSource then
+                lastSource = source
+                t = t .. " <LINE> " .. colorTag(COLORS.dim) .. source .. " <LINE> "
+            end
+            t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive, source)
+        end
+        return t
     end
 
     local text = ""
@@ -541,7 +541,7 @@ function BCRStatsWindow:updateCatalog()
         table.sort(t, function(a, b)
             local ca = math.abs(a.cost or 0)
             local cb = math.abs(b.cost or 0)
-            if ca ~= cb then return ca > cb end
+            if ca ~= cb then return ca < cb end
             local na = BCR.GetTraitDisplayName(a.id) or a.id
             local nb = BCR.GetTraitDisplayName(b.id) or b.id
             return na < nb
@@ -562,16 +562,9 @@ function BCRStatsWindow:updateCatalog()
         text = text .. " <LINE> "
     else
         for _, entry in ipairs(BCR.PositiveTraits) do
-            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true)
+            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true, nil)
         end
-        if BCR.CustomPositiveTraits and #BCR.CustomPositiveTraits > 0 then
-            text = text .. " <LINE> " .. colorTag(COLORS.addonHead)
-            text = text .. (getText("UI_BCR_AddonTraits") or "Addon Traits")
-            text = text .. " <LINE> "
-            for _, entry in ipairs(BCR.CustomPositiveTraits) do
-                text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true)
-            end
-        end
+        text = text .. renderCustomSection(BCR.CustomPositiveTraits, earnablePool, true)
     end
 
     text = text .. " <INDENT:0> <BR> "
@@ -590,23 +583,25 @@ function BCRStatsWindow:updateCatalog()
             local traitId = entry.id
             if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                 hasRelevantTraits = true
-                text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
+                text = text .. renderTraitLine(traitId, entry.cost, removablePool, false, nil)
             end
         end
         if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
             local addonText = ""
+            local lastSource = nil
             for _, entry in ipairs(BCR.CustomNegativeTraits) do
                 local traitId = entry.id
                 if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                     hasRelevantTraits = true
-                    addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false)
+                    local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
+                    if source ~= lastSource then
+                        lastSource = source
+                        addonText = addonText .. " <LINE> " .. colorTag(COLORS.dim) .. source .. " <LINE> "
+                    end
+                    addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false, source)
                 end
             end
-            if #addonText > 0 then
-                text = text .. " <LINE> " .. colorTag(COLORS.addonHead)
-                text = text .. (getText("UI_BCR_AddonTraits") or "Addon Traits")
-                text = text .. " <LINE> " .. addonText
-            end
+            text = text .. addonText
         end
 
         if not hasRelevantTraits then
