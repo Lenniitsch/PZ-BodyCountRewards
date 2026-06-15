@@ -489,3 +489,5 @@ function BCR_RunThirdPartyTests()
         tostring(failed) .. " failed =====")
     return failed == 0
 end
+
+BCR.RunThirdPartyTests = BCR_RunThirdPartyTests
