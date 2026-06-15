@@ -5,36 +5,10 @@ link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
 
 [ v1.3.1 - Body Count Rewards ]
 
-TECHNICAL: TRAIT ID REFACTOR (ResourceLocation format)
-- All internal trait IDs changed from UPPER_SNAKE_CASE (SPEED_DEMON) to ResourceLocation format (base:SpeedDemon).
-- Trait resolution now uses CharacterTrait.get(ResourceLocation.of(traitId)) -- a single, proven lookup path used by vanilla PZ.
-- This enables full support for custom mod traits registered by other mods via the third-party addon API.
-- The "I Am Not Your Mom" addon and "BCR-TestCustomTraits" test addon confirm custom traits resolve correctly.
-
-BACKWARD COMPATIBILITY
-- Old saves load without issues. Trait history entries from pre-v1.3.1 saves display correctly (Wakeful, Sleepyhead, Cat's Eyes etc. -- not "Unknown").
-- Sandbox trait toggle preferences are automatically migrated to the new format. No settings lost.
-- Console prints a migration summary once per session when old-format sandbox keys are detected.
-
-UI
-- Catalog and History tabs: "Trait Source" renamed to "Trait(s) added by".
-- Debug logging now shows the sandbox key and value when a trait is blocked, making it easier to diagnose disabled toggles.
-
-INTERNAL
-- Cleaned up Unicode characters in Lua files and test assertions (em dashes, arrows, special symbols).
-- Fixed GetTraitDisplayName for traits where PZ uses non-PascalCase internal names (e.g. Cat's Eyes/NightVision).
-- Nil/empty input guard in GetTraitUserdata to prevent rare engine errors.
-
-KNOWN LIMITATIONS
-- Some trait visual effects (notably Short Sighted) do not refresh immediately after trait removal. The trait is removed correctly, but the visual modifier requires a game reload to take effect. This is a PZ engine limitation, not a BCR bug. Quit to main menu and reload your save.
-
-[ v1.3.0 - Body Count Rewards ]
-
 FIXES & IMPROVEMENTS
 - Fixed trait exclusion bugs where conflicting traits could be double-granted (e.g. Adrenaline Junkie + Cowardly).
 - Corrected several trait point costs to match vanilla B42 values.
 - Cached config and trait lookups - less per-tick overhead.
-- Staggered notification queuing - no more halo text spam on batch claims.
 - Slight overhaul of the "Trait catalouge" Tab in the UI to support "Addon Mods", see "THIRD-PARTY TRAIT API"-Section down below  
 
 NEW OPTIONS

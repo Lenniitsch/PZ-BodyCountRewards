@@ -405,7 +405,8 @@ function BCRStatsWindow:updateHistory()
 
     for i = count, 1, -1 do
         local entry = history[i]
-        local displayName = BCR.GetTraitDisplayName(entry.id) or entry.id
+        local traitId = entry.id or entry.trait
+        local displayName = BCR.GetTraitDisplayName(traitId) or traitId
         local rarity = entry.rarity or "common"
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local sourceStr = ""
