@@ -171,7 +171,7 @@ function BCR_OnPlayerUpdate(player)
         local milestonesAtKills = BCR.GetMilestonesAtKills(currentKills, BCR.opts)
         local currentRewards = bcrData.rewardsGiven or 0
         if milestonesAtKills > currentRewards and not rewardsExhausted then
-            print("[BCR] [Client] Milestone reached at " .. currentKills .. " kills!")
+            BCR.DebugPrint("[BCR] [Client] Milestone reached at " .. currentKills .. " kills!")
             if isSinglePlayer() then
                 local missed = countMissedMilestones(bcrData, BCR.opts)
                 if missed > 1 then
@@ -213,7 +213,7 @@ function BCR_OnPlayerUpdate(player)
                         rewardsExhausted = true
                         shouldShowFinalMessage = true
                         showFinalMessageTimer = 0
-                        pendingStallCount = 0
+                        pendingRewardsCount = 0
                     else
                         pendingStallCount = pendingStallCount + 1
                         if pendingStallCount >= 3 then
@@ -293,18 +293,6 @@ function BCR_OnServerCommand(module, command, args)
             rewardsExhausted = true
             shouldShowFinalMessage = true
             showFinalMessageTimer = 0
-        end
-    elseif command == "KillsSynced" then
-        BCR.DebugPrint("[Client] Server command: KillsSynced")
-        if args.kills then
-            bcrData.kills = args.kills
-            if args.kills > lastKnownKills then
-                lastKnownKills = args.kills
-            end
-        end
-        local rewardsGiven = args.rewardsGiven
-        if rewardsGiven and rewardsGiven > (bcrData.rewardsGiven or 0) then
-            bcrData.rewardsGiven = rewardsGiven
         end
     elseif command == "RewardError" then
         print("[BCR] [Client] Reward error: " .. tostring(args.reason))

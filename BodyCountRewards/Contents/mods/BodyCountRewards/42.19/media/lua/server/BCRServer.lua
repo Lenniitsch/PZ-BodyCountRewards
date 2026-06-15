@@ -131,9 +131,9 @@ function BCR.ProcessRewardDirect(player)
     local rewardsToGive = missedCount
     local results = {}
     local appliedThisBatch = {}
+    local earnablePool = BCR.BuildEarnablePool(player, nil)
+    local removablePool = BCR.BuildRemovablePool(player, nil)
     for _ = 1, rewardsToGive do
-        local earnablePool = BCR.BuildEarnablePool(player, nil)
-        local removablePool = BCR.BuildRemovablePool(player, nil)
         local applied = buildAndApplyReward(player, earnablePool, removablePool, opts, appliedThisBatch)
         if applied then
             appliedThisBatch[applied.id] = true
@@ -153,45 +153,6 @@ end
 -- ============================================================
 -- MP HANDLERS
 -- ============================================================
-
-local function handleSyncKills(player, args)
-    if not player then return end
-    if not args or type(args.kills) ~= "number" then
-        BCR.DebugPrint("[Server] SyncKills received with invalid args")
-        return
-    end
-    local bcrData = BCR.EnsureModData(player)
-    if not bcrData then return end
-    local newKills = math.floor(args.kills)
-    local serverKills = getZombieKillsSafe(player) or 0
-    if serverKills > newKills then
-        BCR.DebugPrint(string.format(
-            "[Server] Server kill count (%d) higher than client report (%d) - using server value",
-            serverKills, newKills
-        ))
-        newKills = serverKills
-    end
-    local currentKills = bcrData.kills or 0
-    if newKills < currentKills then
-        local ok, username = pcall(function() return tostring(player:getUsername()) end)
-        local playerName = ok and username or "unknown"
-        BCR.DebugPrint(string.format(
-            "[Server] SyncKills REJECTED for %s: attempt to decrease kills (%d -> %d)",
-            playerName, currentKills, newKills
-        ))
-        return
-    end
-    if newKills > currentKills then
-        bcrData.kills = newKills
-    end
-    if isServer() then
-        pcall(function() player:transmitModData() end)
-    end
-    sendServerCommand(player, "BCR", "KillsSynced", {
-        kills = bcrData.kills,
-        rewardsGiven = bcrData.rewardsGiven or 0,
-    })
-end
 
 local function handleRequestReward(player, args)
     if not player or not args then return end
@@ -233,9 +194,9 @@ local function handleRequestReward(player, args)
     local rewardsToGive = missedCount
     local appliedThisBatch = {}
     local totalGranted = 0
+    local earnablePool = BCR.BuildEarnablePool(player, nil)
+    local removablePool = BCR.BuildRemovablePool(player, nil)
     for _ = 1, rewardsToGive do
-        local earnablePool = BCR.BuildEarnablePool(player, nil)
-        local removablePool = BCR.BuildRemovablePool(player, nil)
         local applied = buildAndApplyReward(player, earnablePool, removablePool, opts, appliedThisBatch)
         if applied then
             appliedThisBatch[applied.id] = true
@@ -271,7 +232,5 @@ Events.OnClientCommand.Add(function(module, command, player, args)
     if module ~= "BCR" then return end
     if command == "RequestReward" then
         handleRequestReward(player, args)
-    elseif command == "SyncKills" then
-        handleSyncKills(player, args)
     end
 end)
