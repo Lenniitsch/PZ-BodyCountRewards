@@ -510,9 +510,9 @@ function BCRStatsWindow:updateCatalog()
         end
 
         line = line .. " <INDENT:16> " .. colorTag(COLORS.dim)
-        line = line .. "- " .. displayName .. "  |  " .. statusReason
+        line = line .. "- " .. displayName .. "  |  " .. colorTag(rarityMuted(rarity)) .. rarityLabel
         line = line .. " <LINE> "
-        line = line .. " <INDENT:24> " .. colorTag(rarityMuted(rarity)) .. rarityLabel
+        line = line .. " <INDENT:24> " .. statusReason
         line = line .. " <LINE> "
         return line
     end
