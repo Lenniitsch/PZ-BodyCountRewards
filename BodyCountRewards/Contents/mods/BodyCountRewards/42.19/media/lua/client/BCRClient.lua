@@ -33,6 +33,7 @@ local hasShownAllTraitsMessage = false
 local shouldShowFinalMessage = false
 local showFinalMessageTimer = 0
 local rewardsExhausted = false
+local pendingStallCount = 0
 
 -- ============================================================
 -- HELPERS
@@ -56,9 +57,11 @@ local function resetState()
     shouldShowFinalMessage = false
     showFinalMessageTimer = 0
     rewardsExhausted = false
+    pendingStallCount = 0
 end
 
 local function countMissedMilestones(bcrData, opts)
+    if not opts then return 0 end
     local player = getLocalPlayer()
     if not player then return 0 end
     local ok, kills = pcall(function() return player:getZombieKills() end)
@@ -144,7 +147,7 @@ end
 function BCR_OnPlayerUpdate(player)
     if not player then return end
     if player:isDead() then return end
-    if isPendingRequestInFlight then
+    if isPendingRequestInFlight and not isSinglePlayer() then
         pendingRequestTimer = pendingRequestTimer + 1
         if pendingRequestTimer >= MP_REQUEST_TIMEOUT_TICKS then
             print("[BCR] [Client] MP request timed out — resetting")
@@ -202,7 +205,6 @@ function BCR_OnPlayerUpdate(player)
             pendingRewardTimer = 0
             if isSinglePlayer() and not isPendingRequestInFlight then
                 isPendingRequestInFlight = true
-                pendingRewardsCount = pendingRewardsCount - 1
                 local ok, results = pcall(BCR.ProcessRewardDirect, player)
                 if not ok or type(results) ~= "table" or #results == 0 then
                     isPendingRequestInFlight = false
@@ -211,17 +213,24 @@ function BCR_OnPlayerUpdate(player)
                         rewardsExhausted = true
                         shouldShowFinalMessage = true
                         showFinalMessageTimer = 0
-                        pendingRewardsCount = 0
+                        pendingStallCount = 0
                     else
-                        pendingRewardsCount = pendingRewardsCount + 1
+                        pendingStallCount = pendingStallCount + 1
+                        if pendingStallCount >= 3 then
+                            BCR.DebugPrint("[Client] Stalled on empty ProcessRewardDirect — aborting pending loop")
+                            pendingRewardsCount = 0
+                            pendingStallCount = 0
+                        end
                     end
+                    pendingRewardsCount = countMissedMilestones(bcrData, BCR.opts)
                 else
                     isPendingRequestInFlight = false
+                    pendingStallCount = 0
                     for _, result in ipairs(results) do
                         BCR.EnqueueNotification(result)
                     end
                     BCR.RefreshStatsWindow()
-                    pendingRewardsCount = math.max(0, countMissedMilestones(bcrData, BCR.opts) - #results)
+                    pendingRewardsCount = countMissedMilestones(bcrData, BCR.opts)
                     if not BCR.HasAvailableRewards(player) then
                         rewardsExhausted = true
                         shouldShowFinalMessage = true
@@ -299,11 +308,6 @@ function BCR_OnServerCommand(module, command, args)
         end
     elseif command == "RewardError" then
         print("[BCR] [Client] Reward error: " .. tostring(args.reason))
-        isPendingRequestInFlight = false
-        pendingRequestTimer = 0
-        pendingRewardsCount = 0
-    elseif command == "NoRewardAvailable" then
-        BCR.DebugPrint(string.format("[Client] No rewards available: %s", tostring(args.reason)))
         isPendingRequestInFlight = false
         pendingRequestTimer = 0
         pendingRewardsCount = 0

@@ -48,6 +48,5 @@
     "UI_BCR_StatusUnavailable": "不可用",
     "UI_BCR_Option_ShowMenu": "显示右键菜单",
     "UI_BCR_Option_ShowMenu_tooltip": "启用后，右键点击可在右键菜单中显示 Body Count Rewards 进度。"
-	"UI_BCR_AddonTraits": "--- Addon Traits ---"
-	"UI_BCR_BatchRewards": "Multiple rewards earned!"
+	"UI_BCR_AddonTraits": "--- Addon Traits ---","UI_BCR_BatchRewards": "Multiple rewards earned!"
 }

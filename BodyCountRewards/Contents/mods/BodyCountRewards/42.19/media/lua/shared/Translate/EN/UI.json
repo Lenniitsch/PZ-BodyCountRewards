@@ -48,6 +48,5 @@
     "UI_BCR_StatusUnavailable": "Unavailable",
     "UI_BCR_Option_ShowMenu": "Show Context Menu",
     "UI_BCR_Option_ShowMenu_tooltip": "When enabled, right-clicking shows Body Count Rewards progress in the context menu.",
-    "UI_BCR_AddonTraits": "--- Addon Traits ---"
-	"UI_BCR_BatchRewards": "Multiple rewards earned!"
+    "UI_BCR_AddonTraits": "--- Addon Traits ---","UI_BCR_BatchRewards": "Multiple rewards earned!"
 }

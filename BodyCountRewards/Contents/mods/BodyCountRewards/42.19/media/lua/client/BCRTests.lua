@@ -430,7 +430,7 @@ local function suiteFilterPool()
     assertEqual(3, #BCR.FilterPoolByExclusion(pool, { Z = true }),
         "Exclude nonexistent Z → unchanged")
 
-    -- ExcludeSet with falsy values: key presence matters, not value
+    -- FilterPoolByExclusion checks excludeSet[id] == nil (excluded if key present, regardless of value)
     local f3 = BCR.FilterPoolByExclusion(pool, { A = false, B = true })
     assertEqual(1, #f3, "Falsy A still excluded (key presence matters)")
 end
@@ -717,15 +717,16 @@ local function suiteCatchUpProcessReward()
     if originalKills ~= nil then bcrData.kills = originalKills end
     if originalRewardsGiven ~= nil then bcrData.rewardsGiven = originalRewardsGiven end
     -- If no reward returned (all traits already owned/blocked), that's valid
-    if result ~= nil then
-        assertNotNil(result.id, "Result.id")
-        assertNotNil(result.displayName, "Result.displayName")
-        assertTrue(result.action == "added" or result.action == "removed",
-            "Action is added/removed, got " .. tostring(result.action))
-        assertNotNil(result.rarity, "Result.rarity")
-        assertNotNil(result.color, "Result.color")
-        assertEqual(3, #result.color, "Color {r,g,b}")
-        assertNotNil(result.cost, "Result.cost")
+    if result ~= nil and type(result) == "table" and #result > 0 then
+        local first = result[1]
+        assertNotNil(first.id, "Result.id")
+        assertNotNil(first.displayName, "Result.displayName")
+        assertTrue(first.action == "added" or first.action == "removed",
+            "Action is added/removed, got " .. tostring(first.action))
+        assertNotNil(first.rarity, "Result.rarity")
+        assertNotNil(first.color, "Result.color")
+        assertEqual(3, #first.color, "Color {r,g,b}")
+        assertNotNil(first.cost, "Result.cost")
     end
 end
 
