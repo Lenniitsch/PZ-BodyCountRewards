@@ -151,6 +151,10 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
             elseif type(entry.cost) ~= "number" then
                 print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " has no numeric cost, skipped")
                 rejected = rejected + 1
+            elseif isPositive and entry.cost > 0 then
+                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " positive trait with positive cost " .. tostring(entry.cost) .. " (expected negative); registered anyway")
+            elseif not isPositive and entry.cost < 0 then
+                print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " negative trait with negative cost " .. tostring(entry.cost) .. " (expected positive); registered anyway")
             elseif not BCR.GetTraitUserdata(traitId) then
                 print("[BCR] \"" .. sourceName .. "\" — " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
                 rejected = rejected + 1
@@ -196,7 +200,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
             if type(traitId) == "string" and type(excludeList) == "table" then
                 for _, excludedId in ipairs(excludeList) do
                     if type(excludedId) ~= "string" or excludedId == "" then
-                        BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] invalid exclusion entry in " .. traitId)
+                        print("[BCR] \"" .. sourceName .. "\" — invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
                     else
                         if not BCR.Exclusions[traitId] then
                             BCR.Exclusions[traitId] = {}

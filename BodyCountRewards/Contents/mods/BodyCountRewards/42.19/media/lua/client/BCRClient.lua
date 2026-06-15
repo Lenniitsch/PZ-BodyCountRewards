@@ -18,6 +18,7 @@ BCR = BCR or {}
 
 local PENDING_REWARD_DELAY_TICKS = 90
 local NOTIFICATION_DELAY_TICKS = 200
+local REEXHAUST_RECHECK_TICKS = 300
 
 -- ============================================================
 -- STATE VARIABLES
@@ -31,6 +32,7 @@ local hasShownAllTraitsMessage = false
 local shouldShowFinalMessage = false
 local showFinalMessageTimer = 0
 local rewardsExhausted = false
+local exhaustedRecheckTimer = 0
 
 -- ============================================================
 -- HELPERS
@@ -53,6 +55,7 @@ local function resetState()
     shouldShowFinalMessage = false
     showFinalMessageTimer = 0
     rewardsExhausted = false
+    exhaustedRecheckTimer = 0
 end
 
 local function countMissedMilestones(bcrData, opts)
@@ -125,7 +128,18 @@ end
 function BCR_OnPlayerUpdate(player)
     if not player then return end
     if player:isDead() then return end
-    if hasShownAllTraitsMessage then return end
+    if hasShownAllTraitsMessage then
+        exhaustedRecheckTimer = exhaustedRecheckTimer + 1
+        if exhaustedRecheckTimer >= REEXHAUST_RECHECK_TICKS then
+            exhaustedRecheckTimer = 0
+            if BCR.HasAvailableRewards(player) then
+                BCR.DebugPrint("[Client] Re-exhaust check: rewards available again — resuming")
+                hasShownAllTraitsMessage = false
+                rewardsExhausted = false
+            end
+        end
+        return
+    end
     if BCR.opts == nil then
         BCR.RefreshConfig()
     end
