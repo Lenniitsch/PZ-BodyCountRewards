@@ -2,84 +2,76 @@ version=1
 id=3660382016
 title=Body Count Rewards
 description=[i]Finally, a mod where your body count actually matters.[/i]
-description=Look, I'm not here to judge your... [i]numbers[/i]. Kill zombies, hit milestones, earn trait rewards. Higher trait cost = lower drop chance. Simple.
-description=[b]SP & MP[/b] because your body count shouldn't depend on your social life.
+description=Kill zombies, hit milestones, earn trait rewards. Higher trait cost means lower drop chance. SP and MP.
 description=
-description=[b]✅ Compatible with B42.13.2+ | SP & MP[/b]
-description=[i]Hobby project. Maintained as long as PZ has its hooks in me.[/i]
-description=[i]On an older version? Check out Circuit's Kill Milestones (Zombies) for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3340134879]B41[/url] or [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540255691]B42[/url].[/i]
+description=[b]Compatible with B42.19+ | SP and MP[/b]
 description=
-description=The spiritual successor to Circuit's [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540255691]Kill Milestones (Zombies) B42[/url]. His mod gave me the idea, I wanted more features and control for my server, so I built my own from scratch. Circuit has since moved on from PZ modding and linked this mod on his page. Thanks for the inspiration!
+description=The spiritual successor to Circuit's [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540255691]Kill Milestones (Zombies) B42[/url], built from scratch for more features and full sandbox control. Thanks for the inspiration, Circuit!
+description=On an older B42 version? Circuit's mod works for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3340134879]B41[/url] and [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540255691]B42[/url].
 description=
 description=[h2]Features[/h2]
 description=[list]
-description=[*] [b]Stats UI:[/b] Three tabs: progress, reward history, and full trait catalog
-description=[*] [b]Right-click context menu:[/b] Quick-check kills and distance to next milestone
-description=[*] [b]Smart trait conflicts:[/b] Mutually exclusive traits auto-resolved
-description=[*] [b]43 traits[/b] in the pool, every single one individually toggleable
+description=[*] [b]Stats UI:[/b] Three tabs for progress tracking, full reward history, and a trait catalog with rarity and conflict info
+description=[*] [b]Notification queue:[/b] Halo text with staggered display so rewards do not flood your screen at once
+description=[*] [b]Right-click context menu:[/b] Quick-check kills and distance to next milestone. Toggleable in Mod Options.
+description=[*] [b]Smart trait conflicts:[/b] Mutually exclusive traits are resolved automatically. The Catalog tab shows exactly why any trait is unavailable.
+description=[*] [b]43 traits[/b] in the pool (21 earnable, 22 removable). Every single one individually toggleable in sandbox settings.
+description=[*] [b]Third-party addon API:[/b] Other mods can register their own traits. See the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3745224257]I Am Not Your Mom[/url] addon for an example.
 description=[/list]
 description=
 description=[h2]Sandbox Options[/h2]
 description=All configurable in-game by the host. No file editing needed.
 description=[list]
 description=[*] [b]Kill threshold[/b] per milestone (2 to 10,000)
-description=[*] [b]Progressive or linear[/b] scaling
+description=[*] [b]Linear or Progressive scaling[/b] with adjustable steepness (0.1x to 2.0x)
 description=[*] [b]Reward priority:[/b] Remove negatives first, add positives first, or coin flip
-description=[*] [b]Grant Missed Opportunities:[/b] Install mid-game with thousands of kills? Get all owed rewards at once
-description=[*] [b]Positive rewards, negative removal, or both.[/b] Your body count, your rules
-description=[*] [b]Individual trait toggles:[/b] Enable or disable any of the 43 traits
+description=[*] [b]Grant Missed Opportunities:[/b] Install mid-run with thousands of kills? Get all owed rewards at once.
+description=[*] [b]Positive rewards, negative removal, or both[/b]
+description=[*] [b]43 individual trait toggles:[/b] Enable or disable any trait in the pool
 description=[/list]
 description=
-description=Drop chances scale with trait cost: cheap traits (1-2 pts) drop often, expensive ones (7-8 pts) almost never. Check the Catalog tab for exact percentages.
-description=
 description=[h2]Trait Pool[/h2]
-description=[b]21 positive traits[/b] you can earn, [b]22 negative traits[/b] that can be removed.
-description=Full list with rarity and drop chances visible in the in-game Catalog tab.
-description=[b]Not included:[/b] Traits that grant perk points (Athletic, Strong, Fit...), profession traits, mod traits.
-description=[b]Trait conflicts[/b] are handled automatically. The Catalog tab shows why a trait is unavailable.
+description=[b]21 positive traits[/b] earnable, [b]22 negative traits[/b] removable. Full list with rarity tiers visible in the in-game Catalog tab.
+description=[b]Not included:[/b] Traits that grant perk points (Athletic, Strong, Fit), profession-locked traits, or traits added by other mods unless registered via the addon API.
 description=
 description=[h2]Compatibility[/h2]
 description=[list]
-description=[*] Build 42.13+ (Unstable Branch) | SP + MP
-description=[*] Safe to install mid-game (reads existing kill count)
-description=[*] Safe to remove (earned traits stay permanently)
-description=[*] No vanilla file overwrites, no mod conflicts
-description=[*] Works with Skill Recovery Journal
+description=[*] Build 42.19+ (Unstable). SP and MP.
+description=[*] Safe to install mid-game. Reads your existing kill count.
+description=[*] Safe to remove. Earned vanilla traits stay permanently on your character. Custom traits from third-party addons are the responsibility of their authors. If you remove an addon that registered non-vanilla traits, those traits may crash your save.
+description=[*] No vanilla file overwrites. Works with Skill Recovery Journal.
 description=[/list]
 description=
 description=[h2]FAQ[/h2]
 description=
 description=[b]Q: Do I keep rewards if I remove the mod?[/b]
-description=A: Yes. Traits are permanently safed to your character.
+description=A: Yes. Earned vanilla traits are permanently saved to your character.
 description=
 description=[b]Q: Thousands of kills but only 1 reward?[/b]
-description=A: Enable "Grant Missed Opportunities" in sandbox options and kill one more Z to trigger the update.
+description=A: Enable "Grant Missed Opportunities" in sandbox options and kill one more zombie to trigger the catch-up.
 description=
 description=[b]Q: Why can't I get trait XY?[/b]
-description=A: Right click > BodyCountRewards > Catalog tab. It tells you exactly why.
+description=A: Right click then Body Count Rewards, then the Catalog tab. It tells you exactly why. Conflicting trait owned, already earned, or toggled off in sandbox options.
 description=
 description=[b]Q: Linear vs Progressive?[/b]
-description=A: Linear = same kills per milestone. Progressive = each one needs more kills. Scaling factor controls how steep it gets.
-description=
-description=[b]Q: Athletic/Strong/Fit?[/b]
-description=A: Maybe. Those grant perk points, so they need extra work. If enough people want it, I'll look into it.
+description=A: Linear means the same kills per milestone. Progressive means each milestone needs more kills. The scaling factor controls how steep the curve gets.
 description=
 description=[b]Q: Works with mod traits?[/b]
-description=A: Not yet. Vanilla only.
+description=A: Yes. BCR has a third-party addon API. Check out the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3745224257]I Am Not Your Mom[/url] addon for a working example, or build your own trait pack.
 description=
-description=[b]Q: Switching from "Kill Milestones (Zombies)"?[/b]
-description=A: Just swap subscriptions. Kill count lives on your character. Earned traits stay. Only reward history won't carry over.
+description=[b]Q: Athletic / Strong / Fit?[/b]
+description=A: Those grant perk points and need extra work. If enough people ask, I will look into it.
+description=
+description=[b]Q: Switching from Kill Milestones (Zombies)?[/b]
+description=A: Just swap subscriptions. Kill count lives on your character and earned traits stay. Only reward history will not carry over.
 description=
 description=[h2]Languages[/h2]
 description=English | Deutsch | Español | Русский | Português (BR) | 简体中文 | 한국어 | Türkçe | Français | Polski | Українська
 description=
-description=[b]Translations are AI-generated.[/b] If you spot a mistake or something reads awkwardly in your language, [url=https://github.com/Lenniitsch/PZ-BodyCountRewards/issues]open an issue[/url] on GitHub. Native speakers who want to improve a translation are very welcome.
+description=[b]Translations are automatically translated.[/b] If something reads awkwardly in your language, [url=https://github.com/Lenniitsch/PZ-BodyCountRewards/issues]open an issue[/url] on GitHub or leave a comment below. Native speakers who want to improve a translation are very welcome.
 description=
 description=[h2]AI Transparency[/h2]
-description=The idea, architecture, and all code are mine. This is my first mod and I genuinely enjoyed building it. I used AI (Claude) for unit tests, debugging, understanding the B42 Trait API, inline comments, and generating the non-English translation files.
-description=
-description=[b]To modders:[/b] Consider adding a similar note. Be honest about what's yours.
-description=[b]To users:[/b] If AI-assisted dev isn't your thing, don't use the mod. But please don't downvote transparency. That just discourages honesty.
+description=I designed the architecture and wrote the core logic myself. AI assisted with coding, debugging, unit tests, inline comments, and translations. Think of it as having a very fast, very tireless pair programmer. I believe in being upfront about tools used.
 description=
 description=[h2]Source Code[/h2]
 description=Open source under the [url=https://opensource.org/licenses/MIT]MIT License[/url].
@@ -87,7 +79,7 @@ description=Contributions, translations, and bug reports welcome!
 description=[url=https://github.com/Lenniitsch/PZ-BodyCountRewards]GitHub Repository[/url]
 description=
 description=[i]Found a bug? Got a suggestion? Leave a comment or open an issue on [url=https://github.com/Lenniitsch/PZ-BodyCountRewards/issues]GitHub[/url]![/i]
-description=[i]If this made your apocalypse more rewarding, a thumbs up is always appreciated.[/i]
+description=[i]If this mod made your apocalypse more rewarding, a thumbs up is always appreciated.[/i]
 description=
 tags=Build 42;Balance;Multiplayer;Traits
 visibility=public

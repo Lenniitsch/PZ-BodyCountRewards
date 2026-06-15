@@ -10,6 +10,7 @@ FIXES & IMPROVEMENTS
 - Corrected several trait point costs to match vanilla B42 values.
 - Cached config and trait lookups - less per-tick overhead.
 - Staggered notification queuing - no more halo text spam on batch claims.
+- Slight overhaul of the "Trait catalouge" Tab in the UI to support "Addon Mods", see "THIRD-PARTY TRAIT API"-Section down below  
 
 NEW OPTIONS
 - Enable Debug Logging sandbox option - for sending me log files when things break.
@@ -20,4 +21,5 @@ NEW LANGUAGES
 
 THIRD-PARTY TRAIT API
 - Other modders can now register their own trait packs with BCR. Custom traits merge into the reward pools, stats UI, and history - no hacks needed. Check the "I Am Not Your Mom" addon for a working template.
+- Example Mod can be found at "BodyCountRewards (Addon) - I Am Not Your Mom" [Mod ID: BCR-IAmNotYourMom[ [Workshop ID: 3745224257] (https://steamcommunity.com/sharedfiles/filedetails/?id=3745224257)
 [ ------ ]
