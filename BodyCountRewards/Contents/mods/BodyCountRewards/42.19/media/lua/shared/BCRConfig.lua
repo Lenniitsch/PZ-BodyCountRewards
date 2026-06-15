@@ -48,7 +48,7 @@ function BCR.RefreshConfig()
         enablePositive           = sv.enablePositiveTraits ~= false,
         enableNegative           = sv.enableNegativeTraits ~= false,
         rewardPriority           = sv.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST,
-        grantMissedOpportunities = (sv.grantMissedOpportunities == true) or (sv.grandMissedOpportunities == true), -- migration shim: v1.2.0 typo fallback, drop later
+        grantMissedOpportunities = sv.grantMissedOpportunities == true,
         milestoneScaling         = sv.MilestoneScaling or 1,
         progressiveScalingFactor = sv.ProgressiveScalingFactor or 0.5,
     }

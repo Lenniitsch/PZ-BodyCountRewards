@@ -187,9 +187,7 @@ end
 
 local function mergeTraitTables(base, custom)
     if not custom then return base end
-    local empty = true
-    for _ in pairs(custom) do empty = false; break end
-    if empty then return base end
+    if #custom == 0 then return base end
     local merged = {}
     for _, v in ipairs(base) do
         table.insert(merged, v)
@@ -478,7 +476,7 @@ function BCR_RunThirdPartyTests()
     testTraitList(BCR.CustomPositiveTraits, "positive")
     testTraitList(BCR.CustomNegativeTraits, "negative")
 
-    ok("All custom traits have valid exclusions in BCR.Exclusions",
+    ok("BCR.Exclusions exists and is a table",
         BCR.Exclusions ~= nil and type(BCR.Exclusions) == "table")
 
     local sourceList = {}

@@ -734,7 +734,8 @@ end
 -- ============================================================
 
 local function suiteNotificationQueue()
-    BCR.EnqueueNotification(nil)
+    local ok1, err1 = pcall(BCR.EnqueueNotification, nil)
+    assertTrue(ok1, "EnqueueNotification(nil) does not crash")
 
     local sample = {
         id = "SPEED_DEMON",
@@ -743,21 +744,25 @@ local function suiteNotificationQueue()
         rarity = "common",
         color = { 0.8, 0.8, 0.8 },
     }
-    BCR.EnqueueNotification(sample)
+    local ok2, err2 = pcall(BCR.EnqueueNotification, sample)
+    assertTrue(ok2, "EnqueueNotification(valid) does not crash")
 
     for i = 1, BCR.MAX_NOTIFICATION_QUEUE + 5 do
-        BCR.EnqueueNotification({
+        local ok3, _ = pcall(BCR.EnqueueNotification, {
             id = "T" .. tostring(i),
             displayName = "Test " .. tostring(i),
             action = "added",
             rarity = "common",
             color = { 1, 1, 1 },
         })
+        assertTrue(ok3, "EnqueueNotification overflow entry " .. i .. " does not crash")
     end
-    BCR.UpdateNotifications(nil)
-    BCR.ShowFinalMessage(nil)
-    -- Suite completing = all calls above did not crash the test runner
-    passed = passed + 1
+
+    local ok4, _ = pcall(BCR.UpdateNotifications, nil)
+    assertTrue(ok4, "UpdateNotifications(nil) does not crash")
+
+    local ok5, _ = pcall(BCR.ShowFinalMessage, nil)
+    assertTrue(ok5, "ShowFinalMessage(nil) does not crash")
 end
 
 -- ============================================================

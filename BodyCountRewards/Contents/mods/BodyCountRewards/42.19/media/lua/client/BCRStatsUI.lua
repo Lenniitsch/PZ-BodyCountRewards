@@ -70,6 +70,7 @@ local function formatNumber(number)
     if not number then return "0" end
     local sep = getText("UI_BCR_ThousandSeparator")
     if not sep or sep == "UI_BCR_ThousandSeparator" then sep = "," end
+    if sep == "" then sep = "," end
     local formatted = tostring(math.floor(number))
     local k = 1
     while k > 0 do
@@ -505,7 +506,7 @@ function BCRStatsWindow:updateCatalog()
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
             line = line .. colorTag(COLORS.disabled)
             line = line .. displayName .. " (" .. rarityLabel .. ")" .. sourceTag .. " - "
-            if hasConflict and blockerId then
+            if isPositive and hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
                 line = line .. getText("UI_BCR_StatusConflict", blockerName)
             else
@@ -661,16 +662,8 @@ function BCRStatsWindow:updateProgress()
         msStart = math.max(1, rewardsGiven - (MILESTONE_PAST_COUNT + MILESTONE_FUTURE_COUNT - 1))
         msEnd = rewardsGiven
     else
-        local earnableCount = 0
-        local earnable = BCR.BuildEarnablePool(self.player, nil)
-        if earnable then
-            for _ in ipairs(earnable) do earnableCount = earnableCount + 1 end
-        end
-        local removableCount = 0
-        local removable = BCR.BuildRemovablePool(self.player, nil)
-        if removable then
-            for _ in ipairs(removable) do removableCount = removableCount + 1 end
-        end
+        local earnableCount = (BCR.PositiveTraits and #BCR.PositiveTraits or 0) + (BCR.CustomPositiveTraits and #BCR.CustomPositiveTraits or 0)
+        local removableCount = (BCR.NegativeTraits and #BCR.NegativeTraits or 0) + (BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits or 0)
         local rewardsLeft = earnableCount + removableCount
         msStart = math.max(1, rewardsGiven - MILESTONE_PAST_COUNT + 1)
         msEnd = math.min(rewardsGiven + MILESTONE_FUTURE_COUNT, rewardsGiven + rewardsLeft)

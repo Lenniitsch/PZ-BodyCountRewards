@@ -123,10 +123,10 @@ BCR.RarityTiers = {
 -- EXTENSIBILITY — third-party addon trait registration
 -- ============================================================
 
-BCR.CustomPositiveTraits = {}
-BCR.CustomNegativeTraits = {}
-BCR.CustomTraitSources = {}
-BCR.CustomTraitNamespaces = {}
+BCR.CustomPositiveTraits = BCR.CustomPositiveTraits or {}
+BCR.CustomNegativeTraits = BCR.CustomNegativeTraits or {}
+BCR.CustomTraitSources = BCR.CustomTraitSources or {}
+BCR.CustomTraitNamespaces = BCR.CustomTraitNamespaces or {}
 
 function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, negativeTraits, exclusions)
     if not sourceName then

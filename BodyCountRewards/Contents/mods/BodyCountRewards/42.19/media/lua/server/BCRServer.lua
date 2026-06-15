@@ -132,7 +132,7 @@ function BCR.ProcessRewardDirect(player)
     if not opts.grantMissedOpportunities then
         rewardsToGive = 1
     end
-    local result = nil
+    local results = {}
     local appliedThisBatch = {}
     for _ = 1, rewardsToGive do
         local earnablePool = BCR.BuildEarnablePool(player, nil)
@@ -142,15 +142,15 @@ function BCR.ProcessRewardDirect(player)
             appliedThisBatch[applied.id] = true
             bcrData.rewardsGiven = (bcrData.rewardsGiven or 0) + 1
             recordTraitHistory(bcrData, applied)
-            result = applied
+            table.insert(results, applied)
         end
     end
-    if result then
+    if #results > 0 then
         if isServer() then
             pcall(function() player:transmitModData() end)
         end
     end
-    return result
+    return results
 end
 
 -- ============================================================

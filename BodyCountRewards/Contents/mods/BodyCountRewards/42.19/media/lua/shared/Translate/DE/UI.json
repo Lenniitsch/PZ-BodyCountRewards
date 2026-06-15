@@ -49,4 +49,5 @@
     "UI_BCR_Option_ShowMenu": "Kontextmenü anzeigen",
     "UI_BCR_Option_ShowMenu_tooltip": "Wenn aktiviert, zeigt ein Rechtsklick den Body Count Rewards-Fortschritt im Kontextmenü an."
 	"UI_BCR_AddonTraits": "--- Addon Traits ---"
+	"UI_BCR_BatchRewards": "Multiple rewards earned!"
 }
