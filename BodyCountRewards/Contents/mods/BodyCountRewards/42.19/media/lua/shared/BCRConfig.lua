@@ -75,14 +75,14 @@ function BCR.IsTraitAllowed(id)
     if namespace then
         local sv = SandboxVars[namespace]
         if sv and sv[key] == false then
-            BCR.DebugPrint("Trait blocked by sandbox [" .. namespace .. "]: " .. id)
+            BCR.DebugPrint("Trait blocked by sandbox [" .. namespace .. "]: " .. id .. " (key=" .. key .. ", value=" .. tostring(sv[key]) .. ")")
             return false
         end
         return true
     end
     local sv = SandboxVars.BCR or {}
     if sv[key] == false then
-        BCR.DebugPrint("Trait blocked by sandbox: " .. id)
+        BCR.DebugPrint("Trait blocked by sandbox: " .. id .. " (key=" .. key .. ", value=" .. tostring(sv[key]) .. ")")
         return false
     end
     return true

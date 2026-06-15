@@ -410,7 +410,7 @@ function BCRStatsWindow:updateHistory()
         local rarityLabel = getText("UI_BCR_Rarity_" .. rarity) or rarity
         local sourceStr = ""
         if entry.source then
-            sourceStr = " | Source: " .. entry.source
+            sourceStr = " | Added by: " .. entry.source
         end
 
         text = text .. "<INDENT:16>"
@@ -514,7 +514,7 @@ function BCRStatsWindow:updateCatalog()
             local source = BCR.CustomTraitSources and BCR.CustomTraitSources[entry.id]
             if source ~= lastSource then
                 lastSource = source
-                t = t .. " <LINE> " .. colorTag(COLORS.text) .. "Trait Source: \"" .. source .. "\"-Mod <LINE> "
+                t = t .. " <LINE> " .. colorTag(COLORS.text) .. "Trait(s) added by: \"" .. source .. "\" <LINE> "
             end
             t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive)
         end
