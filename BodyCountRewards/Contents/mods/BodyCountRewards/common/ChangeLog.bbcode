@@ -1,0 +1,36 @@
+[alert_config]
+link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=3660382016,
+link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
+[/alert_config]
+
+[quote]
+v1.3.0 — Body Count Rewards
+I rebuilt the mod from the ground up for B42.19. Here's what changed:
+
+New Languages
+I added auto-translated support for a whole bunch of languages across both sandbox options and the stats UI. The translations are machine-generated, so if something reads like a bad Google Translate fever dream, let me know in the Workshop thread and I'll fix it.
+
+Third-Party Trait API
+Other modders can now register their own trait packs with BCR. Custom traits merge right into the reward pools, stats UI, and history — no file overrides, no hacks. Check the "I Am Not Your Mom" addon for a working example and template.
+
+Performance & Polish
+[list]
+[*]Cached config and trait lookups — less per-tick overhead.
+[*]Staggered notification queuing — no more halo text spam when you claim a batch of missed rewards.
+[*]Stats UI rendering is smarter about when to redraw.
+[/list]
+
+Bug Fixes
+[list]
+[*]Fixed trait exclusion bugs where conflicting traits could be double-granted. You should no longer end up with both Adrenaline Junkie and Cowardly at the same time.
+[*]Corrected several trait point costs to match vanilla PZ B42 values.
+[/list]
+
+New Options
+[list]
+[*]Enable Debug Logging sandbox option — for when things go wrong and you need to send me a log file.
+[*]Show Context Menu toggle in the ESC menu (Mod Options) — hides the right-click menu entry if you're tired of seeing it. Not recommended, but it's your apocalypse.
+[/list]
+
+Upgrading from v1.2.0 should be seamless — your sandbox settings carry over automatically, including the misspelled option from the old version.
+[/quote]
