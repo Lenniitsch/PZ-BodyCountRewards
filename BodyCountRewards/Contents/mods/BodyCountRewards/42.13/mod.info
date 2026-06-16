@@ -1,6 +1,8 @@
 name=Body Count Rewards
 id=BCR
 modversion=1.1.0
+author=Lenniitsch
+category=QoL
 versionMin=42.13.2
 versionMax=42.15.3
 icon=bcr_icon.png
