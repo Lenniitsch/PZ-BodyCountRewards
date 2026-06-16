@@ -3,9 +3,9 @@ id=3660382016
 title=Body Count Rewards
 description=[i]Finally, a mod where your body count actually matters.[/i]
 description=Look, I'm not here to judge your... [i]numbers[/i]. Kill zombies, hit milestones, earn trait rewards. Higher trait cost = lower drop chance. Simple.
-description=[b]SP & MP[/b] because your body count shouldn't depend on your social life.
 description=
-description=[b]✅ Compatible with B42.19+ | SP & MP[/b]
+description=[b]✅ Compatible with B42.19+ [/b] | [b]SP & MP[/b] because your body count shouldn't depend on your social life.
+description=
 description=[i]Hobby project. Maintained as long as PZ has its hooks in me.[/i]
 description=[i]On an older version? Check out Circuit's Kill Milestones (Zombies) for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3340134879]B41[/url] or [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540255691]B42[/url].[/i]
 description=
@@ -14,11 +14,10 @@ description=
 description=[h2]Features[/h2]
 description=[list]
 description=[*] [b]Stats UI:[/b] Three tabs for progress tracking, full reward history, and a trait catalog with rarity and conflict info
-description=[*] [b]Notification queue:[/b] Halo text with staggered display so rewards do not flood your screen at once
 description=[*] [b]Right-click context menu:[/b] Quick-check kills and distance to next milestone. Toggleable in Mod Options.
 description=[*] [b]Smart trait conflicts:[/b] Mutually exclusive traits are resolved automatically. The Catalog tab shows exactly why any trait is unavailable.
 description=[*] [b]43 traits[/b] in the pool (21 earnable, 22 removable). Every single one individually toggleable in sandbox settings.
-description=[*] [b]Third-party addon API:[/b] Other mods can register their own traits. See the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3745224257]I Am Not Your Mom[/url] addon for an example.
+description=[*] [b]Third-party addon API:[/b] Other mods can register their own traits. See the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3745224257]I Am Not Your Mom[/url] addon for an example on how to do so.
 description=[*] [b]Toggable context menu:[/b] Mod Options in "ESC"-menu let's you disable the right click context menu. Not recommendet, but now possible.
 description=[/list]
 description=

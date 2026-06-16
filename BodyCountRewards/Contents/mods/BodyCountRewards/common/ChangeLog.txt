@@ -2,12 +2,9 @@
 link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=3660382016,
 link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
 [ ------ ]
-
-[ v1.3.1 - Body Count Rewards ]
-
 FIXES & IMPROVEMENTS
-- Fixed trait exclusion bugs where conflicting traits could be double-granted (e.g. Adrenaline Junkie + Cowardly).
-- Corrected several trait point costs to match vanilla B42 values.
+- Fixed trait exclusion bugs where conflicting traits could be double-granted.
+- Corrected several trait point costs to match vanilla B42.19 values.
 - Cached config and trait lookups - less per-tick overhead.
 - Slight overhaul of the "Trait catalouge" Tab in the UI to support "Addon Mods", see "THIRD-PARTY TRAIT API"-Section down below  
 
