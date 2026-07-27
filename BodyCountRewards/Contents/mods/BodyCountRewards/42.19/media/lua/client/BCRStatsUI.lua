@@ -507,24 +507,6 @@ function BCRStatsWindow:updateCatalog()
         return line
     end
 
-    local function renderCustomSection(list, poolLookup, isPositive)
-        if not list or #list == 0 then return "" end
-        local t = ""
-        local lastSource = nil
-        for _, entry in ipairs(list) do
-            local source = BCR.CustomTraitSources and BCR.CustomTraitSources[entry.id]
-            if source ~= lastSource then
-                lastSource = source
-                local label = #list > 1 and "Traits added by:" or "Trait added by:"
-                t = t .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. source .. "\" <LINE> "
-            end
-            t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive)
-        end
-        return t
-    end
-
-    local text = ""
-
     local function sortByCost(t)
         if not t then return end
         table.sort(t, function(a, b)
@@ -536,10 +518,41 @@ function BCRStatsWindow:updateCatalog()
             return na < nb
         end)
     end
+
+    local function renderCustomSection(list, poolLookup, isPositive)
+        if not list or #list == 0 then return "" end
+        local grouped = {}
+        for _, entry in ipairs(list) do
+            local source = BCR.CustomTraitSources and BCR.CustomTraitSources[entry.id] or ""
+            if not grouped[source] then
+                grouped[source] = {}
+            end
+            table.insert(grouped[source], entry)
+        end
+        local sources = {}
+        for source in pairs(grouped) do
+            table.insert(sources, source)
+        end
+        table.sort(sources)
+        for _, source in ipairs(sources) do
+            sortByCost(grouped[source])
+        end
+        local t = ""
+        for _, source in ipairs(sources) do
+            local group = grouped[source]
+            local label = #group > 1 and "Traits added by:" or "Trait added by:"
+            t = t .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. source .. "\" <LINE> "
+            for _, entry in ipairs(group) do
+                t = t .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive)
+            end
+        end
+        return t
+    end
+
+    local text = ""
+
     sortByCost(BCR.PositiveTraits)
-    sortByCost(BCR.CustomPositiveTraits)
     sortByCost(BCR.NegativeTraits)
-    sortByCost(BCR.CustomNegativeTraits)
 
     text = text .. colorTag(COLORS.sectionHead)
     text = text .. " <H2> " .. (getText("UI_BCR_CatalogPositive") or "Earnable Positive Traits")
@@ -576,19 +589,33 @@ function BCRStatsWindow:updateCatalog()
             end
         end
         if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
-            local addonText = ""
-            local lastSource = nil
+            local grouped = {}
             for _, entry in ipairs(BCR.CustomNegativeTraits) do
                 local traitId = entry.id
                 if BCR.PlayerHasTrait(self.player, traitId) or modRemoved[traitId] then
                     hasRelevantTraits = true
-                    local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
-                    if source ~= lastSource then
-                        lastSource = source
-                        local label = #BCR.CustomNegativeTraits > 1 and "Traits added by:" or "Trait added by:"
-                        addonText = addonText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. source .. "\" <LINE> "
+                    local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId] or ""
+                    if not grouped[source] then
+                        grouped[source] = {}
                     end
-                    addonText = addonText .. renderTraitLine(traitId, entry.cost, removablePool, false)
+                    table.insert(grouped[source], entry)
+                end
+            end
+            local sources = {}
+            for source in pairs(grouped) do
+                table.insert(sources, source)
+            end
+            table.sort(sources)
+            for _, source in ipairs(sources) do
+                sortByCost(grouped[source])
+            end
+            local addonText = ""
+            for _, source in ipairs(sources) do
+                local group = grouped[source]
+                local label = #group > 1 and "Traits added by:" or "Trait added by:"
+                addonText = addonText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. source .. "\" <LINE> "
+                for _, entry in ipairs(group) do
+                    addonText = addonText .. renderTraitLine(entry.id, entry.cost, removablePool, false)
                 end
             end
             text = text .. addonText

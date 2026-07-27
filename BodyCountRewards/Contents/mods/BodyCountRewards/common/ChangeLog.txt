@@ -3,6 +3,12 @@ link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=
 link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
 [ ------ ]
 
+[ v1.3.2 - Body Count Rewards ]
+
+HOUSEKEEPING UPDATE
+- Fixed: addon traits appeared in split "Added by" sections in the catalogue UI when multiple BCR addons were loaded simultaneously. The trait list now groups properly by addon source.
+[ ------ ]
+
 [ v1.3.1 - Body Count Rewards ]
 
 FIXES & IMPROVEMENTS
