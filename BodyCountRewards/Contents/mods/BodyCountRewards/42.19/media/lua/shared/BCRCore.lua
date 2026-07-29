@@ -583,8 +583,8 @@ function BCR_RunThirdPartyTests()
             if type(excludeList) == "table" then
                 for _, excludedId in ipairs(excludeList) do
                     if type(excludedId) == "string" and excludedId ~= "" then
-                        ok("Exclusion target " .. excludedId .. " is a known trait",
-                            knownTraits[excludedId] ~= nil)
+ok("Exclusion target " .. excludedId .. " is a known trait",
+                    knownTraits[excludedId] ~= nil or BCR.GetTraitUserdata(excludedId) ~= nil)
                     end
                 end
             end
