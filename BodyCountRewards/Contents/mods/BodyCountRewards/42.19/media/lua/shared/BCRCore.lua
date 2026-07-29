@@ -505,6 +505,134 @@ function BCR_RunThirdPartyTests()
     ok("BCR.Exclusions exists and is a table",
         BCR.Exclusions ~= nil and type(BCR.Exclusions) == "table")
 
+    -- ============================================================
+    -- NEW (v1.3.3): Sandbox toggle wiring -- every registered trait
+    -- must have IsTraitAllowed == true by default. Catches
+    -- namespace / option-name mismatches between sandbox-options.txt
+    -- and RegisterCustomTraits().
+    -- ============================================================
+
+    local function checkSandboxToggles(list, label)
+        if not list then return end
+        for _, entry in ipairs(list) do
+            local traitId = entry.id
+            if traitId and BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[traitId] then
+                local allowed = BCR.IsTraitAllowed(traitId)
+                ok(label .. " sandbox toggle active for " .. traitId, allowed == true)
+            end
+        end
+    end
+    checkSandboxToggles(BCR.CustomPositiveTraits, "positive")
+    checkSandboxToggles(BCR.CustomNegativeTraits, "negative")
+
+    -- ============================================================
+    -- NEW (v1.3.3): Exclusion bidirectionality -- for every A -> B,
+    -- verify B excludes A and no trait excludes itself.
+    -- Only checks pairs where at least one side is a third-party
+    -- trait (base-bcr-only pairs are maintained in BCRData.lua).
+    -- ============================================================
+
+    local function isCustomTrait(traitId)
+        return BCR.CustomTraitSources and BCR.CustomTraitSources[traitId] ~= nil
+    end
+
+    if BCR.Exclusions then
+        for traitId, excludeList in pairs(BCR.Exclusions) do
+            if type(excludeList) == "table" then
+                for _, excludedId in ipairs(excludeList) do
+                    if type(excludedId) == "string" and excludedId ~= "" then
+                        if isCustomTrait(traitId) or isCustomTrait(excludedId) then
+                            ok("Exclusion " .. traitId .. " -> " .. excludedId .. " is bidirectional",
+                                BCR.Exclusions[excludedId] ~= nil)
+                            local reverseList = BCR.Exclusions[excludedId]
+                            if reverseList then
+                                local found = false
+                                for _, r in ipairs(reverseList) do
+                                    if r == traitId then found = true; break end
+                                end
+                                ok("Exclusion " .. excludedId .. " -> " .. traitId .. " exists in reverse list",
+                                    found)
+                            end
+                            ok("Exclusion " .. traitId .. " does not exclude itself",
+                                excludedId ~= traitId)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- ============================================================
+    -- NEW (v1.3.3): Exclusion targets are real -- every excludedId
+    -- in every exclusion list must be a known trait (base or custom).
+    -- ============================================================
+
+    local knownTraits = {}
+    local function collectIds(list)
+        if not list then return end
+        for _, entry in ipairs(list) do
+            if entry.id then knownTraits[entry.id] = true end
+        end
+    end
+    collectIds(BCR.PositiveTraits)
+    collectIds(BCR.NegativeTraits)
+    collectIds(BCR.CustomPositiveTraits)
+    collectIds(BCR.CustomNegativeTraits)
+    if BCR.Exclusions then
+        for _, excludeList in pairs(BCR.Exclusions) do
+            if type(excludeList) == "table" then
+                for _, excludedId in ipairs(excludeList) do
+                    if type(excludedId) == "string" and excludedId ~= "" then
+                        ok("Exclusion target " .. excludedId .. " is a known trait",
+                            knownTraits[excludedId] ~= nil)
+                    end
+                end
+            end
+        end
+    end
+
+    -- ============================================================
+    -- NEW (v1.3.3): Display names all resolve -- protects against
+    -- trait IDs that BCR can't look up via the translation system.
+    -- ============================================================
+
+    local function checkDisplayNames(list, label)
+        if not list then return end
+        for _, entry in ipairs(list) do
+            local traitId = entry.id
+            if traitId then
+                local name = BCR.GetTraitDisplayName(traitId)
+                ok(label .. " display name for " .. traitId .. " resolves",
+                    name ~= nil and name ~= "" and name ~= "Unknown")
+            end
+        end
+    end
+    checkDisplayNames(BCR.CustomPositiveTraits, "positive")
+    checkDisplayNames(BCR.CustomNegativeTraits, "negative")
+
+    -- ============================================================
+    -- NEW (v1.3.3): Rarity and weight -- every trait must produce
+    -- a valid rarity tier and a weight >= 1 for pool selection.
+    -- ============================================================
+
+    local knownRarities = { common = true, uncommon = true, rare = true, veryRare = true }
+    local function checkRarityAndWeight(list, label)
+        if not list then return end
+        for _, entry in ipairs(list) do
+            local traitId = entry.id
+            if traitId then
+                local rarity = BCR.GetRarity(entry.cost or 0)
+                ok(label .. " rarity for " .. traitId .. " is valid",
+                    knownRarities[rarity] ~= nil)
+                local weight = BCR.CalculateWeight(entry.cost or 0)
+                ok(label .. " weight for " .. traitId .. " >= 1",
+                    type(weight) == "number" and weight >= 1)
+            end
+        end
+    end
+    checkRarityAndWeight(BCR.CustomPositiveTraits, "positive")
+    checkRarityAndWeight(BCR.CustomNegativeTraits, "negative")
+
     local sourceList = {}
     for s, _ in pairs(sources) do table.insert(sourceList, "\"" .. s .. "\"") end
     print("[BCR ThirdPartyTest] Active addon(s): " .. table.concat(sourceList, ", "))
