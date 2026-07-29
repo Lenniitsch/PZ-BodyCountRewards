@@ -3,6 +3,13 @@ link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=
 link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
 [ ------ ]
 
+[ v1.3.3 - Body Count Rewards ]
+
+HOUSEKEEPING UPDATE
+- Upgraded the automated test suite with comprehensive validation checks: sandbox toggle wiring, exclusion bidirectionality and target validity, display name resolution, rarity and weight calculations for all third-party addon traits
+- Updated steam workshop preview images
+[ ------ ]
+
 [ v1.3.2 - Body Count Rewards ]
 
 HOUSEKEEPING UPDATE
