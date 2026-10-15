@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRNotifications (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRNotifications (Build 42.21+)
 -- Notification queue, staggering, halo text display.
 -- ============================================================
 

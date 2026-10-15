@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRTests (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRTests (Build 42.21+)
 -- Unit tests, 15 suites. Run in-game: BCRRunTests()
 -- ============================================================
 

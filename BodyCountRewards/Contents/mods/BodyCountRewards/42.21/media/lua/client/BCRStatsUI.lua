@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRStatsUI (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRStatsUI (Build 42.21+)
 -- Stats window: ISCollapsableWindow with 3 tabs
 -- (progress, history, catalog).
 -- ============================================================

@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRClient (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRClient (Build 42.21+)
 -- Update loop, kill tracking, reward requesting, context menu,
 -- event registration.
 -- ============================================================

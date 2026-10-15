@@ -26,7 +26,7 @@ Works in **Singleplayer** and **Multiplayer**.
 - **Kill threshold** -- Set how many kills per milestone (2--10,000, default: 1,000)
 - **Progressive milestone scaling** -- Milestones get harder over time, or keep it linear. Adjustable steepness (0.1x--2.0x).
 - **Reward priority modes** -- Gain First / Lose First / Random
-- **Retroactive Rewards** -- Grant rewards for kills made before installing the mod. High kill counts may grant many rewards at once
+- **Retroactive Rewards** -- Grants rewards for kills made before installing the mod. While disabled, owed milestones are set aside on load; enable it and reload to claim everything set aside, once. High kill counts may grant many rewards at once
 - **Restore Missing Traits** -- Re-apply a BCR-earned trait that went missing (multiplayer desync, admin removal) instead of requiring it to be re-earned
 - **Individual trait toggles** -- Enable/disable every single one of the 43 traits
 - **Positive/negative rewards** -- Toggle each reward type on or off
@@ -96,7 +96,7 @@ MP flow:  Client sends RequestReward command -> Server validates -> sends Reward
 
 - Built for **Project Zomboid Build 42.20+** (Stable Branch)
 - Works in both **Singleplayer** and **Multiplayer**
-- **Safe to install mid-game** -- reads your existing kill count
+- **Safe to install mid-game** -- reads your existing kill count; with Retroactive Rewards enabled, everything owed is granted on the next load
 - **Safe to remove mid-game** -- all earned vanilla traits are permanently applied
 - **No vanilla file overwrites** -- no conflicts with other mods
 - Works with Skill Recovery Journal

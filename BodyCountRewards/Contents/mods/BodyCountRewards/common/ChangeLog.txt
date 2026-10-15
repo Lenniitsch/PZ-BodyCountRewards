@@ -3,6 +3,22 @@ link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=
 link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
 [ ------ ]
 
+[ v1.4.0 - Body Count Rewards ]
+
+FIXES & IMPROVEMENTS
+- Reworked "Retroactive Rewards". While the option is OFF, every milestone you already passed without a reward is set aside when you load the save instead of being handed out slowly. Turn the option ON and load again to claim everything set aside - each reward is granted exactly once.
+- Fixed the reward system getting stuck when no traits were left: the retry loop now stops and the "All rewards granted!" message appears.
+- Multiplayer: a lost or slow reward request is retried automatically instead of waiting for your next kill.
+- Multiplayer: reward notifications now use each player's own game language.
+- Trait names for addon traits with unusual translation keys now resolve properly instead of showing a raw ID.
+- Missing translations now fall back to readable text instead of showing internal key names.
+- Fixed number formatting in languages that use "." as the thousands separator.
+- Controller users no longer lose the right-click submenu.
+- Old reward popups and the stats window no longer carry over from a previous character into a new session.
+- Loading a save no longer reports your lifetime kill count as newly earned kills.
+- Saves are repaired on load when reward counters or the reward history are damaged or oversized.
+[ ------ ]
+
 [ v1.3.4 - Body Count Rewards ]
 
 FIXES & IMPROVEMENTS

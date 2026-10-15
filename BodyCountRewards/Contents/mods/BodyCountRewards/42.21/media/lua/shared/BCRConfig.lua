@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRConfig (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRConfig (Build 42.21+)
 -- Constants, sandbox option cache, debug flag. No game logic here.
 -- ============================================================
 

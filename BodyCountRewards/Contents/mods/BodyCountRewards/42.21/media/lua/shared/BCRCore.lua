@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRCore (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRCore (Build 42.21+)
 -- Engine: trait registry, pool builder, weighted selection,
 -- milestone math, display names, ModData, trait add/remove.
 -- ============================================================

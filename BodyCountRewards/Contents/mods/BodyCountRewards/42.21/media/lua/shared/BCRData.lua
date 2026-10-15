@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.4 -- BCRData (Build 42.19+)
+-- BodyCountRewards v1.4.0 -- BCRData (Build 42.21+)
 -- Base trait lists, rarity tiers, exclusions, and the third-party
 -- trait registration API (BCR.RegisterCustomTraits).
 -- ============================================================
@@ -113,7 +113,7 @@ BCR.Exclusions = {
 -- LEGACY: v1.3.1 migration table. Maps pre-v1.3.1
 -- UPPER_SNAKE_CASE trait IDs to ResourceLocation format.
 -- Used by GetTraitDisplayName and the trait history guards.
--- Planned removal: v1.4.0.
+-- Kept for pre-v1.3.1 saves; revisit removal in a later release.
 -- ============================================================
 
 BCR.TRAIT_ID_MIGRATION = {
