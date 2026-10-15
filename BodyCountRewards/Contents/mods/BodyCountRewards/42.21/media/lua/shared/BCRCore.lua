@@ -648,6 +648,29 @@ function BCR.EnsureModData(player)
         (type(modData.BCR.withheldMilestones) ~= "number" or modData.BCR.withheldMilestones < 0) then
         modData.BCR.withheldMilestones = nil
     end
+    -- One-time trait history sanitize: drop malformed entries and trim an
+    -- oversized list. The marker keeps this O(n) pass out of the per-tick
+    -- EnsureModData calls; recordTraitHistory keeps the list capped after it.
+    if modData.BCR.traitHistoryChecked ~= true then
+        local history = modData.BCR.traitHistory
+        local cleaned = {}
+        local count = #history
+        local first = 1
+        if count > BCR.MAX_TRAIT_HISTORY then
+            first = count - BCR.MAX_TRAIT_HISTORY + 1
+        end
+        for i = first, count do
+            local entry = history[i]
+            local entryId = type(entry) == "table" and (entry.id or entry.trait) or nil
+            if type(entryId) == "string" and entryId ~= ""
+                and (entry.action == "added" or entry.action == "removed"
+                    or entry.action == "baseline" or entry.action == "lost") then
+                table.insert(cleaned, entry)
+            end
+        end
+        modData.BCR.traitHistory = cleaned
+        modData.BCR.traitHistoryChecked = true
+    end
     return modData.BCR
 end
 

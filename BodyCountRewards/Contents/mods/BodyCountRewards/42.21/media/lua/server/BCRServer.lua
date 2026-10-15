@@ -56,6 +56,10 @@ local function recordTraitHistory(bcrData, result)
         timestamp = getWorldAgeHoursSafe(),
         source = BCR.CustomTraitSources and BCR.CustomTraitSources[result.id],
     })
+    -- Bound the history so the per-trait scans stay cheap on long saves.
+    if #bcrData.traitHistory > BCR.MAX_TRAIT_HISTORY then
+        table.remove(bcrData.traitHistory, 1)
+    end
 end
 
 -- ============================================================
@@ -290,7 +294,11 @@ local function handleRequestReward(player, args)
     -- cooldown only blocks spam, never legit flow. A silent return is
     -- safe -- the client re-requests on its next pending tick.
     local now = getWorldAgeHoursSafe()
-    if bcrData.lastRewardRequest and (now - bcrData.lastRewardRequest) * 3600 < BCR.REWARD_REQUEST_COOLDOWN_SECONDS then
+    local previousRequest = bcrData.lastRewardRequest
+    -- Only rate-limit on a clock that moved forward: a rollback, a new world,
+    -- or an unreadable clock must not lock the player out of rewards.
+    if previousRequest and now > previousRequest
+        and (now - previousRequest) * 3600 < BCR.REWARD_REQUEST_COOLDOWN_SECONDS then
         return
     end
     bcrData.lastRewardRequest = now

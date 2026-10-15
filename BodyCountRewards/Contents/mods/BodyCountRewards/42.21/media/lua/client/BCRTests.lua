@@ -422,6 +422,15 @@ local function suiteDataIntegrity()
     local exCount = 0
     for _ in pairs(BCR.Exclusions) do exCount = exCount + 1 end
     assertTrue(exCount > 0, "Exclusions must have entries")
+
+    -- === Regression: self-referencing exclusion merge is safe ===
+    local beforeKeys = 0
+    for _ in pairs(BCR.Exclusions) do beforeKeys = beforeKeys + 1 end
+    local okMerge = pcall(BCR.RegisterCustomTraits, "MergeSelfTest", "mergeSelfTestNs", {}, {}, BCR.Exclusions)
+    local afterKeys = 0
+    for _ in pairs(BCR.Exclusions) do afterKeys = afterKeys + 1 end
+    assertTrue(okMerge, "Self-referencing exclusion merge does not error")
+    assertEqual(beforeKeys, afterKeys, "Self-referencing exclusion merge adds no keys")
 end
 
 -- ============================================================
@@ -852,6 +861,37 @@ local function suitePoolBuildingPlayerState()
     bcrData.traitHistory = savedHistory
     bcrData.kills = savedKills
     bcrData.rewardsGiven = savedRewards
+
+    -- === Regression: trait history sanitize + cap ===
+    local savedChecked = bcrData.traitHistoryChecked
+    local mixed = {
+        { id = "base:SpeedDemon", action = "added" },
+        { id = "base:NightVision", action = "lost" },
+        { action = "added" },
+        "not a table",
+        { id = "base:Dextrous", action = "bogus" },
+        { id = "", action = "added" },
+        { trait = "base:FastReader", action = "added" },
+    }
+    bcrData.traitHistoryChecked = nil
+    bcrData.traitHistory = mixed
+    local sanitized = BCR.EnsureModData(player)
+    local kept = #sanitized.traitHistory
+
+    local big = {}
+    for i = 1, BCR.MAX_TRAIT_HISTORY + 5 do
+        big[i] = { id = "base:SpeedDemon", action = "added" }
+    end
+    bcrData.traitHistoryChecked = nil
+    bcrData.traitHistory = big
+    sanitized = BCR.EnsureModData(player)
+    local capped = #sanitized.traitHistory
+
+    bcrData.traitHistory = savedHistory
+    bcrData.traitHistoryChecked = savedChecked
+
+    assertEqual(3, kept, "Sanitize keeps only valid history entries")
+    assertEqual(BCR.MAX_TRAIT_HISTORY, capped, "Sanitize caps the history length")
 
     -- === Regression: server kill sync takes the engine value ===
     if BCR.SyncAuthoritativeKills then

@@ -296,7 +296,13 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
 
     local function mergeExclusions()
         if not exclusions then return end
+        -- Copy first: an addon may pass BCR.Exclusions itself, and Lua 5.1
+        -- leaves pairs() undefined when new keys are inserted during traversal.
+        local source = {}
         for traitId, excludeList in pairs(exclusions) do
+            source[traitId] = excludeList
+        end
+        for traitId, excludeList in pairs(source) do
             if type(traitId) == "string" and type(excludeList) == "table" then
                 for _, excludedId in ipairs(excludeList) do
                     if type(excludedId) ~= "string" or excludedId == "" then
