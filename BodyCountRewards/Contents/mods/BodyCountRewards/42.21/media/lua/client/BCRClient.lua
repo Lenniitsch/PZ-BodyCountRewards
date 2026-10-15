@@ -121,7 +121,7 @@ end
 -- EVENT HANDLERS
 -- ============================================================
 
-function BCR_OnCreatePlayer(playerNum, player)
+local function BCR_OnCreatePlayer(playerNum, player)
     BCR.RefreshConfig()
     if not player then return end
 
@@ -132,8 +132,11 @@ function BCR_OnCreatePlayer(playerNum, player)
     local bcrData = BCR.EnsureModData(player)
     if not bcrData then return end
 
-    if BCR.opts then
-        pcall(function() BCR.ReconcileTraitState(player, bcrData, BCR.opts) end)
+    if BCR.opts and BCR.ReconcileTraitState then
+        local recOk, recErr = pcall(BCR.ReconcileTraitState, player, bcrData, BCR.opts)
+        if not recOk then
+            BCR.DebugPrint("Client", "ReconcileTraitState failed: " .. tostring(recErr))
+        end
     end
 
     local ok, kills = pcall(function() return player:getZombieKills() end)
@@ -143,11 +146,14 @@ function BCR_OnCreatePlayer(playerNum, player)
             bcrData.kills = kills
         end
     end
+    -- Seed the tick baseline so the first update does not report the whole
+    -- lifetime kill count as new kills.
+    lastKnownKills = bcrData.kills or 0
 
     local traitCount = bcrData.traitHistory and #bcrData.traitHistory or 0
     BCR.DebugPrint("Client", string.format(
         "onCreatePlayer: kills=%d, rewardsGiven=%d, traits=%d",
-        kills or 0, rewardsGiven, traitCount
+        (ok and kills) or 0, rewardsGiven, traitCount
     ))
 
     if not BCR.HasAvailableRewards(player) then
@@ -176,7 +182,11 @@ local function requestReward(player, bcrData)
     BCR.DebugPrint("Client", "Requesting reward")
     local ok, results = pcall(BCR.ProcessRewardDirect, player)
     if not ok or type(results) ~= "table" or #results == 0 then
-        BCR.DebugPrint("Client", "SP Reward skipped: " .. tostring(results or ok))
+        if not ok then
+            BCR.DebugPrint("Client", "SP reward request error: " .. tostring(results))
+        else
+            BCR.DebugPrint("Client", "SP reward skipped: nothing granted")
+        end
         if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
             BCR.DebugPrint("Client", "No more rewards available - scheduling final message")
             scheduleFinalMessage()
@@ -194,16 +204,17 @@ local function requestReward(player, bcrData)
     end
 end
 
-function BCR_OnPlayerUpdate(player)
+local function BCR_OnPlayerUpdate(player)
     if not player then return end
     if player:isDead() then return end
     if isPendingRequestInFlight and not isSinglePlayer() then
         pendingRequestTimer = pendingRequestTimer + 1
         if pendingRequestTimer >= MP_REQUEST_TIMEOUT_TICKS then
-            BCR.DebugPrint("Client", "MP request timed out -- resetting")
+            -- Clear only the in-flight flag: the pending count stays armed so
+            -- the retry loop re-sends instead of waiting for the next kill.
+            BCR.DebugPrint("Client", "MP request timed out -- retrying")
             isPendingRequestInFlight = false
             pendingRequestTimer = 0
-            pendingRewardsCount = 0
         end
     end
     if needsPlayerReady then
@@ -252,8 +263,11 @@ function BCR_OnPlayerUpdate(player)
                 else
                     if not isPendingRequestInFlight then
                         isPendingRequestInFlight = true
-                        requestReward(player, bcrData)
+                        local reqOk, reqErr = pcall(requestReward, player, bcrData)
                         isPendingRequestInFlight = false
+                        if not reqOk then
+                            BCR.DebugPrint("Client", "requestReward error: " .. tostring(reqErr))
+                        end
                     end
                 end
             else
@@ -272,7 +286,11 @@ function BCR_OnPlayerUpdate(player)
                 local ok, results = pcall(BCR.ProcessRewardDirect, player)
                 if not ok or type(results) ~= "table" or #results == 0 then
                     isPendingRequestInFlight = false
-                    BCR.DebugPrint("Client", "OnPlayerUpdate: ProcessRewardDirect error: " .. tostring(results or ok))
+                    if not ok then
+                        BCR.DebugPrint("Client", "OnPlayerUpdate: ProcessRewardDirect error: " .. tostring(results))
+                    else
+                        BCR.DebugPrint("Client", "OnPlayerUpdate: ProcessRewardDirect granted nothing")
+                    end
                     if not BCR.HasAvailableRewards(player) then
                         scheduleFinalMessage()
                         pendingRewardsCount = 0
@@ -322,7 +340,7 @@ function BCR_OnPlayerUpdate(player)
     lastKnownKills = currentKills
 end
 
-function BCR_OnServerCommand(module, command, args)
+local function BCR_OnServerCommand(module, command, args)
     if module ~= "BCR" then return end
     if not args then return end
     local player = getLocalPlayer()
@@ -337,18 +355,28 @@ function BCR_OnServerCommand(module, command, args)
     elseif command == "RewardBatchComplete" then
         isPendingRequestInFlight = false
         pendingRequestTimer = 0
-        if args.remainingMilestones then
-            pendingRewardsCount = args.remainingMilestones
+        local totalGranted = type(args.totalGranted) == "number"
+            and math.max(0, math.floor(args.totalGranted)) or 0
+        local remainingMilestones = type(args.remainingMilestones) == "number"
+            and math.max(0, math.floor(args.remainingMilestones)) or nil
+        local serverRewardsGiven = type(args.rewardsGiven) == "number"
+            and math.max(0, math.floor(args.rewardsGiven)) or nil
+        local serverWithheld = type(args.withheldMilestones) == "number"
+            and math.max(0, math.floor(args.withheldMilestones)) or nil
+        if remainingMilestones then
+            pendingRewardsCount = remainingMilestones
         end
         BCR.DebugPrint("Client", string.format(
             "Batch complete: %d granted, %d milestones remaining",
-            args.totalGranted or 0, args.remainingMilestones or 0
+            totalGranted, remainingMilestones or 0
         ))
-        local rewardsGiven = args.rewardsGiven
-        if rewardsGiven and rewardsGiven > (bcrData.rewardsGiven or 0) then
-            bcrData.rewardsGiven = rewardsGiven
+        if serverRewardsGiven and serverRewardsGiven > (bcrData.rewardsGiven or 0) then
+            bcrData.rewardsGiven = serverRewardsGiven
         end
-        if (args.totalGranted or 0) == 0 and pendingRewardsCount > 0 then
+        if serverWithheld then
+            bcrData.withheldMilestones = serverWithheld
+        end
+        if totalGranted == 0 and pendingRewardsCount > 0 then
             -- Server granted nothing -- either the pools are exhausted or
             -- a pick failed transiently. Retry a few times, then stop so
             -- the client does not ping-pong the server forever.
@@ -387,7 +415,7 @@ function BCR_OnServerCommand(module, command, args)
     end
 end
 
-function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test)
+local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test)
     if test then return true end
     if not bcrModConfig.showContextMenu then return end
 

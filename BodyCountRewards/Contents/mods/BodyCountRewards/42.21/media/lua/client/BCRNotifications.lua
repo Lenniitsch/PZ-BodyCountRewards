@@ -27,9 +27,11 @@ local HALO_COLORS = {
 -- ============================================================
 
 function BCR.EnqueueNotification(result)
-    if not result then return end
+    if type(result) ~= "table" then return end
     if #notificationQueue >= BCR.MAX_NOTIFICATION_QUEUE then
-        local batchedCount = #notificationQueue + 1
+        -- The summary replaces the queued entries; the incoming reward takes
+        -- its own slot, so count only what is collapsed.
+        local batchedCount = #notificationQueue
         local label = getText("UI_BCR_BatchRewards")
         if not label or label == "UI_BCR_BatchRewards" then
             label = tostring(batchedCount) .. " rewards"

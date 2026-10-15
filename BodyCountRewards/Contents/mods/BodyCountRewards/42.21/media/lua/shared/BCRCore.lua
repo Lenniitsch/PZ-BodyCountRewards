@@ -20,7 +20,11 @@ function BCR.GetTraitUserdata(traitId)
         return nil
     end
     local cached = traitUserdataCache[traitId]
-    if cached ~= nil then return cached end
+    if cached ~= nil then
+        -- Misses are cached as false; the public contract stays "nil".
+        if cached == false then return nil end
+        return cached
+    end
     local ok, userdata = pcall(function()
         return CharacterTrait.get(ResourceLocation.of(traitId))
     end)
@@ -231,6 +235,10 @@ end
 
 local function modifyTrait(player, traitEntry, action)
     if not player or not traitEntry then return false end
+    if type(traitEntry) ~= "table" then
+        BCR.DebugPrint("Core", "modifyTrait: trait entry must be a table")
+        return false
+    end
     if not canModifyTraits() then
         BCR.DebugPrint("Core", "modifyTrait: cannot modify traits in this context")
         return false
@@ -308,21 +316,17 @@ end
 
 function BCR.CalculateWeight(cost)
     if type(cost) ~= "number" then return 1 end
-    return math.max(1, (BCR.MAX_WEIGHT_COST - math.abs(cost)) + 1)
+    return math.max(1, math.floor((BCR.MAX_WEIGHT_COST - math.abs(cost)) + 1))
 end
 
 function BCR.WeightedRandomSelect(pool)
-    if not pool then return nil end
-    local empty = true
-    for _ in pairs(pool) do empty = false; break end
-    if empty then return nil end
+    if not pool or #pool == 0 then return nil end
     local totalWeight = 0
     for _, entry in ipairs(pool) do
         totalWeight = totalWeight + (entry.weight or 1)
     end
     if totalWeight <= 0 then
-        local count = #pool
-        return pool[ZombRand(count) + 1]
+        return pool[ZombRand(#pool) + 1]
     end
     local roll = ZombRand(totalWeight)
     local cumulative = 0

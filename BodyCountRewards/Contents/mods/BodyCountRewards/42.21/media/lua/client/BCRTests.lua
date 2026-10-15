@@ -146,6 +146,8 @@ local function suiteTraitRegistry()
 
     local unknown = BCR.GetTraitUserdata("FAKE_TRAIT_XYZ")
     assertTrue(unknown == nil or unknown == false, "GetTraitUserdata(unknown id) -> nil/false")
+    local unknownAgain = BCR.GetTraitUserdata("FAKE_TRAIT_XYZ")
+    assertTrue(unknownAgain == nil, "Cached miss returns nil on repeat calls")
 
     assertTrue(BCR.GetTraitUserdata(nil) == nil or BCR.GetTraitUserdata(nil) == false,
         "GetTraitUserdata(nil) -> nil/false")
@@ -203,6 +205,8 @@ local function suiteRarityWeight()
         assertEqual(BCR.CalculateWeight(c), BCR.CalculateWeight(-c),
             "Weight symmetric for cost +/-" .. c)
     end
+    local wFrac = BCR.CalculateWeight(1.5)
+    assertEqual(wFrac, math.floor(wFrac), "Fractional cost yields an integer weight")
 
     local cc = BCR.GetRarityColor(1)
     assertEqual(0.80, cc[1], "Common R=0.80")
@@ -274,6 +278,8 @@ end
 local function suiteWeightedSelection()
     assertTrue(BCR.WeightedRandomSelect(nil) == nil, "WeightedRandomSelect(nil) -> nil")
     assertTrue(BCR.WeightedRandomSelect({}) == nil, "WeightedRandomSelect(empty table) -> nil")
+    assertTrue(BCR.WeightedRandomSelect({ only = true }) == nil,
+        "WeightedRandomSelect(hash-only table) -> nil")
 
     local single = { id = "ONLY", traitUserdata = nil, cost = 1, rarity = "common", weight = 1 }
     local singleOk = true
@@ -648,6 +654,10 @@ local function suiteAddRemove()
     -- Entry with no .id field
     assertFalse(BCR.AddTrait(player, { cost = -1 }), "AddTrait(entry without id) -> false")
     assertFalse(BCR.RemoveTrait(player, { cost = 2 }), "RemoveTrait(entry without id) -> false")
+
+    -- Non-table entry (bad addon or console input)
+    assertFalse(BCR.AddTrait(player, 42), "AddTrait(non-table entry) -> false")
+    assertFalse(BCR.RemoveTrait(player, "junk"), "RemoveTrait(non-table entry) -> false")
 
     -- Bogus trait ID (won't resolve to userdata)
     assertFalse(BCR.AddTrait(player, { id = "NOT_A_REAL_TRAIT" }),
@@ -1053,6 +1063,8 @@ end
 local function suiteNotificationQueue()
     local ok1 = pcall(BCR.EnqueueNotification, nil)
     assertTrue(ok1, "EnqueueNotification(nil) does not crash")
+    local ok1b = pcall(BCR.EnqueueNotification, "junk")
+    assertTrue(ok1b, "EnqueueNotification(non-table) does not crash")
 
     local sample = {
         id = "base:SpeedDemon",
