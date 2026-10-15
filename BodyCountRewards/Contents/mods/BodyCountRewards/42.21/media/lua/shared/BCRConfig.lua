@@ -20,6 +20,9 @@ BCR.NOTIFICATION_DELAY_TICKS = 200
 BCR.MAX_BATCH_REWARDS = 64
 BCR.MAX_TRAIT_HISTORY = 1000
 BCR.REWARD_REQUEST_COOLDOWN_SECONDS = 1
+BCR.SCALING_LINEAR = 1
+BCR.SCALING_PROGRESSIVE = 2
+BCR.SECONDS_PER_HOUR = 3600
 
 -- ============================================================
 -- RUNTIME STATE
@@ -74,7 +77,7 @@ function BCR.RefreshConfig()
         rewardPriority           = sandboxVars.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST,
         grantMissedOpportunities = sandboxVars.grantMissedOpportunities == true,
         restoreMissingTraits     = sandboxVars.restoreMissingTraits == true,
-        milestoneScaling         = sandboxVars.MilestoneScaling or 1,
+        milestoneScaling         = sandboxVars.MilestoneScaling or BCR.SCALING_LINEAR,
         progressiveScalingFactor = sandboxVars.ProgressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR,
     }
     BCR.DEBUG = sandboxVars.enableDebugLogging == true

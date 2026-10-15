@@ -38,11 +38,8 @@ function BCR.EnqueueNotification(result)
         end
         notificationQueue = {
             {
-                id = "BATCH",
                 displayName = label,
                 action = "batch",
-                rarity = "common",
-                color = { 1, 1, 1 },
             }
         }
     end

@@ -90,6 +90,10 @@ local function rarityColor(rarity)
     return (COLORS.bright[rarity] or COLORS.bright.common)
 end
 
+local function getRarityLabel(rarity)
+    return getTextOrNull("UI_BCR_Rarity_" .. tostring(rarity)) or tostring(rarity)
+end
+
 local function getBCRData(player)
     -- Route through EnsureModData so the UI never reads an
     -- unnormalized/corrupt ModData table.
@@ -120,7 +124,8 @@ local function formatNumber(value)
 end
 
 -- ============================================================
--- BCRProgressPanel -- ISPanel subclass with dirty-flag prerender
+-- BCRProgressPanel -- draws the cached snapshot each frame; the
+-- expensive data recompute is event-gated, not per-frame.
 -- ============================================================
 
 BCRProgressPanel = ISPanel:derive("BCRProgressPanel")
@@ -135,10 +140,6 @@ function BCRProgressPanel:new(x, y, w, h, parentWindow)
     o.cached = nil
     o.player = parentWindow.player
     return o
-end
-
-function BCRProgressPanel:initialise()
-    ISPanel.initialise(self)
 end
 
 function BCRProgressPanel:prerender()
@@ -281,10 +282,6 @@ function BCRStatsWindow:new(x, y, w, h, player)
     return o
 end
 
-function BCRStatsWindow:initialise()
-    ISCollapsableWindow.initialise(self)
-end
-
 local function createRichTextPanel(w, h)
     local panel = ISRichTextPanel:new(0, 0, w, h)
     panel:initialise()
@@ -338,10 +335,6 @@ function BCRStatsWindow:close()
     statsWindow = nil
 end
 
-function BCRStatsWindow:prerender()
-    ISCollapsableWindow.prerender(self)
-end
-
 -- ============================================================
 -- TAB 2: HISTORY CONTENT
 -- ============================================================
@@ -376,11 +369,7 @@ function BCRStatsWindow:updateHistory()
             local traitId = entry.id or entry.trait
             local displayName = BCR.GetTraitDisplayName(traitId) or traitId
             local rarity = entry.rarity or "common"
-            local rarityKey = "UI_BCR_Rarity_" .. rarity
-            local rarityLabel = getText(rarityKey)
-            if not rarityLabel or rarityLabel == rarityKey then
-                rarityLabel = rarity
-            end
+            local rarityLabel = getRarityLabel(rarity)
             local sourceStr = ""
             if entry.source then
                 sourceStr = " | Added by: " .. entry.source
@@ -439,11 +428,7 @@ function BCRStatsWindow:updateCatalog()
         local line = ""
         local displayName = BCR.GetTraitDisplayName(traitId) or traitId
         local rarity = BCR.GetRarity(cost)
-        local rarityKey = "UI_BCR_Rarity_" .. rarity
-        local rarityLabel = getText(rarityKey)
-        if not rarityLabel or rarityLabel == rarityKey then
-            rarityLabel = rarity
-        end
+        local rarityLabel = getRarityLabel(rarity)
         local isInPool = poolLookup[traitId] ~= nil
         local isAllowed = BCR.IsTraitAllowed(traitId)
 
@@ -621,7 +606,7 @@ function BCRStatsWindow:updateProgress()
     end
 
     local scalingLabel
-    if opts.milestoneScaling == 2 then
+    if opts.milestoneScaling == BCR.SCALING_PROGRESSIVE then
         local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
         scalingLabel = (getTextOrNull("UI_BCR_ScalingProgressive") or "Progressive")
             .. " (x" .. formatFloatLocaleSafe(factor, 1) .. ")"
@@ -630,9 +615,9 @@ function BCRStatsWindow:updateProgress()
     end
 
     local rewardPriorityLabel
-    if opts.rewardPriority == 2 then
+    if opts.rewardPriority == BCR.PRIORITY_NEGATIVE_FIRST then
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityLoseFirst") or "Remove Negative First"
-    elseif opts.rewardPriority == 3 then
+    elseif opts.rewardPriority == BCR.PRIORITY_RANDOM then
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityRandom") or "Random"
     else
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityGainFirst") or "Gain Positive First"

@@ -110,11 +110,10 @@ BCR.Exclusions = {
 }
 
 -- ============================================================
--- TEMPORARY: v1.3.1 migration table. Maps pre-v1.3.1
+-- LEGACY: v1.3.1 migration table. Maps pre-v1.3.1
 -- UPPER_SNAKE_CASE trait IDs to ResourceLocation format.
--- Used by GetTraitDisplayName (history fallback) and
--- RefreshConfig (sandbox key migration).
--- Remove after a few releases when old saves cycle out.
+-- Used by GetTraitDisplayName and the trait history guards.
+-- Planned removal: v1.4.0.
 -- ============================================================
 
 BCR.TRAIT_ID_MIGRATION = {

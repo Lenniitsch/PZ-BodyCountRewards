@@ -15,6 +15,8 @@ BCR = BCR or {}
 
 local traitUserdataCache = {}
 
+-- Resolves a trait id to its engine userdata; caches hits and misses.
+-- Returns nil (never false) when the id does not resolve.
 function BCR.GetTraitUserdata(traitId)
     if not traitId or traitId == "" then
         return nil
@@ -40,6 +42,7 @@ end
 -- PLAYER TRAIT CHECKS (tri-state: true/has, false/doesn't, nil/error)
 -- ============================================================
 
+-- Tri-state: true = has, false = does not have, nil = engine could not tell.
 function BCR.PlayerHasTrait(player, traitId)
     if not player then return nil end
     local traitObj = BCR.GetTraitUserdata(traitId)
@@ -49,6 +52,7 @@ function BCR.PlayerHasTrait(player, traitId)
     return result
 end
 
+-- Returns true, blockerId when a mutually exclusive trait is owned.
 function BCR.HasMutuallyExclusiveTrait(player, traitId)
     local exclusions = BCR.Exclusions[traitId]
     if not exclusions then return false end
@@ -60,6 +64,7 @@ function BCR.HasMutuallyExclusiveTrait(player, traitId)
     return false, nil
 end
 
+-- Engine trait name strings for a player; nil when the engine read fails.
 function BCR.GetPlayerTraitsList(player)
     if not player then return nil end
     local traitsOk, traits = pcall(function() return player:getCharacterTraits() end)
@@ -100,6 +105,24 @@ function BCR.DumpEngineTraits(quiet)
     local count = 0
     pcall(function() count = defs:size() end)
 
+    -- Sorted "count [id, id]" text for an engine id-list getter; a failed
+    -- engine call degrades to "0" (the dump is diagnostic only).
+    local function collectEngineTraitIds(getter)
+        local ids = {}
+        pcall(function()
+            local list = getter()
+            if list then
+                for j = 0, list:size() - 1 do
+                    local other = list:get(j)
+                    if other then table.insert(ids, tostring(other)) end
+                end
+            end
+        end)
+        table.sort(ids)
+        if #ids == 0 then return "0" end
+        return #ids .. " [" .. table.concat(ids, ", ") .. "]"
+    end
+
     for i = 0, count - 1 do
         local rowOk, row = pcall(function()
             local def = defs:get(i)
@@ -117,37 +140,8 @@ function BCR.DumpEngineTraits(quiet)
             local costOk, cost = pcall(function() return def:getCost() end)
             cost = (costOk and cost) or 0
 
-            local mutexIds = {}
-            pcall(function()
-                local m = def:getMutuallyExclusiveTraits()
-                if m then
-                    for j = 0, m:size() - 1 do
-                        local other = m:get(j)
-                        if other then table.insert(mutexIds, tostring(other)) end
-                    end
-                end
-            end)
-            table.sort(mutexIds)
-            local mutexText = tostring(#mutexIds)
-            if #mutexIds > 0 then
-                mutexText = #mutexIds .. " [" .. table.concat(mutexIds, ", ") .. "]"
-            end
-
-            local grantedIds = {}
-            pcall(function()
-                local g = def:getGrantedTraits()
-                if g then
-                    for j = 0, g:size() - 1 do
-                        local other = g:get(j)
-                        if other then table.insert(grantedIds, tostring(other)) end
-                    end
-                end
-            end)
-            table.sort(grantedIds)
-            local grantedText = tostring(#grantedIds)
-            if #grantedIds > 0 then
-                grantedText = #grantedIds .. " [" .. table.concat(grantedIds, ", ") .. "]"
-            end
+            local mutexText = collectEngineTraitIds(function() return def:getMutuallyExclusiveTraits() end)
+            local grantedText = collectEngineTraitIds(function() return def:getGrantedTraits() end)
 
             local mpDisabled = false
             pcall(function() mpDisabled = def:isDisabledInMultiplayer() == true end)
@@ -288,10 +282,12 @@ local function modifyTrait(player, traitEntry, action)
     return true
 end
 
+-- Grants a trait (entry: { id = ..., cost = ... }); false when blocked or invalid.
 function BCR.AddTrait(player, traitEntry)
     return modifyTrait(player, traitEntry, "add")
 end
 
+-- Removes a trait; false when not owned, blocked or invalid.
 function BCR.RemoveTrait(player, traitEntry)
     return modifyTrait(player, traitEntry, "remove")
 end
@@ -319,6 +315,7 @@ function BCR.CalculateWeight(cost)
     return math.max(1, math.floor((BCR.MAX_WEIGHT_COST - math.abs(cost)) + 1))
 end
 
+-- Picks one entry by weight; nil for a nil or empty pool.
 function BCR.WeightedRandomSelect(pool)
     if not pool or #pool == 0 then return nil end
     local totalWeight = 0
@@ -464,6 +461,7 @@ local function buildPool(player, baseList, customTraits, options)
     return pool
 end
 
+-- Traits the player can still earn (not owned, allowed, not excluded).
 function BCR.BuildEarnablePool(player, customTraits)
     if not player then return nil end
     local bcrData = BCR.EnsureModData(player)
@@ -474,6 +472,7 @@ function BCR.BuildEarnablePool(player, customTraits)
     })
 end
 
+-- Traits the player owns and can have removed (allowed, not excluded).
 function BCR.BuildRemovablePool(player, customTraits)
     if not player then return nil end
     local bcrData = BCR.EnsureModData(player)
@@ -484,6 +483,7 @@ function BCR.BuildRemovablePool(player, customTraits)
     })
 end
 
+-- Removes pool entries whose id appears as a key in excludeSet.
 function BCR.FilterPoolByExclusion(pool, excludeSet)
     if not pool then return {} end
     if not excludeSet then return pool end
@@ -508,7 +508,7 @@ function BCR.GetKillsForMilestone(milestone, opts)
     if not milestone or not opts then return 0 end
     if milestone <= 0 then return 0 end
     local bc = opts.bodyCount or BCR.DEFAULT_BODY_COUNT
-    if opts.milestoneScaling == 2 then
+    if opts.milestoneScaling == BCR.SCALING_PROGRESSIVE then
         local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
         if factor > 0 then
             return math.floor(bc * (milestone + factor * milestone * (milestone - 1) / 2))
@@ -522,7 +522,7 @@ function BCR.GetMilestonesAtKills(kills, opts)
     if not opts then return 0 end
     local bc = opts.bodyCount or BCR.DEFAULT_BODY_COUNT
     if bc <= 0 then return 0 end
-    if opts.milestoneScaling == 2 then
+    if opts.milestoneScaling == BCR.SCALING_PROGRESSIVE then
         local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
         if factor > 0 then
             local quadA = factor * bc / 2
@@ -577,6 +577,7 @@ end
 -- DISPLAY NAMES
 -- ============================================================
 
+-- Localized display name for a trait id; never returns nil.
 function BCR.GetTraitDisplayName(traitId)
     if type(traitId) ~= "string" or traitId == "" then return "Unknown" end
     local override = BCR.DISPLAY_OVERRIDES[traitId]
@@ -637,6 +638,8 @@ end
 -- MODDATA
 -- ============================================================
 
+-- Returns the per-player BCR ModData table, creating and repairing it as
+-- needed. Returns nil when ModData is unreadable.
 function BCR.EnsureModData(player)
     if not player then return nil end
     local ok, modData = pcall(function() return player:getModData() end)
@@ -695,24 +698,19 @@ end
 -- AVAILABILITY
 -- ============================================================
 
+-- True when at least one reward can still be granted to this player.
 function BCR.HasAvailableRewards(player)
     if not player then return false end
     local opts = BCR.GetOpts()
-    local earnableCount = 0
-    local removableCount = 0
     if opts.enablePositive ~= false then
         local earnable = BCR.BuildEarnablePool(player, nil)
-        if earnable then
-            for _ in ipairs(earnable) do earnableCount = earnableCount + 1 end
-        end
+        if earnable and #earnable > 0 then return true end
     end
     if opts.enableNegative ~= false then
         local removable = BCR.BuildRemovablePool(player, nil)
-        if removable then
-            for _ in ipairs(removable) do removableCount = removableCount + 1 end
-        end
+        if removable and #removable > 0 then return true end
     end
-    return earnableCount > 0 or removableCount > 0
+    return false
 end
 
 -- ============================================================

@@ -21,15 +21,18 @@ local failures = {}
 local suiteIndex = 0
 local suiteTotal = 0
 
+local function failAssertion(detail)
+    failed = failed + 1
+    table.insert(failures, "[" .. currentSuite .. "] " .. detail)
+    print("[BCR] [Tests] FAIL: [" .. currentSuite .. "] " .. detail)
+end
+
 local function assertTrue(cond, msg)
     if cond then
         passed = passed + 1
         print("[BCR] [Tests] PASS: " .. (msg or "assertTrue"))
     else
-        failed = failed + 1
-        local detail = msg or "assertion failed"
-        table.insert(failures, "[" .. currentSuite .. "] " .. detail)
-        print("[BCR] [Tests] FAIL: [" .. currentSuite .. "] " .. detail)
+        failAssertion(msg or "assertion failed")
     end
 end
 
@@ -43,11 +46,8 @@ local function assertEqual(expected, actual, msg)
         print("[BCR] [Tests] PASS: " .. (msg or "assertEqual"))
         return
     end
-    failed = failed + 1
-    local detail = (msg or "assertEqual failed")
-        .. " (expected " .. tostring(expected) .. ", got " .. tostring(actual) .. ")"
-    table.insert(failures, "[" .. currentSuite .. "] " .. detail)
-    print("[BCR] [Tests] FAIL: [" .. currentSuite .. "] " .. detail)
+    failAssertion((msg or "assertEqual failed")
+        .. " (expected " .. tostring(expected) .. ", got " .. tostring(actual) .. ")")
 end
 
 local function assertNotNil(value, msg)
@@ -55,10 +55,7 @@ local function assertNotNil(value, msg)
         passed = passed + 1
         print("[BCR] [Tests] PASS: " .. (msg or "assertNotNil"))
     else
-        failed = failed + 1
-        local detail = msg or "expected non-nil, got nil"
-        table.insert(failures, "[" .. currentSuite .. "] " .. detail)
-        print("[BCR] [Tests] FAIL: [" .. currentSuite .. "] " .. detail)
+        failAssertion(msg or "expected non-nil, got nil")
     end
 end
 
@@ -67,10 +64,7 @@ local function assertNotEqual(expected, actual, msg)
         passed = passed + 1
         print("[BCR] [Tests] PASS: " .. (msg or "assertNotEqual"))
     else
-        failed = failed + 1
-        local detail = msg or "values should differ"
-        table.insert(failures, "[" .. currentSuite .. "] " .. detail)
-        print("[BCR] [Tests] FAIL: [" .. currentSuite .. "] " .. detail)
+        failAssertion(msg or "values should differ")
     end
 end
 
@@ -79,11 +73,8 @@ local function assertType(expectedType, value, msg)
         passed = passed + 1
         print("[BCR] [Tests] PASS: " .. (msg or "type check"))
     else
-        failed = failed + 1
-        local detail = (msg or "type check failed")
-            .. " (expected " .. expectedType .. ", got " .. type(value) .. ")"
-        table.insert(failures, "[" .. currentSuite .. "] " .. detail)
-        print("[BCR] [Tests] FAIL: [" .. currentSuite .. "] " .. detail)
+        failAssertion((msg or "type check failed")
+            .. " (expected " .. expectedType .. ", got " .. type(value) .. ")")
     end
 end
 
@@ -112,8 +103,18 @@ local function getPlayerForTests()
     return player
 end
 
-local function hasPlayer()
-    return getPlayerForTests() ~= nil
+-- Shared precondition for suites that need a live singleplayer character.
+local function requireSinglePlayerWithCharacter()
+    if isClient() or isServer() then
+        skipSuite("Needs SP mode (neither client nor server flag set)")
+        return nil
+    end
+    local player = getPlayerForTests()
+    if not player then
+        skipSuite("Needs player in-game. Run from SP world console.")
+        return nil
+    end
+    return player
 end
 
 -- ============================================================
@@ -644,15 +645,8 @@ end
 -- ============================================================
 
 local function suiteAddRemove()
-    if isClient() or isServer() then
-        skipSuite("Needs SP mode (neither client nor server flag set)")
-        return
-    end
-    if not hasPlayer() then
-        skipSuite("Needs player in-game. Run from SP world console.")
-        return
-    end
-    local player = getPlayerForTests()
+    local player = requireSinglePlayerWithCharacter()
+    if not player then return end
 
     local speedEntry = { id = "base:NightVision", cost = -3 }
     local hadSpeed = BCR.PlayerHasTrait(player, "base:NightVision")
@@ -697,15 +691,8 @@ end
 -- ============================================================
 
 local function suiteExclusions()
-    if isClient() or isServer() then
-        skipSuite("Needs SP mode (neither client nor server flag set)")
-        return
-    end
-    if not hasPlayer() then
-        skipSuite("Needs player in-game. Run from SP world console.")
-        return
-    end
-    local player = getPlayerForTests()
+    local player = requireSinglePlayerWithCharacter()
+    if not player then return end
 
     local adrEntry = { id = "base:AdrenalineJunkie", cost = -4 }
     local agoEntry = { id = "base:Agoraphobic", cost = 4 }
@@ -778,15 +765,8 @@ end
 -- ============================================================
 
 local function suitePoolBuildingPlayerState()
-    if isClient() or isServer() then
-        skipSuite("Needs SP mode (neither client nor server flag set)")
-        return
-    end
-    if not hasPlayer() then
-        skipSuite("Needs player in-game. Run from SP world console.")
-        return
-    end
-    local player = getPlayerForTests()
+    local player = requireSinglePlayerWithCharacter()
+    if not player then return end
 
     -- === BuildEarnablePool ===
     assertTrue(BCR.BuildEarnablePool(nil) == nil, "BuildEarnablePool(nil) -> nil")
@@ -974,15 +954,8 @@ end
 -- ============================================================
 
 local function suiteCatchUpProcessReward()
-    if isClient() or isServer() then
-        skipSuite("Needs SP mode (neither client nor server flag set)")
-        return
-    end
-    if not hasPlayer() then
-        skipSuite("Needs player in-game. Run from SP world console.")
-        return
-    end
-    local player = getPlayerForTests()
+    local player = requireSinglePlayerWithCharacter()
+    if not player then return end
     local bcrData = BCR.EnsureModData(player)
     assertNotNil(bcrData, "Should have ModData")
 
@@ -1149,15 +1122,8 @@ local function suiteTraitHistoryReconciliation()
         { { id = "base:NightVision", action = "added" } }, "NIGHT_VISION"),
         "Legacy query id resolves to current entry")
 
-    if isClient() or isServer() then
-        skipSuite("Needs SP mode (neither client nor server flag set)")
-        return
-    end
-    if not hasPlayer() then
-        skipSuite("Needs player in-game. Run from SP world console.")
-        return
-    end
-    local player = getPlayerForTests()
+    local player = requireSinglePlayerWithCharacter()
+    if not player then return end
     local bcrData = BCR.EnsureModData(player)
     assertNotNil(bcrData, "ModData present")
 

@@ -4,6 +4,7 @@
 -- Returns config table. Nil-guarded PZAPI.ModOptions integration.
 -- ============================================================
 
+local PZOPTION_TYPE_BUTTON = "button"
 local config = { showContextMenu = true }
 
 if PZAPI and PZAPI.ModOptions then
@@ -14,7 +15,7 @@ if PZAPI and PZAPI.ModOptions then
         getTextOrNull("UI_BCR_Option_ShowMenu_tooltip") or "When enabled, right-clicking shows Body Count Rewards progress in the context menu.")
     options.apply = function(self)
         for k, v in pairs(self.dict) do
-            if v.type and v.type ~= "button" then
+            if v.type and v.type ~= PZOPTION_TYPE_BUTTON then
                 config[k] = v:getValue()
             end
         end

@@ -285,7 +285,7 @@ local function handleRequestReward(player, args)
     BCR.DebugPrint("Server", "RequestReward received from: " .. who)
     local bcrData = BCR.EnsureModData(player)
     if not bcrData then
-        sendServerCommand(player, "BCR", "RewardError", { reason = "no_moddata" })
+        sendServerCommand(player, BCR.MODULE_NAME, "RewardError", { reason = "no_moddata" })
         return
     end
     local opts = BCR.GetOpts()
@@ -298,14 +298,14 @@ local function handleRequestReward(player, args)
     -- Only rate-limit on a clock that moved forward: a rollback, a new world,
     -- or an unreadable clock must not lock the player out of rewards.
     if previousRequest and now > previousRequest
-        and (now - previousRequest) * 3600 < BCR.REWARD_REQUEST_COOLDOWN_SECONDS then
+        and (now - previousRequest) * BCR.SECONDS_PER_HOUR < BCR.REWARD_REQUEST_COOLDOWN_SECONDS then
         return
     end
     bcrData.lastRewardRequest = now
 
     if not opts.enablePositive and not opts.enableNegative then
         print("[BCR] [Server] Both trait rewards are disabled in sandbox options")
-        sendServerCommand(player, "BCR", "RewardError", {
+        sendServerCommand(player, BCR.MODULE_NAME, "RewardError", {
             reason = "rewards_disabled",
         })
         return
@@ -317,7 +317,7 @@ local function handleRequestReward(player, args)
         -- Nothing owed right now (for example a withheld backlog).
         -- Report it as a normal empty batch so the client stops asking
         -- without logging an error.
-        sendServerCommand(player, "BCR", "RewardBatchComplete", {
+        sendServerCommand(player, BCR.MODULE_NAME, "RewardBatchComplete", {
             totalGranted = 0,
             remainingMilestones = 0,
             rewardsGiven = bcrData.rewardsGiven or 0,
@@ -335,7 +335,7 @@ local function handleRequestReward(player, args)
         ))
         -- Send identity and action only: the client resolves the display
         -- name and colors locally, so each player sees their own language.
-        sendServerCommand(player, "BCR", "RewardGranted", {
+        sendServerCommand(player, BCR.MODULE_NAME, "RewardGranted", {
             id = applied.id,
             action = applied.action,
         })
@@ -344,7 +344,7 @@ local function handleRequestReward(player, args)
     if isServer() then
         pcall(function() player:transmitModData() end)
     end
-    sendServerCommand(player, "BCR", "RewardBatchComplete", {
+    sendServerCommand(player, BCR.MODULE_NAME, "RewardBatchComplete", {
         totalGranted = totalGranted,
         remainingMilestones = remainingMilestones,
         rewardsGiven = bcrData.rewardsGiven or 0,
@@ -365,7 +365,7 @@ local function handlePlayerReady(player)
     if isServer() then
         pcall(function() player:transmitModData() end)
     end
-    sendServerCommand(player, "BCR", "PlayerSync", {
+    sendServerCommand(player, BCR.MODULE_NAME, "PlayerSync", {
         kills = bcrData.kills or 0,
         rewardsGiven = bcrData.rewardsGiven or 0,
         withheldMilestones = bcrData.withheldMilestones,
@@ -373,7 +373,7 @@ local function handlePlayerReady(player)
 end
 
 Events.OnClientCommand.Add(function(module, command, player, args)
-    if module ~= "BCR" then return end
+    if module ~= BCR.MODULE_NAME then return end
     if command == "RequestReward" then
         local ok, err = pcall(handleRequestReward, player, args)
         if not ok then

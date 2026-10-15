@@ -111,10 +111,19 @@ local function scheduleFinalMessage()
     showFinalMessageTimer = 0
 end
 
+-- Schedules the final message when no rewards remain (shared by the two
+-- requestReward exit paths).
+local function checkExhaustion(player)
+    if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
+        BCR.DebugPrint("Client", "No more rewards available - scheduling final message")
+        scheduleFinalMessage()
+    end
+end
+
 local function sendRequestCommand(player, kills)
     isPendingRequestInFlight = true
     pendingRequestTimer = 0
-    local ok = pcall(function() sendClientCommand(player, "BCR", "RequestReward", { kills = kills }) end)
+    local ok = pcall(function() sendClientCommand(player, BCR.MODULE_NAME, "RequestReward", { kills = kills }) end)
     if not ok then
         isPendingRequestInFlight = false
     end
@@ -190,10 +199,7 @@ local function requestReward(player, bcrData)
         else
             BCR.DebugPrint("Client", "SP reward skipped: nothing granted")
         end
-        if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
-            BCR.DebugPrint("Client", "No more rewards available - scheduling final message")
-            scheduleFinalMessage()
-        end
+        checkExhaustion(player)
         return
     end
     for _, result in ipairs(results) do
@@ -201,10 +207,7 @@ local function requestReward(player, bcrData)
         BCR.DebugPrint("Client", "SP Reward granted: " .. tostring(result.id) .. " (" .. tostring(result.action) .. ")")
     end
     BCR.RefreshStatsWindow()
-    if not hasShownAllTraitsMessage and not BCR.HasAvailableRewards(player) then
-        BCR.DebugPrint("Client", "No more rewards available - scheduling final message")
-        scheduleFinalMessage()
-    end
+    checkExhaustion(player)
 end
 
 local function BCR_OnPlayerUpdate(player)
@@ -226,7 +229,7 @@ local function BCR_OnPlayerUpdate(player)
             playerReadyTimer = 0
             playerReadyAttempts = playerReadyAttempts + 1
             local sent = pcall(function()
-                sendClientCommand(player, "BCR", "PlayerReady", {})
+                sendClientCommand(player, BCR.MODULE_NAME, "PlayerReady", {})
             end)
             if not sent or playerReadyAttempts >= PLAYER_READY_MAX_ATTEMPTS then
                 needsPlayerReady = false
@@ -344,7 +347,7 @@ local function BCR_OnPlayerUpdate(player)
 end
 
 local function BCR_OnServerCommand(module, command, args)
-    if module ~= "BCR" then return end
+    if module ~= BCR.MODULE_NAME then return end
     if not args then return end
     local player = getLocalPlayer()
     if not player then return end
