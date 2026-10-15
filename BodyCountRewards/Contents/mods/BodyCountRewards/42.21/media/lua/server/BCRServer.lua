@@ -333,12 +333,11 @@ local function handleRequestReward(player, args)
             "[BCR] [Server] Reward granted to %s: %s (%s) - %s",
             who, applied.id, applied.action, applied.rarity
         ))
+        -- Send identity and action only: the client resolves the display
+        -- name and colors locally, so each player sees their own language.
         sendServerCommand(player, "BCR", "RewardGranted", {
             id = applied.id,
-            displayName = applied.displayName,
             action = applied.action,
-            rarity = applied.rarity,
-            color = applied.color,
         })
     end
     local remainingMilestones = BCR.GetMissedMilestoneCount(bcrData, bcrData.kills or 0, opts)

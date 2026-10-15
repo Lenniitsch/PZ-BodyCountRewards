@@ -32,8 +32,8 @@ function BCR.EnqueueNotification(result)
         -- The summary replaces the queued entries; the incoming reward takes
         -- its own slot, so count only what is collapsed.
         local batchedCount = #notificationQueue
-        local label = getText("UI_BCR_BatchRewards")
-        if not label or label == "UI_BCR_BatchRewards" then
+        local label = getTextOrNull("UI_BCR_BatchRewards")
+        if not label then
             label = tostring(batchedCount) .. " rewards"
         end
         notificationQueue = {
@@ -82,11 +82,11 @@ function BCR.UpdateNotifications(player)
     local action = result.action or "added"
     local displayName = result.displayName or BCR.GetTraitDisplayName(result.id) or "Unknown"
     if action == "added" then
-        local actionText = getText("UI_BCR_Gained") or "Gained"
+        local actionText = getTextOrNull("UI_BCR_Gained") or "Gained"
         local text = actionText .. ": " .. displayName
         HaloTextHelper.addTextWithArrow(player, text, true, HALO_COLORS.gained[1], HALO_COLORS.gained[2], HALO_COLORS.gained[3])
     elseif action == "removed" then
-        local actionText = getText("UI_BCR_Lost") or "Lost"
+        local actionText = getTextOrNull("UI_BCR_Lost") or "Lost"
         local text = actionText .. ": " .. displayName
         HaloTextHelper.addTextWithArrow(player, text, true, HALO_COLORS.lost[1], HALO_COLORS.lost[2], HALO_COLORS.lost[3])
     elseif action == "batch" then
@@ -96,7 +96,7 @@ end
 
 function BCR.ShowFinalMessage(player)
     if not player then return end
-    local text = getText("UI_BCR_AllRewardsGranted") or "All rewards granted!"
+    local text = getTextOrNull("UI_BCR_AllRewardsGranted") or "All rewards granted!"
     HaloTextHelper.addText(player, text, "", HALO_COLORS.final[1], HALO_COLORS.final[2], HALO_COLORS.final[3])
 end
 

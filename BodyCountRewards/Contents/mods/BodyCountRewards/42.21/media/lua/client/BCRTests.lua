@@ -373,6 +373,23 @@ local function suiteDisplayNames()
     end
     assertEqual(0, #badNames, "All traits have display names (bad: " .. table.concat(badNames, ", ") .. ")")
 
+    -- Engine fallback: no display name may leak an unresolved UI_ key
+    local customIds = {}
+    if BCR.CustomPositiveTraits then
+        for _, e in ipairs(BCR.CustomPositiveTraits) do table.insert(customIds, e.id) end
+    end
+    if BCR.CustomNegativeTraits then
+        for _, e in ipairs(BCR.CustomNegativeTraits) do table.insert(customIds, e.id) end
+    end
+    local leaked = {}
+    for _, tid in ipairs(customIds) do
+        local name = BCR.GetTraitDisplayName(tid)
+        if type(name) ~= "string" or name == "" or string.sub(name, 1, 3) == "UI_" then
+            table.insert(leaked, tid)
+        end
+    end
+    assertEqual(0, #leaked, "No custom display name leaks a raw key (" .. table.concat(leaked, ", ") .. ")")
+
     assertEqual("Unknown", BCR.GetTraitDisplayName(nil), "GetTraitDisplayName(nil) -> 'Unknown'")
     assertEqual("Unknown", BCR.GetTraitDisplayName(""), "GetTraitDisplayName(empty string) -> 'Unknown'")
 

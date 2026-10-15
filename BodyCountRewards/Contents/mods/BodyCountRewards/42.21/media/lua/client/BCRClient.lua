@@ -261,7 +261,7 @@ local function BCR_OnPlayerUpdate(player)
                     BCR.DebugPrint("Client", "Found " .. missed .. " milestones to claim")
                     pendingRewardsCount = missed
                     pendingRewardTimer = 0
-                    local msg = missed .. " " .. (getText("UI_BCR_PendingRewards") or "rewards earned!")
+                    local msg = missed .. " " .. (getTextOrNull("UI_BCR_PendingRewards") or "rewards earned!")
                     HaloTextHelper.addText(player, msg, "", 255, 255, 255)
                 else
                     if not isPendingRequestInFlight then
@@ -419,7 +419,15 @@ local function BCR_OnServerCommand(module, command, args)
 end
 
 local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test)
-    if test then return true end
+    if test then
+        -- Controller users only see the submenu if a handler that would add
+        -- options reports itself (vanilla ISWorldObjectContextMenu contract).
+        if ISWorldObjectContextMenu and ISWorldObjectContextMenu.setTest
+            and bcrModConfig.showContextMenu and getSpecificPlayer(playerNum) then
+            ISWorldObjectContextMenu.setTest()
+        end
+        return true
+    end
     if not bcrModConfig.showContextMenu then return end
 
     local player = getSpecificPlayer(playerNum)
@@ -434,13 +442,13 @@ local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects
     if not ok then return end
     local currentKills = kills or 0
 
-    local label = getText("UI_BCR_MenuTitle") or "Body Count Rewards"
+    local label = getTextOrNull("UI_BCR_MenuTitle") or "Body Count Rewards"
     local bcrOption = context:addOption(label, nil, nil)
     local subMenu = ISContextMenu:getNew(context)
     context:addSubMenu(bcrOption, subMenu)
 
     subMenu:addOption(
-        getText("UI_BCR_ViewStats") or "View Stats...",
+        getTextOrNull("UI_BCR_ViewStats") or "View Stats...",
         player,
         BCR.ShowStatsWindow
     )
@@ -448,7 +456,7 @@ local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects
     tryReexhaust(player)
 
     if hasShownAllTraitsMessage or not BCR.HasAvailableRewards(player) then
-        local exhaustedText = getText("UI_BCR_AllRewardsGranted") or "All rewards granted!"
+        local exhaustedText = getTextOrNull("UI_BCR_AllRewardsGranted") or "All rewards granted!"
         local exhaustedOption = subMenu:addOption(exhaustedText, nil, nil)
         exhaustedOption.notAvailable = true
     else
@@ -456,13 +464,13 @@ local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects
         local nextMilestone = BCR.GetKillsForMilestone(answered + 1, opts)
         local killsRemaining = math.max(0, nextMilestone - currentKills)
 
-        local progressText = (getText("UI_BCR_Progress") or "Progress") .. ": "
+        local progressText = (getTextOrNull("UI_BCR_Progress") or "Progress") .. ": "
             .. tostring(currentKills) .. " / " .. tostring(nextMilestone)
         local progressOption = subMenu:addOption(progressText, nil, nil)
         progressOption.notAvailable = true
 
-        local remainingText = (getText("UI_BCR_NextReward") or "Next reward") .. ": "
-            .. tostring(killsRemaining) .. " " .. (getText("UI_BCR_Kills") or "kills")
+        local remainingText = (getTextOrNull("UI_BCR_NextReward") or "Next reward") .. ": "
+            .. tostring(killsRemaining) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills")
         local remainingOption = subMenu:addOption(remainingText, nil, nil)
         remainingOption.notAvailable = true
     end

@@ -98,11 +98,11 @@ end
 
 local function formatNumber(value)
     if not value then return "0" end
-    local sep = getText("UI_BCR_ThousandSeparator")
-    if not sep or sep == "UI_BCR_ThousandSeparator" then sep = "," end
+    local sep = getTextOrNull("UI_BCR_ThousandSeparator") or ","
     if sep == "" then sep = "," end
-    -- Escape Lua pattern magic characters so the separator is safe as
-    -- a gsub replacement string.
+    -- Keep the literal separator for the leading-separator strip below;
+    -- `sep` itself becomes pattern-escaped for the gsub replacement.
+    local literalSep = sep
     sep = sep:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%1")
     local intPart = tostring(math.floor(value))
     local sign = ""
@@ -113,8 +113,8 @@ local function formatNumber(value)
     local reversed = string.reverse(intPart)
     local grouped = string.gsub(reversed, "(%d%d%d)", "%1" .. sep)
     grouped = string.reverse(grouped)
-    if string.sub(grouped, 1, #sep) == sep then
-        grouped = string.sub(grouped, #sep + 1)
+    if string.sub(grouped, 1, #literalSep) == literalSep then
+        grouped = string.sub(grouped, #literalSep + 1)
     end
     return sign .. grouped
 end
@@ -157,7 +157,7 @@ function BCRProgressPanel:drawProgressContent()
     local data = self.cached
     if not data then
         self:drawText(
-            getText("UI_BCR_NoData") or "No data available.",
+            getTextOrNull("UI_BCR_NoData") or "No data available.",
             PADDING, PADDING + TAB_CONTENT_OFFSET,
             COLORS.empty.r, COLORS.empty.g, COLORS.empty.b, 1, UIFont.Medium
         )
@@ -170,18 +170,18 @@ function BCRProgressPanel:drawProgressContent()
 
     if data.allComplete then
         self:drawText(
-            getText("UI_BCR_AllComplete") or "All rewards earned!",
+            getTextOrNull("UI_BCR_AllComplete") or "All rewards earned!",
             x, y, COLORS.sectionHead.r, COLORS.sectionHead.g, COLORS.sectionHead.b, 1, UIFont.Medium
         )
         y = y + HEADER_GAP
 
-        y = self:drawStatRow((getText("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(data.rewardsGiven), x, y)
-        y = self:drawStatRow((getText("UI_BCR_ZombieKills") or "Zombie Kills") .. ":", formatNumber(data.kills), x, y)
-        y = self:drawStatRow((getText("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", data.scalingLabel, x, y)
-        y = self:drawStatRow((getText("UI_BCR_RewardPriority") or "Reward Priority") .. ":", data.rewardPriorityLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(data.rewardsGiven), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_ZombieKills") or "Zombie Kills") .. ":", formatNumber(data.kills), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", data.scalingLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_RewardPriority") or "Reward Priority") .. ":", data.rewardPriorityLabel, x, y)
     else
         self:drawText(
-            getText("UI_BCR_ZombieKills") or "Zombie Kills",
+            getTextOrNull("UI_BCR_ZombieKills") or "Zombie Kills",
             x, y, COLORS.sectionHead.r, COLORS.sectionHead.g, COLORS.sectionHead.b, 1, UIFont.Medium
         )
         y = y + SECTION_HEAD_GAP
@@ -221,17 +221,17 @@ function BCRProgressPanel:drawProgressContent()
 
         y = barY + barH + BAR_BOTTOM_GAP
 
-        y = self:drawStatRow((getText("UI_BCR_NextRewardAt") or "Next Reward at") .. ":", formatNumber(data.nextMilestone) .. " " .. (getText("UI_BCR_Kills") or "kills"), x, y)
-        y = self:drawStatRow((getText("UI_BCR_KillsRemaining") or "Kills Remaining") .. ":", formatNumber(data.killsRemaining), x, y)
-        y = self:drawStatRow((getText("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(data.rewardsGiven), x, y)
-        y = self:drawStatRow((getText("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", data.scalingLabel, x, y)
-        y = self:drawStatRow((getText("UI_BCR_RewardPriority") or "Reward Priority") .. ":", data.rewardPriorityLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_NextRewardAt") or "Next Reward at") .. ":", formatNumber(data.nextMilestone) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills"), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_KillsRemaining") or "Kills Remaining") .. ":", formatNumber(data.killsRemaining), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(data.rewardsGiven), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", data.scalingLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_RewardPriority") or "Reward Priority") .. ":", data.rewardPriorityLabel, x, y)
     end
 
     if data.milestones and #data.milestones > 0 then
         y = y + SECTION_GAP
         self:drawText(
-            getText("UI_BCR_MilestoneRoadmap") or "Milestone Roadmap",
+            getTextOrNull("UI_BCR_MilestoneRoadmap") or "Milestone Roadmap",
             x, y,
             COLORS.sectionHead.r, COLORS.sectionHead.g, COLORS.sectionHead.b, 1,
             UIFont.Medium
@@ -244,20 +244,20 @@ function BCRProgressPanel:drawProgressContent()
         for _, ms in ipairs(data.milestones) do
             local prefix, cr, cg, cb
             if ms.reached then
-                prefix = getText("UI_BCR_MilestoneReached") or "[x]"
+                prefix = getTextOrNull("UI_BCR_MilestoneReached") or "[x]"
                 cr, cg, cb = COLORS.gainGreen.r, COLORS.gainGreen.g, COLORS.gainGreen.b
             elseif ms.isCurrent then
-                prefix = getText("UI_BCR_MilestoneCurrent") or "[>]"
+                prefix = getTextOrNull("UI_BCR_MilestoneCurrent") or "[>]"
                 cr, cg, cb = COLORS.text.r, COLORS.text.g, COLORS.text.b
             else
-                prefix = getText("UI_BCR_MilestoneFuture") or "[ ]"
+                prefix = getTextOrNull("UI_BCR_MilestoneFuture") or "[ ]"
                 cr, cg, cb = COLORS.dim.r, COLORS.dim.g, COLORS.dim.b
             end
 
             self:drawText(prefix, x, y, cr, cg, cb, 1, UIFont.Small)
             self:drawText("#" .. tostring(ms.number), msLabelX, y, cr, cg, cb, 1, UIFont.Small)
             self:drawText(
-                formatNumber(ms.killsNeeded) .. " " .. (getText("UI_BCR_Kills") or "kills"),
+                formatNumber(ms.killsNeeded) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills"),
                 msKillsX, y, cr, cg, cb, 1, UIFont.Small
             )
             y = y + LINE_H
@@ -275,7 +275,7 @@ function BCRStatsWindow:new(x, y, w, h, player)
     local o = ISCollapsableWindow:new(x, y, w, h)
     setmetatable(o, self)
     self.__index = self
-    o.title = getText("UI_BCR_StatsTitle") or "Performance Review"
+    o.title = getTextOrNull("UI_BCR_StatsTitle") or "Performance Review"
     o.resizable = false
     o.player = player
     return o
@@ -323,13 +323,13 @@ function BCRStatsWindow:createChildren()
     self.progressPanel:initialise()
     self.progressPanel:setAnchorRight(true)
     self.progressPanel:setAnchorBottom(true)
-    self.tabs:addView(getText("UI_BCR_TabProgress") or "Progress", self.progressPanel)
+    self.tabs:addView(getTextOrNull("UI_BCR_TabProgress") or "Progress", self.progressPanel)
 
     self.historyPanel = createRichTextPanel(contentW, contentH)
-    self.tabs:addView(getText("UI_BCR_TabHistory") or "History", self.historyPanel)
+    self.tabs:addView(getTextOrNull("UI_BCR_TabHistory") or "History", self.historyPanel)
 
     self.catalogPanel = createRichTextPanel(contentW, contentH)
-    self.tabs:addView(getText("UI_BCR_TabCatalog") or "Catalog", self.catalogPanel)
+    self.tabs:addView(getTextOrNull("UI_BCR_TabCatalog") or "Catalog", self.catalogPanel)
 end
 
 function BCRStatsWindow:close()
@@ -360,14 +360,14 @@ function BCRStatsWindow:updateHistory()
 
     if visibleCount == 0 then
         text = text .. colorTag(COLORS.empty)
-        text = text .. (getText("UI_BCR_NoTraitsYet") or "No rewards yet. Time to rack up your count!")
+        text = text .. (getTextOrNull("UI_BCR_NoTraitsYet") or "No rewards yet. Time to rack up your count!")
         self.historyPanel.text = text
         self.historyPanel:paginate()
         return
     end
 
     text = text .. colorTag(COLORS.sectionHead)
-    text = text .. " <H2> " .. (getText("UI_BCR_EarnedRewards") or "Earned Rewards")
+    text = text .. " <H2> " .. (getTextOrNull("UI_BCR_EarnedRewards") or "Earned Rewards")
     text = text .. " <LINE> <TEXT> "
 
     for i = #history, 1, -1 do
@@ -456,18 +456,18 @@ function BCRStatsWindow:updateCatalog()
 
         local statusReason
         if not isAllowed then
-            statusReason = getText("UI_BCR_StatusServerDisabled") or "Disabled"
+            statusReason = getTextOrNull("UI_BCR_StatusServerDisabled") or "Disabled"
         elseif lastByTrait[traitId] == "removed" then
-            statusReason = getText("UI_BCR_StatusRemoved") or "Removed"
+            statusReason = getTextOrNull("UI_BCR_StatusRemoved") or "Removed"
         elseif lastByTrait[traitId] == "added" or BCR.PlayerHasTrait(self.player, traitId) then
-            statusReason = getText("UI_BCR_StatusEarned") or "Earned"
+            statusReason = getTextOrNull("UI_BCR_StatusEarned") or "Earned"
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
             if isPositive and hasConflict and blockerId then
                 local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
                 statusReason = getText("UI_BCR_StatusConflict", blockerName)
             else
-                statusReason = getText("UI_BCR_StatusUnavailable") or "Unavailable"
+                statusReason = getTextOrNull("UI_BCR_StatusUnavailable") or "Unavailable"
             end
         end
 
@@ -519,9 +519,9 @@ function BCRStatsWindow:updateCatalog()
             local group = grouped[source]
             local label
             if #group > 1 then
-                label = getText("UI_BCR_AddedByPlural") or "Traits added by:"
+                label = getTextOrNull("UI_BCR_AddedByPlural") or "Traits added by:"
             else
-                label = getText("UI_BCR_AddedBySingular") or "Trait added by:"
+                label = getTextOrNull("UI_BCR_AddedBySingular") or "Trait added by:"
             end
             sectionText = sectionText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. source .. "\" <LINE> "
             for _, entry in ipairs(group) do
@@ -537,12 +537,12 @@ function BCRStatsWindow:updateCatalog()
     local sortedNegative = sortByCost(BCR.NegativeTraits)
 
     text = text .. colorTag(COLORS.sectionHead)
-    text = text .. " <H2> " .. (getText("UI_BCR_CatalogPositive") or "Earnable Positive Traits")
+    text = text .. " <H2> " .. (getTextOrNull("UI_BCR_CatalogPositive") or "Earnable Positive Traits")
     text = text .. " <LINE><TEXT> "
 
     if opts.enablePositive == false then
         text = text .. " <INDENT:16> " .. colorTag(COLORS.dim)
-        text = text .. (getText("UI_BCR_CategoryDisabled") or "Disabled in server settings")
+        text = text .. (getTextOrNull("UI_BCR_CategoryDisabled") or "Disabled in server settings")
         text = text .. " <LINE> "
     else
         for _, entry in ipairs(sortedPositive) do
@@ -554,12 +554,12 @@ function BCRStatsWindow:updateCatalog()
     text = text .. " <INDENT:0> <BR> "
 
     text = text .. colorTag(COLORS.sectionHead)
-    text = text .. " <H2> " .. (getText("UI_BCR_CatalogNegative") or "Removable Negative Traits")
+    text = text .. " <H2> " .. (getTextOrNull("UI_BCR_CatalogNegative") or "Removable Negative Traits")
     text = text .. " <LINE><TEXT> "
 
     if opts.enableNegative == false then
         text = text .. " <INDENT:16> " .. colorTag(COLORS.dim)
-        text = text .. (getText("UI_BCR_CategoryDisabled") or "Disabled in server settings")
+        text = text .. (getTextOrNull("UI_BCR_CategoryDisabled") or "Disabled in server settings")
         text = text .. " <LINE> "
     else
         local hasRelevantTraits = false
@@ -583,7 +583,7 @@ function BCRStatsWindow:updateCatalog()
 
         if not hasRelevantTraits then
             text = text .. " <INDENT:16> " .. colorTag(COLORS.empty)
-            text = text .. (getText("UI_BCR_NoNegativeTraits") or "No negative traits found. Character was created without any.")
+            text = text .. (getTextOrNull("UI_BCR_NoNegativeTraits") or "No negative traits found. Character was created without any.")
             text = text .. " <LINE> "
         end
     end
@@ -623,19 +623,19 @@ function BCRStatsWindow:updateProgress()
     local scalingLabel
     if opts.milestoneScaling == 2 then
         local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
-        scalingLabel = (getText("UI_BCR_ScalingProgressive") or "Progressive")
+        scalingLabel = (getTextOrNull("UI_BCR_ScalingProgressive") or "Progressive")
             .. " (x" .. formatFloatLocaleSafe(factor, 1) .. ")"
     else
-        scalingLabel = getText("UI_BCR_ScalingLinear") or "Linear"
+        scalingLabel = getTextOrNull("UI_BCR_ScalingLinear") or "Linear"
     end
 
     local rewardPriorityLabel
     if opts.rewardPriority == 2 then
-        rewardPriorityLabel = getText("UI_BCR_PriorityLoseFirst") or "Remove Negative First"
+        rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityLoseFirst") or "Remove Negative First"
     elseif opts.rewardPriority == 3 then
-        rewardPriorityLabel = getText("UI_BCR_PriorityRandom") or "Random"
+        rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityRandom") or "Random"
     else
-        rewardPriorityLabel = getText("UI_BCR_PriorityGainFirst") or "Gain Positive First"
+        rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityGainFirst") or "Gain Positive First"
     end
 
     local allComplete = not BCR.HasAvailableRewards(self.player)

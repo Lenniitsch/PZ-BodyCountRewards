@@ -615,9 +615,22 @@ function BCR.GetTraitDisplayName(traitId)
                 return trans2
             end
         end
+        -- The engine definition already holds the translated UI name; it
+        -- covers addon traits whose translation keys differ in case/prefix.
+        local defOk, defName = pcall(function()
+            local def = CharacterTraitDefinition.getCharacterTraitDefinition(traitObj)
+            return def and def:getLabel() or nil
+        end)
+        if defOk and type(defName) == "string" and defName ~= ""
+            and string.sub(defName, 1, 3) ~= "UI_" then
+            return defName
+        end
     end
     local readable = string.gsub(path, "([a-z])([A-Z])", "%1 %2")
-    return readable ~= "" and readable or "Unknown"
+    if readable ~= "" then
+        return string.upper(string.sub(readable, 1, 1)) .. string.sub(readable, 2)
+    end
+    return "Unknown"
 end
 
 -- ============================================================
