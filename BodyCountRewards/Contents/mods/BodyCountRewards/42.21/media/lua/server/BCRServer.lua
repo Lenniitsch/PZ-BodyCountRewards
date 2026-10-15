@@ -17,7 +17,10 @@ BCR = BCR or {}
 local function getZombieKillsSafe(player)
     if not player then return nil end
     local ok, kills = pcall(function() return player:getZombieKills() end)
-    if not ok then return nil end
+    if not ok then
+        BCR.DebugPrintf("Server", "getZombieKills failed: %s", tostring(kills))
+        return nil
+    end
     return kills or 0
 end
 
@@ -27,6 +30,7 @@ local function getWorldAgeHoursSafe()
         return gt and gt:getWorldAgeHours() or 0
     end)
     if ok then return result or 0 end
+    BCR.DebugPrintf("Server", "getWorldAgeHours failed: %s", tostring(result))
     return 0
 end
 
@@ -44,17 +48,17 @@ local function validateMilestone(player, bcrData, opts)
     return true, missed
 end
 
-local function recordTraitHistory(bcrData, result)
-    if not bcrData or not result then return end
+local function recordTraitHistory(bcrData, reward)
+    if not bcrData or not reward then return end
     if not bcrData.traitHistory then
         bcrData.traitHistory = {}
     end
     table.insert(bcrData.traitHistory, {
-        id = result.id,
-        action = result.action,
-        rarity = result.rarity,
+        id = reward.id,
+        action = reward.action,
+        rarity = reward.rarity,
         timestamp = getWorldAgeHoursSafe(),
-        source = BCR.CustomTraitSources and BCR.CustomTraitSources[result.id],
+        source = BCR.CustomTraitSources and BCR.CustomTraitSources[reward.id],
     })
     -- Bound the history so the per-trait scans stay cheap on long saves.
     if #bcrData.traitHistory > BCR.MAX_TRAIT_HISTORY then
@@ -99,16 +103,16 @@ function BCR.ReconcileTraitState(player, bcrData, opts)
         local last = BCR.GetLastHistoryAction(bcrData.traitHistory, traitId)
         local has = BCR.PlayerHasTrait(player, traitId)
         if has == nil then
-            BCR.DebugPrint("Server", "ReconcileTraitState: engine state unreadable for " .. tostring(traitId) .. " -- skipping")
+            BCR.DebugPrintf("Server", "ReconcileTraitState: engine state unreadable for %s -- skipping", tostring(traitId))
         elseif has == true and last == nil then
             -- Starting or externally gained trait -- record a baseline
             -- entry so it can never be granted again. (Baseline entries
             -- are hidden in the history UI.)
-            recordTraitHistory(bcrData, { id = traitId, action = "baseline", rarity = "unknown" })
+            recordTraitHistory(bcrData, { id = traitId, action = "baseline", rarity = BCR.RARITY_UNKNOWN })
             changed = true
         elseif has == true and (last == "removed" or last == "lost") then
             -- Admin or another mod re-granted a previously removed/lost trait
-            recordTraitHistory(bcrData, { id = traitId, action = "added", rarity = "unknown" })
+            recordTraitHistory(bcrData, { id = traitId, action = "added", rarity = BCR.RARITY_UNKNOWN })
             changed = true
         elseif has == false and (last == "added" or last == "baseline") then
             -- History says owned but the trait is missing.
@@ -123,24 +127,27 @@ function BCR.ReconcileTraitState(player, bcrData, opts)
                 recordTraitHistory(bcrData, {
                     id = traitId,
                     action = "added",
-                    rarity = entry and BCR.GetRarity(entry.cost) or "unknown",
+                    rarity = entry and BCR.GetRarity(entry.cost) or BCR.RARITY_UNKNOWN,
                 })
                 changed = true
             elseif not opts.restoreMissingTraits then
                 recordTraitHistory(bcrData, {
                     id = traitId,
                     action = "lost",
-                    rarity = entry and BCR.GetRarity(entry.cost) or "unknown",
+                    rarity = entry and BCR.GetRarity(entry.cost) or BCR.RARITY_UNKNOWN,
                 })
                 changed = true
             else
-                BCR.DebugPrint("Server", "ReconcileTraitState: restore failed/blocked for " .. tostring(traitId) .. " -- will retry on next check")
+                BCR.DebugPrintf("Server", "ReconcileTraitState: restore failed/blocked for %s -- will retry on next check", tostring(traitId))
             end
         end
     end
 
     if changed and isServer() then
-        pcall(function() player:transmitModData() end)
+        local txOk, txErr = pcall(function() player:transmitModData() end)
+        if not txOk then
+            BCR.DebugPrintf("Server", "transmitModData failed: %s", tostring(txErr))
+        end
     end
     return changed
 end
@@ -270,7 +277,10 @@ function BCR.ProcessRewardDirect(player)
     local results = applyRewardBatch(player, bcrData, opts, math.min(missedCount, BCR.MAX_BATCH_REWARDS))
     if #results > 0 then
         if isServer() then
-            pcall(function() player:transmitModData() end)
+            local txOk, txErr = pcall(function() player:transmitModData() end)
+            if not txOk then
+                BCR.DebugPrintf("Server", "transmitModData failed: %s", tostring(txErr))
+            end
         end
     end
     return results
@@ -284,7 +294,7 @@ local function handleRequestReward(player, args)
     if not player or not args then return end
     local ok, username = pcall(function() return tostring(player:getUsername()) end)
     local who = ok and username or "unknown"
-    BCR.DebugPrint("Server", "RequestReward received from: " .. who)
+    BCR.DebugPrintf("Server", "RequestReward received from: %s", who)
     local bcrData = BCR.EnsureModData(player)
     if not bcrData then
         sendServerCommand(player, BCR.MODULE_NAME, "RewardError", { reason = "no_moddata" })
@@ -344,7 +354,10 @@ local function handleRequestReward(player, args)
     end
     local remainingMilestones = BCR.GetMissedMilestoneCount(bcrData, bcrData.kills or 0, opts)
     if isServer() then
-        pcall(function() player:transmitModData() end)
+        local txOk, txErr = pcall(function() player:transmitModData() end)
+        if not txOk then
+            BCR.DebugPrintf("Server", "transmitModData failed: %s", tostring(txErr))
+        end
     end
     sendServerCommand(player, BCR.MODULE_NAME, "RewardBatchComplete", {
         totalGranted = totalGranted,
@@ -365,7 +378,10 @@ local function handlePlayerReady(player)
     BCR.SyncAuthoritativeKills(player, bcrData)
     BCR.CaptureWithheldBaseline(player, bcrData, opts)
     if isServer() then
-        pcall(function() player:transmitModData() end)
+        local txOk, txErr = pcall(function() player:transmitModData() end)
+        if not txOk then
+            BCR.DebugPrintf("Server", "transmitModData failed: %s", tostring(txErr))
+        end
     end
     sendServerCommand(player, BCR.MODULE_NAME, "PlayerSync", {
         kills = bcrData.kills or 0,

@@ -71,19 +71,19 @@ function BCR.GetPlayerTraitsList(player)
     if not traitsOk or not traits then return nil end
     local knownOk, knownTraits = pcall(function() return traits:getKnownTraits() end)
     if not knownOk or not knownTraits then return nil end
-    local result = {}
+    local traitIds = {}
     local sizeOk, size = pcall(function() return knownTraits:size() end)
-    if not sizeOk then return result end
+    if not sizeOk then return traitIds end
     for i = 0, size - 1 do
         local getOk, trait = pcall(function() return knownTraits:get(i) end)
         if getOk and trait then
             local toStringOk, traitString = pcall(function() return tostring(trait) end)
             if toStringOk and traitString then
-                table.insert(result, traitString)
+                table.insert(traitIds, traitString)
             end
         end
     end
-    return result
+    return traitIds
 end
 
 -- ============================================================
@@ -92,13 +92,11 @@ end
 -- Run in-game: BCRDumpTraits()
 -- ============================================================
 
-function BCR.DumpEngineTraits(quiet)
+-- Collects the engine trait registry as sorted rows: { id = ..., text = ... }.
+function BCR.CollectEngineTraits()
     local rows = {}
     local defsOk, defs = pcall(function() return CharacterTraitDefinition.getTraits() end)
     if not defsOk or not defs then
-        if not quiet then
-            print("[BCR] [Dump] Engine trait definitions unavailable in this context")
-        end
         return rows
     end
 
@@ -171,7 +169,16 @@ function BCR.DumpEngineTraits(quiet)
     end
 
     table.sort(rows, function(a, b) return a.id < b.id end)
-    if quiet then return rows end
+    return rows
+end
+
+-- Prints the engine trait registry plus coverage checks. Run in-game: BCRDumpTraits().
+function BCR.DumpEngineTraits()
+    local rows = BCR.CollectEngineTraits()
+    if #rows == 0 then
+        print("[BCR] [Dump] Engine trait definitions unavailable in this context")
+        return rows
+    end
 
     print("[BCR] [Dump] === Engine trait registry: " .. #rows .. " definition(s) ===")
     for _, row in ipairs(rows) do
@@ -216,7 +223,7 @@ function BCR.DumpEngineTraits(quiet)
 end
 
 function BCRDumpTraits()
-    BCR.DumpEngineTraits(false)
+    BCR.DumpEngineTraits()
 end
 
 -- ============================================================
@@ -241,25 +248,25 @@ local function modifyTrait(player, traitEntry, action)
     if not traitId then return false end
     local traitObj = traitEntry.traitUserdata or BCR.GetTraitUserdata(traitId)
     if not traitObj then
-        BCR.DebugPrint("Core", "modifyTrait: no userdata for " .. tostring(traitId))
+        BCR.DebugPrintf("Core", "modifyTrait: no userdata for %s", tostring(traitId))
         return false
     end
 
     if action == "add" then
         local has = BCR.PlayerHasTrait(player, traitId)
         if has ~= false then
-            BCR.DebugPrint("Core", "modifyTrait: cannot add " .. traitId .. " (has=" .. tostring(has) .. ")")
+            BCR.DebugPrintf("Core", "modifyTrait: cannot add %s (has=%s)", tostring(traitId), tostring(has))
             return false
         end
         local blocked, blockerId = BCR.HasMutuallyExclusiveTrait(player, traitId)
         if blocked then
-            BCR.DebugPrint("Core", "modifyTrait: cannot add " .. traitId .. " (blocked by " .. tostring(blockerId) .. ")")
+            BCR.DebugPrintf("Core", "modifyTrait: cannot add %s (blocked by %s)", tostring(traitId), tostring(blockerId))
             return false
         end
     elseif action == "remove" then
         local has = BCR.PlayerHasTrait(player, traitId)
         if has ~= true then
-            BCR.DebugPrint("Core", "modifyTrait: cannot remove " .. traitId .. " (has=" .. tostring(has) .. ")")
+            BCR.DebugPrintf("Core", "modifyTrait: cannot remove %s (has=%s)", tostring(traitId), tostring(has))
             return false
         end
     else
@@ -267,7 +274,10 @@ local function modifyTrait(player, traitEntry, action)
     end
 
     local ok, traits = pcall(function() return player:getCharacterTraits() end)
-    if not ok or not traits then return false end
+    if not ok or not traits then
+        BCR.DebugPrintf("Core", "modifyTrait: getCharacterTraits failed: %s", tostring(traits))
+        return false
+    end
     local success, err = pcall(function()
         if action == "add" then
             traits:add(traitObj)
@@ -276,7 +286,7 @@ local function modifyTrait(player, traitEntry, action)
         end
     end)
     if not success then
-        BCR.DebugPrint("Core", "modifyTrait: " .. action .. " failed for " .. traitId .. ": " .. tostring(err))
+        BCR.DebugPrintf("Core", "modifyTrait: %s failed for %s: %s", tostring(action), tostring(traitId), tostring(err))
         return false
     end
     return true
@@ -335,7 +345,8 @@ function BCR.WeightedRandomSelect(pool)
     end
     -- Unreachable for well-formed weights; kept as a fail-safe so a
     -- malformed pool can never return nil to a caller expecting a pick.
-    BCR.DebugPrint("Core", "WeightedRandomSelect: roll " .. tostring(roll) .. " did not match any entry (totalWeight=" .. tostring(totalWeight) .. ")")
+    BCR.DebugPrintf("Core", "WeightedRandomSelect: roll %s did not match any entry (totalWeight=%s)",
+        tostring(roll), tostring(totalWeight))
     return pool[#pool]
 end
 
@@ -609,7 +620,9 @@ function BCR.GetTraitDisplayName(traitId)
     local traitObj = BCR.GetTraitUserdata(traitId)
     if traitObj then
         local ok, name = pcall(function() return traitObj:getName() end)
-        if ok and name and name ~= "" then
+        if not ok then
+            BCR.DebugPrintf("Core", "GetTraitDisplayName: getName failed: %s", tostring(name))
+        elseif name and name ~= "" then
             local key2 = "UI_trait_" .. name
             local trans2 = getText(key2)
             if trans2 and trans2 ~= key2 then
@@ -643,7 +656,10 @@ end
 function BCR.EnsureModData(player)
     if not player then return nil end
     local ok, modData = pcall(function() return player:getModData() end)
-    if not ok or not modData then return nil end
+    if not ok or not modData then
+        BCR.DebugPrintf("Core", "EnsureModData: getModData failed: %s", tostring(modData))
+        return nil
+    end
     if not modData.BCR or type(modData.BCR) ~= "table" then
         modData.BCR = {
             kills = 0,

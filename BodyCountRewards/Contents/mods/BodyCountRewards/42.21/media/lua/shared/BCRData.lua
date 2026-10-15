@@ -205,16 +205,20 @@ function BCR.GetEngineTraitCost(traitId)
     return nil
 end
 
-function BCR.NormalizeTraitCost(traitId, cost, isPositive)
+-- kind: "earnable" for the positive list (costs are stored negative),
+--       "removable" for the negative list (costs are stored positive).
+-- Returns cost, repairCode where repairCode is "engine", "sign" or nil.
+function BCR.NormalizeTraitCost(traitId, cost, kind)
+    local isEarnable = kind == "earnable"
     if type(cost) ~= "number" then
         local engineCost = BCR.GetEngineTraitCost(traitId)
         if engineCost == nil then return nil, nil end
-        if isPositive then
+        if isEarnable then
             return -engineCost, "engine"
         end
         return engineCost, "engine"
     end
-    if (isPositive and cost > 0) or (not isPositive and cost < 0) then
+    if (isEarnable and cost > 0) or (not isEarnable and cost < 0) then
         return -cost, "sign"
     end
     return cost, nil
@@ -234,8 +238,9 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
     local rejected = 0
     local corrected = 0
 
-    local function registerBatch(list, isPositive)
+    local function registerBatch(list, kind)
         if not list then return end
+        local isEarnable = kind == "earnable"
         for _, entry in ipairs(list) do
             local traitId = entry.id
             if not traitId then
@@ -248,7 +253,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
                 print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
                 rejected = rejected + 1
             else
-                local cost, repair = BCR.NormalizeTraitCost(traitId, entry.cost, isPositive)
+                local cost, repair = BCR.NormalizeTraitCost(traitId, entry.cost, kind)
                 if cost == nil then
                     print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost and no engine cost, skipped")
                     rejected = rejected + 1
@@ -257,11 +262,11 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
                         print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " has no numeric cost; using engine cost " .. tostring(cost) .. " (auto-corrected)")
                         corrected = corrected + 1
                     elseif repair == "sign" then
-                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " cost " .. tostring(entry.cost) .. " has the wrong sign for the " .. (isPositive and "positive" or "negative") .. " list; corrected to " .. tostring(cost) .. " (auto-corrected)")
+                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " cost " .. tostring(entry.cost) .. " has the wrong sign for the " .. (isEarnable and "positive" or "negative") .. " list; corrected to " .. tostring(cost) .. " (auto-corrected)")
                         corrected = corrected + 1
                     end
                     local alreadyInBase = false
-                    if isPositive then
+                    if isEarnable then
                         for _, b in ipairs(BCR.PositiveTraits) do
                             if b.id == traitId then alreadyInBase = true; break end
                         end
@@ -282,7 +287,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
                     else
                         BCR.CustomTraitSources[traitId] = sourceName
                         BCR.CustomTraitNamespaces[traitId] = sandboxNamespace
-                        if isPositive then
+                        if isEarnable then
                             registeredPos = registeredPos + 1
                         else
                             registeredNeg = registeredNeg + 1
@@ -325,8 +330,8 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
     end
 
     local ok, err = pcall(function()
-        registerBatch(positiveTraits, true)
-        registerBatch(negativeTraits, false)
+        registerBatch(positiveTraits, "earnable")
+        registerBatch(negativeTraits, "removable")
         mergeExclusions()
     end)
     if not ok then
@@ -354,7 +359,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
     end
 
     print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. statusStr)
-    BCR.DebugPrint("Addon", "RegisterCustomTraits: [" .. sourceName .. "] detail -- " .. registeredStr)
+    BCR.DebugPrintf("Addon", "RegisterCustomTraits: [%s] detail -- %s", tostring(sourceName), tostring(registeredStr))
     if totalRegistered > 0 then
         BCR.RebuildMergedTraits()
     end

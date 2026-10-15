@@ -26,8 +26,8 @@ local HALO_COLORS = {
 -- PUBLIC FUNCTIONS
 -- ============================================================
 
-function BCR.EnqueueNotification(result)
-    if type(result) ~= "table" then return end
+function BCR.EnqueueNotification(reward)
+    if type(reward) ~= "table" then return end
     if #notificationQueue >= BCR.MAX_NOTIFICATION_QUEUE then
         -- The summary replaces the queued entries; the incoming reward takes
         -- its own slot, so count only what is collapsed.
@@ -43,7 +43,7 @@ function BCR.EnqueueNotification(result)
             }
         }
     end
-    table.insert(notificationQueue, result)
+    table.insert(notificationQueue, reward)
 end
 
 function BCR.UpdateNotifications(player)
@@ -67,17 +67,17 @@ function BCR.UpdateNotifications(player)
             return
         end
     end
-    local result = notificationQueue[1]
+    local reward = notificationQueue[1]
     table.remove(notificationQueue, 1)
-    if not result then
+    if not reward then
         isShowingNotification = false
         return
     end
     isShowingNotification = true
     notificationTimer = 0
-    BCR.DebugPrint("Client", string.format("Showing notification (%d remaining)", #notificationQueue))
-    local action = result.action or "added"
-    local displayName = result.displayName or BCR.GetTraitDisplayName(result.id) or "Unknown"
+    BCR.DebugPrintf("Client", "Showing notification (%d remaining)", #notificationQueue)
+    local action = reward.action or "added"
+    local displayName = reward.displayName or BCR.GetTraitDisplayName(reward.id) or "Unknown"
     if action == "added" then
         local actionText = getTextOrNull("UI_BCR_Gained") or "Gained"
         local text = actionText .. ": " .. displayName

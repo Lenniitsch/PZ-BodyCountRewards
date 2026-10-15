@@ -23,6 +23,7 @@ BCR.REWARD_REQUEST_COOLDOWN_SECONDS = 1
 BCR.SCALING_LINEAR = 1
 BCR.SCALING_PROGRESSIVE = 2
 BCR.SECONDS_PER_HOUR = 3600
+BCR.RARITY_UNKNOWN = "unknown"
 
 -- ============================================================
 -- RUNTIME STATE
@@ -53,6 +54,12 @@ function BCR.DebugPrint(module, message)
         module = "Core"
     end
     print("[BCR] [" .. tostring(module) .. "] " .. tostring(message))
+end
+
+-- Printf-style debug print: the message is only built when debug is on.
+function BCR.DebugPrintf(module, fmt, ...)
+    if not BCR.DEBUG then return end
+    BCR.DebugPrint(module, string.format(fmt, ...))
 end
 
 function BCR.GetOpts()
@@ -90,14 +97,16 @@ function BCR.IsTraitAllowed(id)
     if namespace then
         local sandboxVars = SandboxVars[namespace]
         if sandboxVars and sandboxVars[key] == false then
-            BCR.DebugPrint("Sandbox", "Trait blocked by sandbox [" .. namespace .. "]: " .. id .. " (key=" .. key .. ", value=" .. tostring(sandboxVars[key]) .. ")")
+            BCR.DebugPrintf("Sandbox", "Trait blocked by sandbox [%s]: %s (key=%s, value=%s)",
+                tostring(namespace), tostring(id), tostring(key), tostring(sandboxVars[key]))
             return false
         end
         return true
     end
     local sandboxVars = SandboxVars.BCR or {}
     if sandboxVars[key] == false then
-        BCR.DebugPrint("Sandbox", "Trait blocked by sandbox: " .. id .. " (key=" .. key .. ", value=" .. tostring(sandboxVars[key]) .. ")")
+        BCR.DebugPrintf("Sandbox", "Trait blocked by sandbox: %s (key=%s, value=%s)",
+            tostring(id), tostring(key), tostring(sandboxVars[key]))
         return false
     end
     return true

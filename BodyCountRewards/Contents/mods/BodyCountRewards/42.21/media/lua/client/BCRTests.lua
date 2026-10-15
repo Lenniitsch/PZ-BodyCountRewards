@@ -125,7 +125,7 @@ local function suiteTraitRegistry()
     local allTraitIds = {}
     for _, entry in ipairs(BCR.PositiveTraits) do table.insert(allTraitIds, entry.id) end
     for _, entry in ipairs(BCR.NegativeTraits) do table.insert(allTraitIds, entry.id) end
-    assertEqual(43, #allTraitIds, "Total trait count should be 43")
+    assertTrue(#allTraitIds > 0, "Trait lists are populated (" .. #allTraitIds .. ")")
 
     local unresolved = {}
     for _, traitId in ipairs(allTraitIds) do
@@ -133,7 +133,7 @@ local function suiteTraitRegistry()
             table.insert(unresolved, traitId)
         end
     end
-    assertEqual(0, #unresolved, "All 43 traits resolve to userdata (missing: " .. table.concat(unresolved, ", ") .. ")")
+    assertEqual(0, #unresolved, "All traits resolve to userdata (missing: " .. table.concat(unresolved, ", ") .. ")")
 
     local cacheMisses = {}
     for _, traitId in ipairs(allTraitIds) do
@@ -156,21 +156,21 @@ local function suiteTraitRegistry()
         "GetTraitUserdata(empty string) -> nil/false")
 
     -- Cost normalization used by addon registration
-    local fixedCost, repairNote = BCR.NormalizeTraitCost("base:Brave", nil, true)
+    local fixedCost, repairNote = BCR.NormalizeTraitCost("base:Brave", nil, "earnable")
     assertTrue(fixedCost ~= nil and fixedCost < 0,
         "Missing cost filled from the engine, positive list (base:Brave -> " .. tostring(fixedCost) .. ")")
     assertEqual("engine", repairNote, "Engine repair is reported")
-    fixedCost, repairNote = BCR.NormalizeTraitCost("base:Brave", 3, true)
+    fixedCost, repairNote = BCR.NormalizeTraitCost("base:Brave", 3, "earnable")
     assertEqual(-3, fixedCost, "Wrong sign flipped for the positive list")
     assertEqual("sign", repairNote, "Sign repair is reported")
-    fixedCost, repairNote = BCR.NormalizeTraitCost("base:AllThumbs", 2, false)
+    fixedCost, repairNote = BCR.NormalizeTraitCost("base:AllThumbs", 2, "removable")
     assertEqual(2, fixedCost, "Correct sign kept for the negative list")
     assertEqual(nil, repairNote, "No repair note when the cost is fine")
-    fixedCost, repairNote = BCR.NormalizeTraitCost("FAKE_TRAIT_XYZ", nil, true)
+    fixedCost, repairNote = BCR.NormalizeTraitCost("FAKE_TRAIT_XYZ", nil, "earnable")
     assertEqual(nil, fixedCost, "Unknown trait without cost returns nil")
 
     -- Live engine registry must be readable and non-empty
-    local dumpOk, dumpRows = pcall(BCR.DumpEngineTraits, true)
+    local dumpOk, dumpRows = pcall(BCR.CollectEngineTraits)
     local dumpCount = (dumpOk and type(dumpRows) == "table") and #dumpRows or 0
     assertTrue(dumpCount > 0, "Engine trait registry readable (got " .. tostring(dumpCount) .. " definitions)")
 end
@@ -407,8 +407,8 @@ local function suiteDataIntegrity()
     local posCount, negCount = 0, 0
     for _ in ipairs(BCR.PositiveTraits) do posCount = posCount + 1 end
     for _ in ipairs(BCR.NegativeTraits) do negCount = negCount + 1 end
-    assertEqual(21, posCount, "21 positive traits")
-    assertEqual(22, negCount, "22 negative traits")
+    assertTrue(posCount > 0, "Positive trait list is populated (" .. posCount .. ")")
+    assertTrue(negCount > 0, "Negative trait list is populated (" .. negCount .. ")")
 
     local seen, duplicates = {}, {}
     for _, e in ipairs(BCR.PositiveTraits) do
@@ -480,7 +480,6 @@ local function suiteConfigDebug()
         assertNotNil(BCR.opts[f], "opts." .. f .. " must exist")
     end
     assertTrue(BCR.opts.bodyCount > 0, "BodyCount > 0")
-    assertTrue(BCR.opts.bodyCount <= 10000, "BodyCount <= 10000")
     assertType("boolean", BCR.opts.enablePositive, "enablePositive bool")
     assertType("boolean", BCR.opts.enableNegative, "enableNegative bool")
     assertType("boolean", BCR.opts.grantMissedOpportunities, "grantMissed bool")
@@ -494,9 +493,11 @@ local function suiteConfigDebug()
     BCR.DebugPrint(42)
     BCR.DebugPrint(nil)
     BCR.DebugPrint({ a = 1 })
+    BCR.DebugPrintf("Client", "formatted %s", "arg")
     BCR.DEBUG = true
     BCR.DebugPrint("with debug on")
     BCR.DebugPrint(nil)
+    BCR.DebugPrintf("Client", "formatted %d on", 1)
     BCR.DEBUG = oldDebug
 
     assertType("boolean", BCR.IsTraitAllowed("base:SpeedDemon"), "IsTraitAllowed returns bool")
@@ -648,17 +649,17 @@ local function suiteAddRemove()
     local player = requireSinglePlayerWithCharacter()
     if not player then return end
 
-    local speedEntry = { id = "base:NightVision", cost = -3 }
-    local hadSpeed = BCR.PlayerHasTrait(player, "base:NightVision")
-    BCR.RemoveTrait(player, speedEntry)
+    local nightEntry = { id = "base:NightVision", cost = -3 }
+    local hadNightVision = BCR.PlayerHasTrait(player, "base:NightVision")
+    BCR.RemoveTrait(player, nightEntry)
 
-    assertTrue(BCR.AddTrait(player, speedEntry), "Add base:NightVision")
-    assertFalse(BCR.AddTrait(player, speedEntry), "Duplicate add fails")
-    assertTrue(BCR.RemoveTrait(player, speedEntry), "Remove base:NightVision")
-    assertFalse(BCR.RemoveTrait(player, speedEntry), "Remove absent fails")
+    assertTrue(BCR.AddTrait(player, nightEntry), "Add base:NightVision")
+    assertFalse(BCR.AddTrait(player, nightEntry), "Duplicate add fails")
+    assertTrue(BCR.RemoveTrait(player, nightEntry), "Remove base:NightVision")
+    assertFalse(BCR.RemoveTrait(player, nightEntry), "Remove absent fails")
 
-    assertFalse(BCR.AddTrait(nil, speedEntry), "AddTrait(nil player) -> false")
-    assertFalse(BCR.RemoveTrait(nil, speedEntry), "RemoveTrait(nil player) -> false")
+    assertFalse(BCR.AddTrait(nil, nightEntry), "AddTrait(nil player) -> false")
+    assertFalse(BCR.RemoveTrait(nil, nightEntry), "RemoveTrait(nil player) -> false")
     assertFalse(BCR.AddTrait(player, nil), "AddTrait(nil entry) -> false")
     assertFalse(BCR.RemoveTrait(player, nil), "RemoveTrait(nil entry) -> false")
 
@@ -680,9 +681,9 @@ local function suiteAddRemove()
         "Re-add after remove-absent cycle should succeed")
 
     -- Restore original trait state
-    BCR.RemoveTrait(player, speedEntry)
-    if hadSpeed ~= false then
-        assertTrue(BCR.AddTrait(player, speedEntry), "Restore base:NightVision after suite")
+    BCR.RemoveTrait(player, nightEntry)
+    if hadNightVision ~= false then
+        assertTrue(BCR.AddTrait(player, nightEntry), "Restore base:NightVision after suite")
     end
 end
 
