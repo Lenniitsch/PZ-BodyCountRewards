@@ -26,7 +26,8 @@ Works in **Singleplayer** and **Multiplayer**.
 - **Kill threshold** -- Set how many kills per milestone (2--10,000, default: 1,000)
 - **Progressive milestone scaling** -- Milestones get harder over time, or keep it linear. Adjustable steepness (0.1x--2.0x).
 - **Reward priority modes** -- Gain First / Lose First / Random
-- **Grant Missed Opportunities** -- Install the mod mid-game? Get all your owed rewards at once
+- **Retroactive Rewards** -- Grant rewards for kills made before installing the mod. High kill counts may grant many rewards at once
+- **Restore Missing Traits** -- Re-apply a BCR-earned trait that went missing (multiplayer desync, admin removal) instead of requiring it to be re-earned
 - **Individual trait toggles** -- Enable/disable every single one of the 43 traits
 - **Positive/negative rewards** -- Toggle each reward type on or off
 - **Debug logging** -- For sending me log files when things break
@@ -93,7 +94,7 @@ MP flow:  Client sends RequestReward command -> Server validates -> sends Reward
 
 ## Compatibility
 
-- Built for **Project Zomboid Build 42.19+** (Unstable Branch)
+- Built for **Project Zomboid Build 42.20+** (Stable Branch)
 - Works in both **Singleplayer** and **Multiplayer**
 - **Safe to install mid-game** -- reads your existing kill count
 - **Safe to remove mid-game** -- all earned vanilla traits are permanently applied
@@ -117,6 +118,7 @@ MP flow:  Client sends RequestReward command -> Server validates -> sends Reward
 | Francais (French) | Full | Full |
 | Polski (Polish) | Full | Full |
 | Українська (Ukrainian) | Full | Full |
+| 日本語 (Japanese) | Full | Full |
 
 Translations are machine-generated. If something reads awkwardly in your language, [open an issue](https://github.com/Lenniitsch/PZ-BodyCountRewards/issues) or submit a PR. Native speakers who want to improve a translation are very welcome.
 
@@ -139,6 +141,8 @@ BCR.RegisterCustomTraits(
 ```
 
 Trait IDs use ResourceLocation format (`namespace:PascalCase`), e.g. `"base:SpeedDemon"`, `"YourMod:TraitName"`. BCR resolves all trait IDs via `CharacterTrait.get(ResourceLocation.of(traitId))` -- works for vanilla and custom mod traits equally.
+
+Console diagnostic: run `BCRDumpTraits()` to print the live engine trait registry (all vanilla + mod traits) with cost, profession flag, mutual exclusions and translation status. Useful for checking trait IDs before you ship.
 
 ---
 
