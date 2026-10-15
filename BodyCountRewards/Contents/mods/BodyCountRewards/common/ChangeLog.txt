@@ -13,6 +13,7 @@ FIXES & IMPROVEMENTS
 - Hardened the multiplayer reward path: the server now ignores client-reported kill counts entirely and uses only its own authoritative kill counter. Reward batches are capped and stop early when the pools run dry, so a hacked client can no longer hang the server or claim milestones it never earned.
 - Fixed: reward processing and trait-state reconciliation were inactive in singleplayer due to a wrong server-only guard. The duplicate-grant protection now works in SP too.
 - Fixed: the stats UI catalog no longer reorders the shared trait lists; invalid addon registrations are now correctly reported as skipped.
+- Improved: the sandbox options page. "Restore Missing Traits" and "Debug Logging" now sit at the bottom, and boolean labels drop the redundant "Enable" prefix in all 12 languages.
 - Thanks to "road to 1 mmr" for the duplicate trait report.
 [ ------ ]
 
