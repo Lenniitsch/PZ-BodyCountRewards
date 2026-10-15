@@ -142,6 +142,8 @@ BCR.RegisterCustomTraits(
 
 Trait IDs use ResourceLocation format (`namespace:PascalCase`), e.g. `"base:SpeedDemon"`, `"YourMod:TraitName"`. BCR resolves all trait IDs via `CharacterTrait.get(ResourceLocation.of(traitId))` -- works for vanilla and custom mod traits equally.
 
+`RegisterCustomTraits()` returns the number of traits that were registered (`0` when nothing registered). On an internal failure it returns `nil` plus an error message; the addon should then abort its load with a fatal message.
+
 Console diagnostic: run `BCRDumpTraits()` to print the live engine trait registry (all vanilla + mod traits) with cost, profession flag, mutual exclusions and translation status. Useful for checking trait IDs before you ship.
 
 ---

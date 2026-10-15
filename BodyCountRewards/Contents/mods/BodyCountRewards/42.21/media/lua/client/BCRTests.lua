@@ -455,6 +455,16 @@ local function suiteDataIntegrity()
     for _ in pairs(BCR.Exclusions) do afterKeys = afterKeys + 1 end
     assertTrue(okMerge, "Self-referencing exclusion merge does not error")
     assertEqual(beforeKeys, afterKeys, "Self-referencing exclusion merge adds no keys")
+
+    -- === Registration contract: 0 = nothing registered, nil = failure ===
+    assertEqual(0, BCR.RegisterCustomTraits(nil, "contractNs"), "nil sourceName -> 0")
+    assertEqual(0, BCR.RegisterCustomTraits("ContractTest", ""), "empty namespace -> 0")
+    assertEqual(0, BCR.RegisterCustomTraits("ContractTest", "contractNs", "notatable"), "non-table list -> 0")
+    assertEqual(0, BCR.RegisterCustomTraits("ContractTest", "contractNs", { { id = "FAKE_CONTRACT_TRAIT", cost = 1 } }, nil, nil), "unknown trait id -> 0 (no failure)")
+    local badOk, badCount = pcall(BCR.RegisterCustomTraits, "ContractTest", "contractNs", { 42 }, nil, nil)
+    -- Malformed entry: either a clean (nil, err) failure or a thrown error.
+    -- It must never report registered traits.
+    assertTrue(not badOk or badCount == nil or badCount == 0, "malformed entry never reports registered traits")
 end
 
 -- ============================================================

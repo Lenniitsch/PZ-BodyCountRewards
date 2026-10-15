@@ -224,144 +224,183 @@ function BCR.NormalizeTraitCost(traitId, cost, kind)
     return cost, nil
 end
 
-function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, negativeTraits, exclusions)
-    if not sourceName then
-        print("[BCR] [Addon] RegisterCustomTraits: missing sourceName")
-        return 0
-    end
-    if not sandboxNamespace then
-        print("[BCR] [Addon] RegisterCustomTraits: missing sandboxNamespace for \"" .. tostring(sourceName) .. "\"")
-        return 0
-    end
-    local registeredPos = 0
-    local registeredNeg = 0
-    local rejected = 0
-    local corrected = 0
+-- Addon log line: [BCR] [Addon] "Source" -- message
+local function logAddon(sourceName, message)
+    print("[BCR] [Addon] \"" .. tostring(sourceName) .. "\" -- " .. tostring(message))
+end
 
-    local function registerBatch(list, kind)
-        if not list then return end
-        local isEarnable = kind == "earnable"
-        for _, entry in ipairs(list) do
-            local traitId = entry.id
-            if not traitId then
-                print("[BCR] [Addon] \"" .. sourceName .. "\" -- trait entry missing id, skipped")
-                rejected = rejected + 1
-            elseif not BCR.GetTraitUserdata(traitId) then
-                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
-                rejected = rejected + 1
-            elseif BCR.CustomTraitSources[traitId] then
-                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
-                rejected = rejected + 1
-            else
-                local cost, repair = BCR.NormalizeTraitCost(traitId, entry.cost, kind)
-                if cost == nil then
-                    print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost and no engine cost, skipped")
-                    rejected = rejected + 1
+-- True when the value is nil or a table.
+local function isTableOrNil(value)
+    return value == nil or type(value) == "table"
+end
+
+-- Registers one entry into the custom lists and updates the counters.
+-- kind: "earnable" for the positive list, "removable" for the negative list.
+local function tryRegisterOneTrait(state, sourceName, sandboxNamespace, entry, kind)
+    local traitId = entry.id
+    if not traitId then
+        logAddon(sourceName, "trait entry missing id, skipped")
+        state.rejected = state.rejected + 1
+        return
+    end
+    if not BCR.GetTraitUserdata(traitId) then
+        logAddon(sourceName, tostring(traitId) .. " not a valid CharacterTrait, skipped")
+        state.rejected = state.rejected + 1
+        return
+    end
+    if BCR.CustomTraitSources[traitId] then
+        logAddon(sourceName, tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
+        state.rejected = state.rejected + 1
+        return
+    end
+
+    local cost, repair = BCR.NormalizeTraitCost(traitId, entry.cost, kind)
+    if cost == nil then
+        logAddon(sourceName, tostring(traitId) .. " has no numeric cost and no engine cost, skipped")
+        state.rejected = state.rejected + 1
+        return
+    end
+    if repair == "engine" then
+        logAddon(sourceName, traitId .. " has no numeric cost; using engine cost " .. tostring(cost) .. " (auto-corrected)")
+        state.corrected = state.corrected + 1
+    elseif repair == "sign" then
+        logAddon(sourceName, traitId .. " cost " .. tostring(entry.cost) .. " has the wrong sign for the " .. (kind == "earnable" and "positive" or "negative") .. " list; corrected to " .. tostring(cost) .. " (auto-corrected)")
+        state.corrected = state.corrected + 1
+    end
+
+    local baseList = BCR.PositiveTraits
+    local customList = BCR.CustomPositiveTraits
+    if kind == "removable" then
+        baseList = BCR.NegativeTraits
+        customList = BCR.CustomNegativeTraits
+    end
+    local alreadyInBase = false
+    for _, base in ipairs(baseList) do
+        if base.id == traitId then alreadyInBase = true; break end
+    end
+    if alreadyInBase then
+        logAddon(sourceName, traitId .. " is already a base BCR trait, skipped")
+        state.rejected = state.rejected + 1
+        return
+    end
+
+    table.insert(customList, { id = traitId, cost = cost })
+    BCR.CustomTraitSources[traitId] = sourceName
+    BCR.CustomTraitNamespaces[traitId] = sandboxNamespace
+    if kind == "earnable" then
+        state.registeredPos = state.registeredPos + 1
+    else
+        state.registeredNeg = state.registeredNeg + 1
+    end
+end
+
+local function registerBatch(state, sourceName, sandboxNamespace, list, kind)
+    if not list then return end
+    for _, entry in ipairs(list) do
+        tryRegisterOneTrait(state, sourceName, sandboxNamespace, entry, kind)
+    end
+end
+
+-- Merges the addon's exclusion table into BCR.Exclusions. Iterates a copy:
+-- an addon may pass BCR.Exclusions itself, and Lua 5.1 leaves pairs()
+-- undefined when new keys are inserted during traversal.
+local function mergeExclusions(sourceName, exclusions)
+    if not exclusions then return end
+    local source = {}
+    for traitId, excludeList in pairs(exclusions) do
+        source[traitId] = excludeList
+    end
+    for traitId, excludeList in pairs(source) do
+        if type(traitId) == "string" and type(excludeList) == "table" then
+            for _, excludedId in ipairs(excludeList) do
+                if type(excludedId) ~= "string" or excludedId == "" then
+                    logAddon(sourceName, "invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
                 else
-                    if repair == "engine" then
-                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " has no numeric cost; using engine cost " .. tostring(cost) .. " (auto-corrected)")
-                        corrected = corrected + 1
-                    elseif repair == "sign" then
-                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " cost " .. tostring(entry.cost) .. " has the wrong sign for the " .. (isEarnable and "positive" or "negative") .. " list; corrected to " .. tostring(cost) .. " (auto-corrected)")
-                        corrected = corrected + 1
+                    if not BCR.Exclusions[traitId] then
+                        BCR.Exclusions[traitId] = {}
                     end
-                    local alreadyInBase = false
-                    if isEarnable then
-                        for _, b in ipairs(BCR.PositiveTraits) do
-                            if b.id == traitId then alreadyInBase = true; break end
-                        end
-                        if not alreadyInBase then
-                            table.insert(BCR.CustomPositiveTraits, { id = traitId, cost = cost })
-                        end
-                    else
-                        for _, b in ipairs(BCR.NegativeTraits) do
-                            if b.id == traitId then alreadyInBase = true; break end
-                        end
-                        if not alreadyInBase then
-                            table.insert(BCR.CustomNegativeTraits, { id = traitId, cost = cost })
-                        end
+                    local target = BCR.Exclusions[traitId]
+                    local found = false
+                    for _, e in ipairs(target) do
+                        if e == excludedId then found = true; break end
                     end
-                    if alreadyInBase then
-                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " is already a base BCR trait, skipped")
-                        rejected = rejected + 1
-                    else
-                        BCR.CustomTraitSources[traitId] = sourceName
-                        BCR.CustomTraitNamespaces[traitId] = sandboxNamespace
-                        if isEarnable then
-                            registeredPos = registeredPos + 1
-                        else
-                            registeredNeg = registeredNeg + 1
-                        end
+                    if not found then
+                        table.insert(target, excludedId)
                     end
                 end
             end
         end
+    end
+end
+
+-- "N positive, M negative" text (empty when nothing registered).
+local function formatRegisteredPair(state)
+    local parts = {}
+    if state.registeredPos > 0 then table.insert(parts, state.registeredPos .. " positive") end
+    if state.registeredNeg > 0 then table.insert(parts, state.registeredNeg .. " negative") end
+    return table.concat(parts, ", ")
+end
+
+-- Load-log summary line.
+local function formatRegistrationReport(state)
+    if state.registeredPos + state.registeredNeg == 0 then
+        return "nothing registered -- check messages above"
+    end
+    local statusStr = formatRegisteredPair(state)
+    if state.corrected > 0 then
+        statusStr = statusStr .. " (" .. state.corrected .. " auto-corrected)"
+    end
+    if state.rejected > 0 then
+        statusStr = statusStr .. " (" .. state.rejected .. " rejected)"
+    end
+    return statusStr
+end
+
+-- Registers a third-party addon's traits and exclusions. Call from a
+-- `shared/` file after BCR has loaded.
+--
+-- Returns the number of traits registered (0 when nothing registered),
+-- or nil plus an error message when registration failed part-way.
+function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, negativeTraits, exclusions)
+    if type(sourceName) ~= "string" or sourceName == "" then
+        print("[BCR] [Addon] RegisterCustomTraits: sourceName must be a non-empty string")
+        return 0
+    end
+    if type(sandboxNamespace) ~= "string" or sandboxNamespace == "" then
+        print("[BCR] [Addon] RegisterCustomTraits: sandboxNamespace must be a non-empty string for \"" .. sourceName .. "\"")
+        return 0
+    end
+    if not isTableOrNil(positiveTraits) or not isTableOrNil(negativeTraits)
+        or not isTableOrNil(exclusions) then
+        logAddon(sourceName, "positiveTraits, negativeTraits and exclusions must be tables (or nil)")
+        return 0
     end
 
-    local function mergeExclusions()
-        if not exclusions then return end
-        -- Copy first: an addon may pass BCR.Exclusions itself, and Lua 5.1
-        -- leaves pairs() undefined when new keys are inserted during traversal.
-        local source = {}
-        for traitId, excludeList in pairs(exclusions) do
-            source[traitId] = excludeList
-        end
-        for traitId, excludeList in pairs(source) do
-            if type(traitId) == "string" and type(excludeList) == "table" then
-                for _, excludedId in ipairs(excludeList) do
-                    if type(excludedId) ~= "string" or excludedId == "" then
-                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
-                    else
-                        if not BCR.Exclusions[traitId] then
-                            BCR.Exclusions[traitId] = {}
-                        end
-                        local target = BCR.Exclusions[traitId]
-                        local found = false
-                        for _, e in ipairs(target) do
-                            if e == excludedId then found = true; break end
-                        end
-                        if not found then
-                            table.insert(target, excludedId)
-                        end
-                    end
-                end
-            end
-        end
-    end
+    local state = {
+        registeredPos = 0,
+        registeredNeg = 0,
+        rejected = 0,
+        corrected = 0,
+    }
 
     local ok, err = pcall(function()
-        registerBatch(positiveTraits, "earnable")
-        registerBatch(negativeTraits, "removable")
-        mergeExclusions()
+        registerBatch(state, sourceName, sandboxNamespace, positiveTraits, "earnable")
+        registerBatch(state, sourceName, sandboxNamespace, negativeTraits, "removable")
+        mergeExclusions(sourceName, exclusions)
     end)
-    if not ok then
-        print("[BCR] [Addon] \"" .. sourceName .. "\" -- internal error during registration: " .. tostring(err))
-        return registeredPos + registeredNeg
-    end
 
-    local totalRegistered = registeredPos + registeredNeg
-    local parts = {}
-    if registeredPos > 0 then table.insert(parts, registeredPos .. " positive") end
-    if registeredNeg > 0 then table.insert(parts, registeredNeg .. " negative") end
-    local registeredStr = table.concat(parts, ", ")
-
-    local statusStr
-    if totalRegistered == 0 then
-        statusStr = "nothing registered -- check messages above"
-    else
-        statusStr = registeredStr
-        if corrected > 0 then
-            statusStr = statusStr .. " (" .. corrected .. " auto-corrected)"
-        end
-        if rejected > 0 then
-            statusStr = statusStr .. " (" .. rejected .. " rejected)"
-        end
-    end
-
-    print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. statusStr)
-    BCR.DebugPrintf("Addon", "RegisterCustomTraits: [%s] detail -- %s", tostring(sourceName), tostring(registeredStr))
-    if totalRegistered > 0 then
+    -- Keep the merged pools consistent even after a partial failure.
+    if state.registeredPos + state.registeredNeg > 0 then
         BCR.RebuildMergedTraits()
     end
-    return totalRegistered
+
+    if not ok then
+        logAddon(sourceName, "internal error during registration: " .. tostring(err))
+        return nil, err
+    end
+
+    logAddon(sourceName, formatRegistrationReport(state))
+    BCR.DebugPrintf("Addon", "RegisterCustomTraits: [%s] detail -- %s",
+        tostring(sourceName), tostring(formatRegisteredPair(state)))
+    return state.registeredPos + state.registeredNeg
 end
