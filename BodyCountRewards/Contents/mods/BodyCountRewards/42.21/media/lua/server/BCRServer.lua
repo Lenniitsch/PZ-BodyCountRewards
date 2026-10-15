@@ -82,6 +82,57 @@ local function findTraitEntry(traitId)
     return nil
 end
 
+-- Reconciles one trait against the grant history. Returns true when the
+-- history changed (the caller transmits once at the end).
+local function reconcileOneTrait(player, traitId, bcrData, opts)
+    local last = BCR.GetLastHistoryAction(bcrData.traitHistory, traitId)
+    local has = BCR.PlayerHasTrait(player, traitId)
+    if has == nil then
+        BCR.DebugPrintf("Server", "ReconcileTraitState: engine state unreadable for %s -- skipping", tostring(traitId))
+        return false
+    end
+    if has == true and last == nil then
+        -- Starting or externally gained trait -- record a baseline
+        -- entry so it can never be granted again. (Baseline entries
+        -- are hidden in the history UI.)
+        recordTraitHistory(bcrData, { id = traitId, action = "baseline", rarity = BCR.RARITY_UNKNOWN })
+        return true
+    end
+    if has == true and (last == "removed" or last == "lost") then
+        -- Admin or another mod re-granted a previously removed/lost trait
+        recordTraitHistory(bcrData, { id = traitId, action = "added", rarity = BCR.RARITY_UNKNOWN })
+        return true
+    end
+    if has == false and (last == "added" or last == "baseline") then
+        -- History says owned but the trait is missing.
+        -- (last == "removed"/"lost" are terminal states and can
+        -- never reach this branch.)
+        local entry = findTraitEntry(traitId)
+        local restored = false
+        if opts.restoreMissingTraits and BCR.IsTraitAllowed(traitId) and entry then
+            restored = BCR.AddTrait(player, entry)
+        end
+        if restored then
+            recordTraitHistory(bcrData, {
+                id = traitId,
+                action = "added",
+                rarity = entry and BCR.GetRarity(entry.cost) or BCR.RARITY_UNKNOWN,
+            })
+            return true
+        end
+        if not opts.restoreMissingTraits then
+            recordTraitHistory(bcrData, {
+                id = traitId,
+                action = "lost",
+                rarity = entry and BCR.GetRarity(entry.cost) or BCR.RARITY_UNKNOWN,
+            })
+            return true
+        end
+        BCR.DebugPrintf("Server", "ReconcileTraitState: restore failed/blocked for %s -- will retry on next check", tostring(traitId))
+    end
+    return false
+end
+
 function BCR.ReconcileTraitState(player, bcrData, opts)
     if not player or not bcrData or not opts then return false end
     -- Run everywhere except pure MP clients. SP has isServer() == false
@@ -100,46 +151,8 @@ function BCR.ReconcileTraitState(player, bcrData, opts)
     end
 
     for traitId in pairs(allTraitIds) do
-        local last = BCR.GetLastHistoryAction(bcrData.traitHistory, traitId)
-        local has = BCR.PlayerHasTrait(player, traitId)
-        if has == nil then
-            BCR.DebugPrintf("Server", "ReconcileTraitState: engine state unreadable for %s -- skipping", tostring(traitId))
-        elseif has == true and last == nil then
-            -- Starting or externally gained trait -- record a baseline
-            -- entry so it can never be granted again. (Baseline entries
-            -- are hidden in the history UI.)
-            recordTraitHistory(bcrData, { id = traitId, action = "baseline", rarity = BCR.RARITY_UNKNOWN })
+        if reconcileOneTrait(player, traitId, bcrData, opts) then
             changed = true
-        elseif has == true and (last == "removed" or last == "lost") then
-            -- Admin or another mod re-granted a previously removed/lost trait
-            recordTraitHistory(bcrData, { id = traitId, action = "added", rarity = BCR.RARITY_UNKNOWN })
-            changed = true
-        elseif has == false and (last == "added" or last == "baseline") then
-            -- History says owned but the trait is missing.
-            -- (last == "removed"/"lost" are terminal states and can
-            -- never reach this branch.)
-            local entry = findTraitEntry(traitId)
-            local restored = false
-            if opts.restoreMissingTraits and BCR.IsTraitAllowed(traitId) and entry then
-                restored = BCR.AddTrait(player, entry)
-            end
-            if restored then
-                recordTraitHistory(bcrData, {
-                    id = traitId,
-                    action = "added",
-                    rarity = entry and BCR.GetRarity(entry.cost) or BCR.RARITY_UNKNOWN,
-                })
-                changed = true
-            elseif not opts.restoreMissingTraits then
-                recordTraitHistory(bcrData, {
-                    id = traitId,
-                    action = "lost",
-                    rarity = entry and BCR.GetRarity(entry.cost) or BCR.RARITY_UNKNOWN,
-                })
-                changed = true
-            else
-                BCR.DebugPrintf("Server", "ReconcileTraitState: restore failed/blocked for %s -- will retry on next check", tostring(traitId))
-            end
         end
     end
 
@@ -296,6 +309,56 @@ end
 -- MP HANDLERS
 -- ============================================================
 
+-- Rate limit: the client paces its requests at ~1.5s, so a 1-second
+-- cooldown only blocks spam, never legit flow. A silently skipped request
+-- is safe -- the client re-requests on its next pending tick.
+local function checkRewardRateLimit(bcrData)
+    local now = getWorldAgeHoursSafe()
+    local previousRequest = bcrData.lastRewardRequest
+    -- Only rate-limit on a clock that moved forward: a rollback, a new world,
+    -- or an unreadable clock must not lock the player out of rewards.
+    if previousRequest and now > previousRequest
+        and (now - previousRequest) * BCR.SECONDS_PER_HOUR < BCR.REWARD_REQUEST_COOLDOWN_SECONDS then
+        return false
+    end
+    bcrData.lastRewardRequest = now
+    return true
+end
+
+-- Prints and sends one RewardGranted per applied trait. Returns the count.
+local function broadcastRewardResults(player, who, results)
+    for _, applied in ipairs(results) do
+        print(string.format(
+            "[BCR] [Server] Reward granted to %s: %s (%s) - %s",
+            who, applied.id, applied.action, applied.rarity
+        ))
+        -- Send identity and action only: the client resolves the display
+        -- name and colors locally, so each player sees their own language.
+        sendServerCommand(player, BCR.MODULE_NAME, "RewardGranted", {
+            id = applied.id,
+            action = applied.action,
+        })
+    end
+    return #results
+end
+
+-- Transmits the updated ModData and sends the batch summary.
+local function sendBatchComplete(player, bcrData, opts, totalGranted)
+    local remainingMilestones = BCR.GetMissedMilestoneCount(bcrData, bcrData.kills or 0, opts)
+    if isServer() then
+        local txOk, txErr = pcall(function() player:transmitModData() end)
+        if not txOk then
+            BCR.DebugPrintf("Server", "transmitModData failed: %s", tostring(txErr))
+        end
+    end
+    sendServerCommand(player, BCR.MODULE_NAME, "RewardBatchComplete", {
+        totalGranted = totalGranted,
+        remainingMilestones = remainingMilestones,
+        rewardsGiven = bcrData.rewardsGiven or 0,
+        withheldMilestones = bcrData.withheldMilestones,
+    })
+end
+
 local function handleRequestReward(player, args)
     if not player or not args then return end
     local ok, username = pcall(function() return tostring(player:getUsername()) end)
@@ -308,18 +371,9 @@ local function handleRequestReward(player, args)
     end
     local opts = BCR.GetOpts()
 
-    -- Rate limit: the client paces its requests at ~1.5s, so a 1-second
-    -- cooldown only blocks spam, never legit flow. A silent return is
-    -- safe -- the client re-requests on its next pending tick.
-    local now = getWorldAgeHoursSafe()
-    local previousRequest = bcrData.lastRewardRequest
-    -- Only rate-limit on a clock that moved forward: a rollback, a new world,
-    -- or an unreadable clock must not lock the player out of rewards.
-    if previousRequest and now > previousRequest
-        and (now - previousRequest) * BCR.SECONDS_PER_HOUR < BCR.REWARD_REQUEST_COOLDOWN_SECONDS then
+    if not checkRewardRateLimit(bcrData) then
         return
     end
-    bcrData.lastRewardRequest = now
 
     if not opts.enablePositive and not opts.enableNegative then
         print("[BCR] [Server] Both trait rewards are disabled in sandbox options")
@@ -345,32 +399,8 @@ local function handleRequestReward(player, args)
     end
     BCR.ReconcileTraitState(player, bcrData, opts)
     local results = applyRewardBatch(player, bcrData, opts, math.min(missedCount, BCR.MAX_BATCH_REWARDS))
-    local totalGranted = #results
-    for _, applied in ipairs(results) do
-        print(string.format(
-            "[BCR] [Server] Reward granted to %s: %s (%s) - %s",
-            who, applied.id, applied.action, applied.rarity
-        ))
-        -- Send identity and action only: the client resolves the display
-        -- name and colors locally, so each player sees their own language.
-        sendServerCommand(player, BCR.MODULE_NAME, "RewardGranted", {
-            id = applied.id,
-            action = applied.action,
-        })
-    end
-    local remainingMilestones = BCR.GetMissedMilestoneCount(bcrData, bcrData.kills or 0, opts)
-    if isServer() then
-        local txOk, txErr = pcall(function() player:transmitModData() end)
-        if not txOk then
-            BCR.DebugPrintf("Server", "transmitModData failed: %s", tostring(txErr))
-        end
-    end
-    sendServerCommand(player, BCR.MODULE_NAME, "RewardBatchComplete", {
-        totalGranted = totalGranted,
-        remainingMilestones = remainingMilestones,
-        rewardsGiven = bcrData.rewardsGiven or 0,
-        withheldMilestones = bcrData.withheldMilestones,
-    })
+    local totalGranted = broadcastRewardResults(player, who, results)
+    sendBatchComplete(player, bcrData, opts, totalGranted)
 end
 
 -- MP clients announce themselves once per session so the server can
