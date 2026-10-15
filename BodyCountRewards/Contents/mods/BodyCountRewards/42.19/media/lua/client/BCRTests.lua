@@ -152,6 +152,20 @@ local function suiteTraitRegistry()
     assertTrue(BCR.GetTraitUserdata("") == nil or BCR.GetTraitUserdata("") == false,
         "GetTraitUserdata(empty string) -> nil/false")
 
+    -- Cost normalization used by addon registration
+    local fixedCost, repairNote = BCR.NormalizeTraitCost("base:Brave", nil, true)
+    assertTrue(fixedCost ~= nil and fixedCost < 0,
+        "Missing cost filled from the engine, positive list (base:Brave -> " .. tostring(fixedCost) .. ")")
+    assertEqual("engine", repairNote, "Engine repair is reported")
+    fixedCost, repairNote = BCR.NormalizeTraitCost("base:Brave", 3, true)
+    assertEqual(-3, fixedCost, "Wrong sign flipped for the positive list")
+    assertEqual("sign", repairNote, "Sign repair is reported")
+    fixedCost, repairNote = BCR.NormalizeTraitCost("base:AllThumbs", 2, false)
+    assertEqual(2, fixedCost, "Correct sign kept for the negative list")
+    assertEqual(nil, repairNote, "No repair note when the cost is fine")
+    fixedCost, repairNote = BCR.NormalizeTraitCost("FAKE_TRAIT_XYZ", nil, true)
+    assertEqual(nil, fixedCost, "Unknown trait without cost returns nil")
+
     -- Live engine registry must be readable and non-empty
     local dumpOk, dumpRows = pcall(BCR.DumpEngineTraits, true)
     local dumpCount = (dumpOk and type(dumpRows) == "table") and #dumpRows or 0

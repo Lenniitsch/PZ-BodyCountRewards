@@ -184,6 +184,43 @@ BCR.CustomNegativeTraits = BCR.CustomNegativeTraits or {}
 BCR.CustomTraitSources = BCR.CustomTraitSources or {}
 BCR.CustomTraitNamespaces = BCR.CustomTraitNamespaces or {}
 
+-- ============================================================
+-- COST NORMALIZATION -- used by addon registration. BCR lists
+-- store positive (earnable) traits with negative costs and
+-- negative (removable) traits with positive costs. The engine
+-- uses the opposite sign convention, so costs can be derived
+-- from the engine and repaired automatically.
+-- ============================================================
+
+function BCR.GetEngineTraitCost(traitId)
+    local trait = BCR.GetTraitUserdata(traitId)
+    if not trait then return nil end
+    local ok, cost = pcall(function()
+        local def = CharacterTraitDefinition.getCharacterTraitDefinition(trait)
+        if def then return def:getCost() end
+        return nil
+    end)
+    if ok and type(cost) == "number" then
+        return math.abs(cost)
+    end
+    return nil
+end
+
+function BCR.NormalizeTraitCost(traitId, cost, isPositive)
+    if type(cost) ~= "number" then
+        local engineCost = BCR.GetEngineTraitCost(traitId)
+        if engineCost == nil then return nil, nil end
+        if isPositive then
+            return -engineCost, "engine"
+        end
+        return engineCost, "engine"
+    end
+    if (isPositive and cost > 0) or (not isPositive and cost < 0) then
+        return -cost, "sign"
+    end
+    return cost, nil
+end
+
 function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, negativeTraits, exclusions)
     if not sourceName then
         print("[BCR] [Addon] RegisterCustomTraits: missing sourceName")
@@ -196,6 +233,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
     local registeredPos = 0
     local registeredNeg = 0
     local rejected = 0
+    local corrected = 0
 
     local function registerBatch(list, isPositive)
         if not list then return end
@@ -204,15 +242,6 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
             if not traitId then
                 print("[BCR] [Addon] \"" .. sourceName .. "\" -- trait entry missing id, skipped")
                 rejected = rejected + 1
-            elseif type(entry.cost) ~= "number" then
-                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost, skipped")
-                rejected = rejected + 1
-            elseif isPositive and entry.cost > 0 then
-                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " positive trait with positive cost " .. tostring(entry.cost) .. " (expected negative); skipped")
-                rejected = rejected + 1
-            elseif not isPositive and entry.cost < 0 then
-                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " negative trait with negative cost " .. tostring(entry.cost) .. " (expected positive); skipped")
-                rejected = rejected + 1
             elseif not BCR.GetTraitUserdata(traitId) then
                 print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
                 rejected = rejected + 1
@@ -220,32 +249,45 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
                 print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
                 rejected = rejected + 1
             else
-                local alreadyInBase = false
-                if isPositive then
-                    for _, b in ipairs(BCR.PositiveTraits) do
-                        if b.id == traitId then alreadyInBase = true; break end
-                    end
-                    if not alreadyInBase then
-                        table.insert(BCR.CustomPositiveTraits, { id = traitId, cost = entry.cost })
-                    end
-                else
-                    for _, b in ipairs(BCR.NegativeTraits) do
-                        if b.id == traitId then alreadyInBase = true; break end
-                    end
-                    if not alreadyInBase then
-                        table.insert(BCR.CustomNegativeTraits, { id = traitId, cost = entry.cost })
-                    end
-                end
-                if alreadyInBase then
-                    print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " is already a base BCR trait, skipped")
+                local cost, repair = BCR.NormalizeTraitCost(traitId, entry.cost, isPositive)
+                if cost == nil then
+                    print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost and no engine cost, skipped")
                     rejected = rejected + 1
                 else
-                    BCR.CustomTraitSources[traitId] = sourceName
-                    BCR.CustomTraitNamespaces[traitId] = sandboxNamespace
+                    if repair == "engine" then
+                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " has no numeric cost; using engine cost " .. tostring(cost) .. " (auto-corrected)")
+                        corrected = corrected + 1
+                    elseif repair == "sign" then
+                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " cost " .. tostring(entry.cost) .. " has the wrong sign for the " .. (isPositive and "positive" or "negative") .. " list; corrected to " .. tostring(cost) .. " (auto-corrected)")
+                        corrected = corrected + 1
+                    end
+                    local alreadyInBase = false
                     if isPositive then
-                        registeredPos = registeredPos + 1
+                        for _, b in ipairs(BCR.PositiveTraits) do
+                            if b.id == traitId then alreadyInBase = true; break end
+                        end
+                        if not alreadyInBase then
+                            table.insert(BCR.CustomPositiveTraits, { id = traitId, cost = cost })
+                        end
                     else
-                        registeredNeg = registeredNeg + 1
+                        for _, b in ipairs(BCR.NegativeTraits) do
+                            if b.id == traitId then alreadyInBase = true; break end
+                        end
+                        if not alreadyInBase then
+                            table.insert(BCR.CustomNegativeTraits, { id = traitId, cost = cost })
+                        end
+                    end
+                    if alreadyInBase then
+                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " is already a base BCR trait, skipped")
+                        rejected = rejected + 1
+                    else
+                        BCR.CustomTraitSources[traitId] = sourceName
+                        BCR.CustomTraitNamespaces[traitId] = sandboxNamespace
+                        if isPositive then
+                            registeredPos = registeredPos + 1
+                        else
+                            registeredNeg = registeredNeg + 1
+                        end
                     end
                 end
             end
@@ -298,6 +340,9 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         statusStr = "nothing registered -- check messages above"
     else
         statusStr = registeredStr
+        if corrected > 0 then
+            statusStr = statusStr .. " (" .. corrected .. " auto-corrected)"
+        end
         if rejected > 0 then
             statusStr = statusStr .. " (" .. rejected .. " rejected)"
         end
