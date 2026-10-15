@@ -233,20 +233,22 @@ function BCR.SyncAuthoritativeKills(player, bcrData)
 end
 
 -- ============================================================
--- RETROACTIVE REWARDS BASELINE -- captured once per player while
--- the option is off. Milestones reached before that moment are
--- withheld: not owed while the option stays off, released when it
--- is switched on. Returns true when the baseline was captured now.
+-- RETROACTIVE REWARDS WITHHOLDING -- while the option is off,
+-- every load moves whatever is still owed into the withheld pool.
+-- Withheld milestones are not granted; switching the option on
+-- releases them. Returns true when the pool grew.
 -- ============================================================
 
 function BCR.CaptureWithheldBaseline(player, bcrData, opts)
     if not bcrData or not opts then return false end
-    if bcrData.withheldMilestones ~= nil then return false end
     if opts.grantMissedOpportunities then return false end
     local kills = getZombieKillsSafe(player) or 0
     local reached = BCR.GetMilestonesAtKills(kills, opts)
     local rewarded = bcrData.rewardsGiven or 0
-    bcrData.withheldMilestones = math.max(0, reached - rewarded)
+    local withheld = bcrData.withheldMilestones or 0
+    local owed = reached - rewarded - withheld
+    if owed <= 0 then return false end
+    bcrData.withheldMilestones = withheld + owed
     return true
 end
 

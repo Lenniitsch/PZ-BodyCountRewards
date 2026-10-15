@@ -174,8 +174,8 @@ local function BCR_OnCreatePlayer(playerNum, player)
     end
 
     if isSinglePlayer() then
-        -- Same VM as the server module: capture the withheld baseline and
-        -- drain anything already owed without waiting for the next kill.
+        -- Same VM as the server module: set owed milestones aside
+        -- (option off) or drain them right away (option on).
         if BCR.CaptureWithheldBaseline and BCR.opts then
             pcall(BCR.CaptureWithheldBaseline, player, bcrData, BCR.opts)
         end

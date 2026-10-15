@@ -660,10 +660,9 @@ function BCR.EnsureModData(player)
     if type(modData.BCR.rewardsGiven) ~= "number" or modData.BCR.rewardsGiven < 0 then
         modData.BCR.rewardsGiven = 0
     end
-    -- withheldMilestones: absent means "baseline not captured yet" (nil),
-    -- a number means that many milestones are withheld while retroactive
-    -- rewards stay off. Corrupt values are dropped so the next capture
-    -- point can rebuild them.
+    -- withheldMilestones: number of milestones set aside while retroactive
+    -- rewards stay off; absent/nil means none are set aside yet. Corrupt
+    -- values are dropped so the next load can rebuild the pool.
     if modData.BCR.withheldMilestones ~= nil and
         (type(modData.BCR.withheldMilestones) ~= "number" or modData.BCR.withheldMilestones < 0) then
         modData.BCR.withheldMilestones = nil

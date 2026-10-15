@@ -917,23 +917,30 @@ local function suitePoolBuildingPlayerState()
         end
     end
 
-    -- === Regression: withheld baseline capture (retroactive rewards) ===
+    -- === Regression: withheld capture (retroactive rewards) ===
     if BCR.CaptureWithheldBaseline then
         local okK3, engineKills3 = pcall(function() return player:getZombieKills() end)
         if okK3 and type(engineKills3) == "number" then
             local captureOpts = {
-                bodyCount = 1000, milestoneScaling = 1,
+                bodyCount = 2, milestoneScaling = 1,
                 progressiveScalingFactor = 0.5, grantMissedOpportunities = false,
             }
-            local expected = BCR.GetMilestonesAtKills(engineKills3, captureOpts)
+            local deeperOpts = {
+                bodyCount = 1, milestoneScaling = 1,
+                progressiveScalingFactor = 0.5, grantMissedOpportunities = false,
+            }
+            local reached = BCR.GetMilestonesAtKills(engineKills3, captureOpts)
             local savedWithheld = bcrData.withheldMilestones
             local savedRewards2 = bcrData.rewardsGiven
 
             bcrData.withheldMilestones = nil
             bcrData.rewardsGiven = 0
             local captured = BCR.CaptureWithheldBaseline(player, bcrData, captureOpts)
-            local withheld = bcrData.withheldMilestones
+            local withheldAfter = bcrData.withheldMilestones or 0
             local capturedAgain = BCR.CaptureWithheldBaseline(player, bcrData, captureOpts)
+            local deeperReached = BCR.GetMilestonesAtKills(engineKills3, deeperOpts)
+            local grew = BCR.CaptureWithheldBaseline(player, bcrData, deeperOpts)
+            local withheldGrown = bcrData.withheldMilestones or 0
 
             bcrData.withheldMilestones = nil
             local capturedOnOpts = BCR.CaptureWithheldBaseline(player, bcrData, { grantMissedOpportunities = true })
@@ -941,9 +948,11 @@ local function suitePoolBuildingPlayerState()
             bcrData.withheldMilestones = savedWithheld
             bcrData.rewardsGiven = savedRewards2
 
-            assertTrue(captured, "First capture reports a change")
-            assertEqual(expected, withheld, "Capture withholds reached-but-ungranted milestones")
-            assertFalse(capturedAgain, "Capture is a one-time baseline")
+            assertTrue(captured == (reached > 0), "Capture reports a change only when milestones are owed")
+            assertEqual(reached, withheldAfter, "Capture sets aside every owed milestone")
+            assertFalse(capturedAgain, "Second capture with the same state adds nothing")
+            assertTrue(grew == (deeperReached > withheldAfter), "A deeper backlog grows the withheld pool")
+            assertEqual(deeperReached, withheldGrown, "Grown pool equals reached minus granted")
             assertFalse(capturedOnOpts, "No capture while retroactive rewards are on")
         end
     end
