@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 -- BCRConfig (Build 42.19+)
+-- BodyCountRewards v1.3.4 -- BCRConfig (Build 42.19+)
 -- Constants, sandbox option cache, debug flag. No game logic here.
 -- ============================================================
 
@@ -14,6 +14,11 @@ BCR.PRIORITY_NEGATIVE_FIRST = 2
 BCR.PRIORITY_RANDOM = 3
 BCR.MODULE_NAME = "BCR"
 BCR.MAX_NOTIFICATION_QUEUE = 8
+BCR.DEFAULT_BODY_COUNT = 1000
+BCR.DEFAULT_PROGRESSIVE_FACTOR = 0.5
+BCR.NOTIFICATION_DELAY_TICKS = 200
+BCR.MAX_BATCH_REWARDS = 64
+BCR.REWARD_REQUEST_COOLDOWN_SECONDS = 1
 
 -- ============================================================
 -- RUNTIME STATE
@@ -37,52 +42,58 @@ BCR.DISPLAY_OVERRIDES = {
 -- FUNCTIONS
 -- ============================================================
 
-function BCR.DebugPrint(message)
-    if BCR.DEBUG then print("[BCR] " .. tostring(message)) end
+function BCR.DebugPrint(module, message)
+    if not BCR.DEBUG then return end
+    if message == nil then
+        message = module
+        module = "Core"
+    end
+    print("[BCR] [" .. tostring(module) .. "] " .. tostring(message))
+end
+
+function BCR.GetOpts()
+    if not BCR.opts then
+        BCR.RefreshConfig()
+    end
+    return BCR.opts
 end
 
 function BCR.RefreshConfig()
-    local sv = SandboxVars.BCR or {}
-    if sv.allow_SPEED_DEMON ~= nil then
-        local migrated = 0
-        if BCR.TRAIT_ID_MIGRATION then
-            for oldId, newId in pairs(BCR.TRAIT_ID_MIGRATION) do
-                local oldKey = "allow_" .. oldId
-                local newKey = "allow_" .. string.gsub(newId, ":", "_")
-                if sv[oldKey] ~= nil and sv[newKey] == nil then
-                    sv[newKey] = sv[oldKey]
-                    migrated = migrated + 1
-                end
-            end
-        end
-        print("[BCR] v1.3.1: Migrated " .. tostring(migrated) .. " sandbox trait toggle(s) to new format. Verify in the Traits page if needed.")
-    end
+    -- NOTE: In-game sandbox key migration is not possible. The engine
+    -- (SandboxOptions.load) discards save-file options that are not
+    -- declared in the current sandbox-options.txt, so keys from older
+    -- mod versions never reach SandboxVars here. Keys must never be
+    -- renamed after shipping. Saves upgrading from pre-1.3.0 (the
+    -- misspelled "grandMissedOpportunities" key) reset to defaults.
+    local sandboxVars = SandboxVars.BCR or {}
     BCR.opts = {
-        bodyCount                = sv.BodyCount or 1000,
-        enablePositive           = sv.enablePositiveTraits ~= false,
-        enableNegative           = sv.enableNegativeTraits ~= false,
-        rewardPriority           = sv.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST,
-        grantMissedOpportunities = sv.grantMissedOpportunities == true,
-        milestoneScaling         = sv.MilestoneScaling or 1,
-        progressiveScalingFactor = sv.ProgressiveScalingFactor or 0.5,
+        bodyCount                = sandboxVars.BodyCount or BCR.DEFAULT_BODY_COUNT,
+        enablePositive           = sandboxVars.enablePositiveTraits ~= false,
+        enableNegative           = sandboxVars.enableNegativeTraits ~= false,
+        rewardPriority           = sandboxVars.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST,
+        grantMissedOpportunities = sandboxVars.grantMissedOpportunities == true,
+        restoreMissingTraits     = sandboxVars.restoreMissingTraits == true,
+        milestoneScaling         = sandboxVars.MilestoneScaling or 1,
+        progressiveScalingFactor = sandboxVars.ProgressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR,
     }
-    BCR.DEBUG = sv.enableDebugLogging == true
+    BCR.DEBUG = sandboxVars.enableDebugLogging == true
 end
 
 function BCR.IsTraitAllowed(id)
+    if type(id) ~= "string" then return true end
     local key = "allow_" .. string.gsub(id, ":", "_")
     local namespace = BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[id]
     if namespace then
-        local sv = SandboxVars[namespace]
-        if sv and sv[key] == false then
-            BCR.DebugPrint("Trait blocked by sandbox [" .. namespace .. "]: " .. id .. " (key=" .. key .. ", value=" .. tostring(sv[key]) .. ")")
+        local sandboxVars = SandboxVars[namespace]
+        if sandboxVars and sandboxVars[key] == false then
+            BCR.DebugPrint("Sandbox", "Trait blocked by sandbox [" .. namespace .. "]: " .. id .. " (key=" .. key .. ", value=" .. tostring(sandboxVars[key]) .. ")")
             return false
         end
         return true
     end
-    local sv = SandboxVars.BCR or {}
-    if sv[key] == false then
-        BCR.DebugPrint("Trait blocked by sandbox: " .. id .. " (key=" .. key .. ", value=" .. tostring(sv[key]) .. ")")
+    local sandboxVars = SandboxVars.BCR or {}
+    if sandboxVars[key] == false then
+        BCR.DebugPrint("Sandbox", "Trait blocked by sandbox: " .. id .. " (key=" .. key .. ", value=" .. tostring(sandboxVars[key]) .. ")")
         return false
     end
     return true

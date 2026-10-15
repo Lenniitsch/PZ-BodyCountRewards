@@ -3,6 +3,19 @@ link1 = Steam Workshop = https://steamcommunity.com/sharedfiles/filedetails/?id=
 link2 = GitHub = https://github.com/Lenniitsch/PZ-BodyCountRewards,
 [ ------ ]
 
+[ v1.3.4 - Body Count Rewards ]
+
+FIXES & IMPROVEMENTS
+- Fixed: traits a player already had (starting traits, previously earned traits) could be granted again at a kill milestone. BCR now records a trait baseline at first check and guards reward pools with its own grant history. This protects against grants made while the engine's trait list is wrong (for example right after a save load or a multiplayer sync resets it).
+- Added "Restore Missing Traits" sandbox option (Default: Off). When a BCR-earned trait is missing from a player (multiplayer desync, admin removal), BCR marks it as lost so it can be re-earned through milestones. With the option enabled, the trait is re-applied automatically instead.
+- Fixed: broken characters in the sandbox translations for German, French, Polish, Portuguese (BR), Russian, Turkish, Korean, Chinese and Ukrainian. Files were recovered and re-encoded.
+- Added: Japanese translation (UI + sandbox options), using the official vanilla trait names.
+- Hardened the multiplayer reward path: the server now ignores client-reported kill counts entirely and uses only its own authoritative kill counter. Reward batches are capped and stop early when the pools run dry, so a hacked client can no longer hang the server or claim milestones it never earned.
+- Fixed: reward processing and trait-state reconciliation were inactive in singleplayer due to a wrong server-only guard. The duplicate-grant protection now works in SP too.
+- Fixed: the stats UI catalog no longer reorders the shared trait lists; invalid addon registrations are now correctly reported as skipped.
+- Thanks to "road to 1 mmr" for the duplicate trait report.
+[ ------ ]
+
 [ v1.3.3 - Body Count Rewards ]
 
 HOUSEKEEPING UPDATE

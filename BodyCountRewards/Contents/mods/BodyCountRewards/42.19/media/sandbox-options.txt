@@ -51,6 +51,14 @@ option BCR.grantMissedOpportunities
     translation = BCR_grantMissedOpportunities,
 }
 
+option BCR.restoreMissingTraits
+{
+    type = boolean,
+    default = false,
+    page = BodyCountRewards,
+    translation = BCR_restoreMissingTraits,
+}
+
 option BCR.MilestoneScaling
 {
     type = enum,

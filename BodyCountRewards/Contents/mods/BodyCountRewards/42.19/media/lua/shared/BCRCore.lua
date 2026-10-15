@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 -- BCRCore (Build 42.19+)
+-- BodyCountRewards v1.3.4 -- BCRCore (Build 42.19+)
 -- Engine: trait registry, pool builder, weighted selection,
 -- milestone math, display names, ModData, trait add/remove.
 -- ============================================================
@@ -58,20 +58,167 @@ end
 
 function BCR.GetPlayerTraitsList(player)
     if not player then return nil end
-    local ok, traits = pcall(function() return player:getCharacterTraits() end)
-    if not ok or not traits then return nil end
-    local ok2, knownTraits = pcall(function() return traits:getKnownTraits() end)
-    if not ok2 or not knownTraits then return nil end
+    local traitsOk, traits = pcall(function() return player:getCharacterTraits() end)
+    if not traitsOk or not traits then return nil end
+    local knownOk, knownTraits = pcall(function() return traits:getKnownTraits() end)
+    if not knownOk or not knownTraits then return nil end
     local result = {}
-    local ok3, size = pcall(function() return knownTraits:size() end)
-    if not ok3 then return result end
+    local sizeOk, size = pcall(function() return knownTraits:size() end)
+    if not sizeOk then return result end
     for i = 0, size - 1 do
-        local ok4, trait = pcall(function() return knownTraits:get(i) end)
-        if ok4 and trait then
-            table.insert(result, tostring(trait))
+        local getOk, trait = pcall(function() return knownTraits:get(i) end)
+        if getOk and trait then
+            local toStringOk, traitString = pcall(function() return tostring(trait) end)
+            if toStringOk and traitString then
+                table.insert(result, traitString)
+            end
         end
     end
     return result
+end
+
+-- ============================================================
+-- ENGINE TRAIT DUMP -- iterates what the running game actually
+-- holds (every character_trait_definition: vanilla + mods).
+-- Run in-game: BCRDumpTraits()
+-- ============================================================
+
+function BCR.DumpEngineTraits(quiet)
+    local rows = {}
+    local defsOk, defs = pcall(function() return CharacterTraitDefinition.getTraits() end)
+    if not defsOk or not defs then
+        if not quiet then
+            print("[BCR] [Dump] Engine trait definitions unavailable in this context")
+        end
+        return rows
+    end
+
+    local count = 0
+    pcall(function() count = defs:size() end)
+
+    for i = 0, count - 1 do
+        local rowOk, row = pcall(function()
+            local def = defs:get(i)
+            local trait = def:getType()
+            local id = trait and tostring(trait) or ("definition#" .. tostring(i))
+
+            local keyOk, key = pcall(function() return def:getUIName() end)
+            key = (keyOk and key) or ""
+            local label = key
+            if key ~= "" then
+                local translated = getText(key)
+                if translated and translated ~= key then label = translated end
+            end
+
+            local costOk, cost = pcall(function() return def:getCost() end)
+            cost = (costOk and cost) or 0
+
+            local mutexIds = {}
+            pcall(function()
+                local m = def:getMutuallyExclusiveTraits()
+                if m then
+                    for j = 0, m:size() - 1 do
+                        local other = m:get(j)
+                        if other then table.insert(mutexIds, tostring(other)) end
+                    end
+                end
+            end)
+            table.sort(mutexIds)
+            local mutexText = tostring(#mutexIds)
+            if #mutexIds > 0 then
+                mutexText = #mutexIds .. " [" .. table.concat(mutexIds, ", ") .. "]"
+            end
+
+            local grantedIds = {}
+            pcall(function()
+                local g = def:getGrantedTraits()
+                if g then
+                    for j = 0, g:size() - 1 do
+                        local other = g:get(j)
+                        if other then table.insert(grantedIds, tostring(other)) end
+                    end
+                end
+            end)
+            table.sort(grantedIds)
+            local grantedText = tostring(#grantedIds)
+            if #grantedIds > 0 then
+                grantedText = #grantedIds .. " [" .. table.concat(grantedIds, ", ") .. "]"
+            end
+
+            local mpDisabled = false
+            pcall(function() mpDisabled = def:isDisabledInMultiplayer() == true end)
+
+            -- isFree() == true marks the profession variant of a trait
+            -- (same name, cost 0, granted by a profession, e.g. nutritionist2).
+            local profession = false
+            pcall(function() profession = def:isFree() == true end)
+
+            -- Engine convention (script "Cost" field): positive traits have
+            -- positive cost, negative traits have negative cost.
+            local category = "free"
+            if cost > 0 then category = "pos"
+            elseif cost < 0 then category = "neg" end
+
+            return {
+                id = id,
+                text = string.format("%s | %s | cost=%d | %s | profession=%s | mutex=%s | granted=%s%s",
+                    id, category, cost, (label ~= "" and label or "(no ui name)"),
+                    profession and "yes" or "no", mutexText, grantedText,
+                    mpDisabled and " | MP-disabled" or ""),
+            }
+        end)
+        if rowOk and row then
+            table.insert(rows, row)
+        end
+    end
+
+    table.sort(rows, function(a, b) return a.id < b.id end)
+    if quiet then return rows end
+
+    print("[BCR] [Dump] === Engine trait registry: " .. #rows .. " definition(s) ===")
+    for _, row in ipairs(rows) do
+        print("[BCR] [Dump] " .. row.text)
+    end
+
+    -- Engine ids are lowercase; BCR lists use ResourceLocation case.
+    local present = {}
+    for _, row in ipairs(rows) do present[string.lower(row.id)] = true end
+
+    local missingBase = {}
+    for _, e in ipairs(BCR.PositiveTraits or {}) do
+        if not present[string.lower(e.id)] then table.insert(missingBase, e.id) end
+    end
+    for _, e in ipairs(BCR.NegativeTraits or {}) do
+        if not present[string.lower(e.id)] then table.insert(missingBase, e.id) end
+    end
+    table.sort(missingBase)
+    print("[BCR] [Dump] BCR base traits missing from engine: " .. #missingBase ..
+        (#missingBase > 0 and (" -- " .. table.concat(missingBase, ", ")) or ""))
+
+    local missingAddon = {}
+    for id in pairs(BCR.CustomTraitSources or {}) do
+        if not present[string.lower(id)] then table.insert(missingAddon, id) end
+    end
+    table.sort(missingAddon)
+    print("[BCR] [Dump] Addon traits missing from engine: " .. #missingAddon ..
+        (#missingAddon > 0 and (" -- " .. table.concat(missingAddon, ", ")) or ""))
+
+    pcall(function()
+        local player = getSpecificPlayer(0)
+        if player then
+            local list = BCR.GetPlayerTraitsList(player)
+            if list then
+                table.sort(list)
+                print("[BCR] [Dump] Player traits (" .. #list .. "): " .. table.concat(list, ", "))
+            end
+        end
+    end)
+
+    return rows
+end
+
+function BCRDumpTraits()
+    BCR.DumpEngineTraits(false)
 end
 
 -- ============================================================
@@ -85,32 +232,32 @@ end
 local function modifyTrait(player, traitEntry, action)
     if not player or not traitEntry then return false end
     if not canModifyTraits() then
-        BCR.DebugPrint("modifyTrait: cannot modify traits in this context")
+        BCR.DebugPrint("Core", "modifyTrait: cannot modify traits in this context")
         return false
     end
     local traitId = traitEntry.id
     if not traitId then return false end
     local traitObj = traitEntry.traitUserdata or BCR.GetTraitUserdata(traitId)
     if not traitObj then
-        BCR.DebugPrint("modifyTrait: no userdata for " .. tostring(traitId))
+        BCR.DebugPrint("Core", "modifyTrait: no userdata for " .. tostring(traitId))
         return false
     end
 
     if action == "add" then
         local has = BCR.PlayerHasTrait(player, traitId)
         if has ~= false then
-            BCR.DebugPrint("modifyTrait: cannot add " .. traitId .. " (has=" .. tostring(has) .. ")")
+            BCR.DebugPrint("Core", "modifyTrait: cannot add " .. traitId .. " (has=" .. tostring(has) .. ")")
             return false
         end
         local blocked, blockerId = BCR.HasMutuallyExclusiveTrait(player, traitId)
         if blocked then
-            BCR.DebugPrint("modifyTrait: cannot add " .. traitId .. " (blocked by " .. tostring(blockerId) .. ")")
+            BCR.DebugPrint("Core", "modifyTrait: cannot add " .. traitId .. " (blocked by " .. tostring(blockerId) .. ")")
             return false
         end
     elseif action == "remove" then
         local has = BCR.PlayerHasTrait(player, traitId)
         if has ~= true then
-            BCR.DebugPrint("modifyTrait: cannot remove " .. traitId .. " (has=" .. tostring(has) .. ")")
+            BCR.DebugPrint("Core", "modifyTrait: cannot remove " .. traitId .. " (has=" .. tostring(has) .. ")")
             return false
         end
     else
@@ -127,7 +274,7 @@ local function modifyTrait(player, traitEntry, action)
         end
     end)
     if not success then
-        BCR.DebugPrint("modifyTrait: " .. action .. " failed for " .. traitId .. ": " .. tostring(err))
+        BCR.DebugPrint("Core", "modifyTrait: " .. action .. " failed for " .. traitId .. ": " .. tostring(err))
         return false
     end
     return true
@@ -146,6 +293,7 @@ end
 -- ============================================================
 
 function BCR.GetRarity(cost)
+    if type(cost) ~= "number" then return "common" end
     local absCost = math.abs(cost)
     if absCost <= BCR.RarityTiers.common.maxCost then return "common" end
     if absCost <= BCR.RarityTiers.uncommon.maxCost then return "uncommon" end
@@ -159,6 +307,7 @@ function BCR.GetRarityColor(cost)
 end
 
 function BCR.CalculateWeight(cost)
+    if type(cost) ~= "number" then return 1 end
     return math.max(1, (BCR.MAX_WEIGHT_COST - math.abs(cost)) + 1)
 end
 
@@ -183,6 +332,9 @@ function BCR.WeightedRandomSelect(pool)
             return entry
         end
     end
+    -- Unreachable for well-formed weights; kept as a fail-safe so a
+    -- malformed pool can never return nil to a caller expecting a pick.
+    BCR.DebugPrint("Core", "WeightedRandomSelect: roll " .. tostring(roll) .. " did not match any entry (totalWeight=" .. tostring(totalWeight) .. ")")
     return pool[#pool]
 end
 
@@ -190,93 +342,142 @@ end
 -- POOL BUILDING
 -- ============================================================
 
-BCR.MergedPositiveTraits = BCR.PositiveTraits
-BCR.MergedNegativeTraits = BCR.NegativeTraits
-
 local function mergeTraitTables(base, custom)
-    if not custom then return base end
-    if #custom == 0 then return base end
     local merged = {}
-    for _, v in ipairs(base) do
-        table.insert(merged, v)
+    if base then
+        for _, v in ipairs(base) do
+            table.insert(merged, v)
+        end
     end
-    for _, v in ipairs(custom) do
-        table.insert(merged, v)
+    if custom then
+        for _, v in ipairs(custom) do
+            table.insert(merged, v)
+        end
     end
     return merged
 end
+
+-- Always start from copies, never aliases, so nothing can mutate the
+-- base trait tables through the merged lists.
+BCR.MergedPositiveTraits = mergeTraitTables(BCR.PositiveTraits, BCR.CustomPositiveTraits)
+BCR.MergedNegativeTraits = mergeTraitTables(BCR.NegativeTraits, BCR.CustomNegativeTraits)
 
 function BCR.RebuildMergedTraits()
     BCR.MergedPositiveTraits = mergeTraitTables(BCR.PositiveTraits, BCR.CustomPositiveTraits)
     BCR.MergedNegativeTraits = mergeTraitTables(BCR.NegativeTraits, BCR.CustomNegativeTraits)
 end
 
-function BCR.BuildEarnablePool(player, customTraits)
-    if not player then return nil end
-    local allTraits = BCR.MergedPositiveTraits
+-- ============================================================
+-- TRAIT HISTORY GUARDS -- BCR's own record, independent of
+-- live engine state. Prevents duplicate grants.
+-- ============================================================
+
+function BCR.GetLastHistoryAction(history, traitId)
+    if not history or not traitId then return nil end
+    -- Normalize legacy IDs (pre-v1.3.1 UPPER_SNAKE_CASE) so old-save
+    -- history entries still match current ResourceLocation IDs.
+    local normalized = traitId
+    if BCR.TRAIT_ID_MIGRATION and BCR.TRAIT_ID_MIGRATION[traitId] then
+        normalized = BCR.TRAIT_ID_MIGRATION[traitId]
+    end
+    for i = #history, 1, -1 do
+        local entry = history[i]
+        if entry and entry.id then
+            local entryId = entry.id
+            if BCR.TRAIT_ID_MIGRATION and BCR.TRAIT_ID_MIGRATION[entryId] then
+                entryId = BCR.TRAIT_ID_MIGRATION[entryId]
+            end
+            if entryId == normalized then
+                return entry.action
+            end
+        end
+    end
+    return nil
+end
+
+local function isExcludedFromEarnable(bcrData, traitId)
+    -- Fail closed: if BCR's own records cannot be read, exclude the
+    -- trait from the earnable pool rather than risking a duplicate grant.
+    if not bcrData then return true end
+    local last = BCR.GetLastHistoryAction(bcrData.traitHistory, traitId)
+    return last == "added" or last == "baseline"
+end
+
+local function isExcludedFromRemovable(bcrData, traitId)
+    if not bcrData then return true end
+    return BCR.GetLastHistoryAction(bcrData.traitHistory, traitId) == "removed"
+end
+
+-- ============================================================
+-- POOL BUILDING -- one shared builder behind both public functions
+-- ============================================================
+
+-- options:
+--   wantOwned  : true -> include only owned traits (removable pool)
+--                false -> include only NOT owned traits (earnable pool)
+--   checkMutual: apply mutual-exclusion filtering (earnable pool)
+--   excluded   : function(traitId) -> true when the trait must be
+--                filtered out by history/baseline guards
+local function buildPool(player, baseList, customTraits, options)
+    if not options then options = {} end
+    local wantOwned = options.wantOwned == true
+    local checkMutual = options.checkMutual == true
+    local excluded = options.excluded
+    local allTraits = baseList
     if customTraits then
         allTraits = mergeTraitTables(allTraits, customTraits)
     end
     local pool = {}
     for _, entry in ipairs(allTraits) do
         local traitId = entry.id
-        if traitId then
-            if BCR.IsTraitAllowed(traitId) then
-                local has = BCR.PlayerHasTrait(player, traitId)
-                if has == false then
-                    local blocked = BCR.HasMutuallyExclusiveTrait(player, traitId)
-                    if not blocked then
-                        local traitObj = BCR.GetTraitUserdata(traitId)
-                        if traitObj then
-                            local cost = entry.cost or 0
-                            local rarity = BCR.GetRarity(cost)
-                            local weight = BCR.CalculateWeight(cost)
-                            table.insert(pool, {
-                                id = traitId,
-                                traitUserdata = traitObj,
-                                cost = cost,
-                                rarity = rarity,
-                                weight = weight,
-                            })
-                        end
-                    end
-                end
+        if not traitId then
+            -- entry without id -- skip
+        elseif type(entry.cost) ~= "number" then
+            -- malformed entry from a third-party addon -- skip
+        elseif not BCR.IsTraitAllowed(traitId) then
+            -- disabled in sandbox -- skip
+        elseif BCR.PlayerHasTrait(player, traitId) ~= wantOwned then
+            -- ownership state doesn't match this pool -- skip
+            -- (nil from the tri-state check also lands here: fail closed)
+        elseif excluded and excluded(traitId) then
+            -- history/baseline guard -- skip
+        elseif checkMutual and BCR.HasMutuallyExclusiveTrait(player, traitId) then
+            -- blocked by a mutually exclusive owned trait -- skip
+        else
+            local traitObj = BCR.GetTraitUserdata(traitId)
+            if traitObj then
+                local cost = entry.cost
+                table.insert(pool, {
+                    id = traitId,
+                    traitUserdata = traitObj,
+                    cost = cost,
+                    rarity = BCR.GetRarity(cost),
+                    weight = BCR.CalculateWeight(cost),
+                })
             end
         end
     end
     return pool
 end
 
+function BCR.BuildEarnablePool(player, customTraits)
+    if not player then return nil end
+    local bcrData = BCR.EnsureModData(player)
+    return buildPool(player, BCR.MergedPositiveTraits, customTraits, {
+        wantOwned = false,
+        checkMutual = true,
+        excluded = function(traitId) return isExcludedFromEarnable(bcrData, traitId) end,
+    })
+end
+
 function BCR.BuildRemovablePool(player, customTraits)
     if not player then return nil end
-    local allTraits = BCR.MergedNegativeTraits
-    if customTraits then
-        allTraits = mergeTraitTables(allTraits, customTraits)
-    end
-    local pool = {}
-    for _, entry in ipairs(allTraits) do
-        local traitId = entry.id
-        if traitId then
-            if BCR.IsTraitAllowed(traitId) then
-                if BCR.PlayerHasTrait(player, traitId) == true then
-                    local traitObj = BCR.GetTraitUserdata(traitId)
-                    if traitObj then
-                        local cost = entry.cost or 0
-                        local rarity = BCR.GetRarity(cost)
-                        local weight = BCR.CalculateWeight(cost)
-                        table.insert(pool, {
-                            id = traitId,
-                            traitUserdata = traitObj,
-                            cost = cost,
-                            rarity = rarity,
-                            weight = weight,
-                        })
-                    end
-                end
-            end
-        end
-    end
-    return pool
+    local bcrData = BCR.EnsureModData(player)
+    return buildPool(player, BCR.MergedNegativeTraits, customTraits, {
+        wantOwned = true,
+        checkMutual = false,
+        excluded = function(traitId) return isExcludedFromRemovable(bcrData, traitId) end,
+    })
 end
 
 function BCR.FilterPoolByExclusion(pool, excludeSet)
@@ -300,10 +501,11 @@ end
 -- ============================================================
 
 function BCR.GetKillsForMilestone(milestone, opts)
+    if not milestone or not opts then return 0 end
     if milestone <= 0 then return 0 end
-    local bc = opts.bodyCount or 1000
+    local bc = opts.bodyCount or BCR.DEFAULT_BODY_COUNT
     if opts.milestoneScaling == 2 then
-        local factor = opts.progressiveScalingFactor or 0.5
+        local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
         if factor > 0 then
             return math.floor(bc * (milestone + factor * milestone * (milestone - 1) / 2))
         end
@@ -312,18 +514,21 @@ function BCR.GetKillsForMilestone(milestone, opts)
 end
 
 function BCR.GetMilestonesAtKills(kills, opts)
-    if kills <= 0 then return 0 end
-    local bc = opts.bodyCount or 1000
+    if not kills or kills <= 0 then return 0 end
+    if not opts then return 0 end
+    local bc = opts.bodyCount or BCR.DEFAULT_BODY_COUNT
     if bc <= 0 then return 0 end
     if opts.milestoneScaling == 2 then
-        local factor = opts.progressiveScalingFactor or 0.5
+        local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
         if factor > 0 then
-            local a = factor * bc / 2
-            local b = bc * (1 - factor / 2)
-            local c = -kills
-            local discriminant = b * b - 4 * a * c
+            local quadA = factor * bc / 2
+            local quadB = bc * (1 - factor / 2)
+            local quadC = -kills
+            local discriminant = quadB * quadB - 4 * quadA * quadC
             if discriminant < 0 then return 0 end
-            local root = math.floor((-b + math.sqrt(discriminant)) / (2 * a))
+            -- Small epsilon guards against floating-point error flooring
+            -- one milestone below the exact boundary.
+            local root = math.floor((-quadB + math.sqrt(discriminant)) / (2 * quadA) + 1e-9)
             return math.max(0, root)
         end
     end
@@ -331,11 +536,24 @@ function BCR.GetMilestonesAtKills(kills, opts)
 end
 
 -- ============================================================
+-- MILESTONE DELTA -- single source of truth for "how many rewards
+-- are owed right now". Used by server validation, client-side
+-- detection, and the stats UI.
+-- ============================================================
+
+function BCR.GetMissedMilestoneCount(bcrData, kills, opts)
+    if not bcrData or not opts then return 0 end
+    local milestonesAtKills = BCR.GetMilestonesAtKills(kills, opts)
+    local currentRewards = bcrData.rewardsGiven or 0
+    return math.max(0, milestonesAtKills - currentRewards)
+end
+
+-- ============================================================
 -- DISPLAY NAMES
 -- ============================================================
 
 function BCR.GetTraitDisplayName(traitId)
-    if not traitId then return "Unknown" end
+    if type(traitId) ~= "string" or traitId == "" then return "Unknown" end
     local override = BCR.DISPLAY_OVERRIDES[traitId]
     if override then
         local text = getText(override)
@@ -345,7 +563,7 @@ function BCR.GetTraitDisplayName(traitId)
     local path = colonPos and string.sub(traitId, colonPos + 1) or nil
     if not path then
         local newId = BCR.TRAIT_ID_MIGRATION and BCR.TRAIT_ID_MIGRATION[traitId]
-        if newId then
+        if newId and newId ~= traitId then
             return BCR.GetTraitDisplayName(newId)
         end
         local formatted = string.gsub(traitId, "_", " ")
@@ -385,7 +603,7 @@ function BCR.EnsureModData(player)
     if not player then return nil end
     local ok, modData = pcall(function() return player:getModData() end)
     if not ok or not modData then return nil end
-    if not modData.BCR then
+    if not modData.BCR or type(modData.BCR) ~= "table" then
         modData.BCR = {
             kills = 0,
             rewardsGiven = 0,
@@ -394,6 +612,12 @@ function BCR.EnsureModData(player)
     end
     if not modData.BCR.traitHistory then
         modData.BCR.traitHistory = {}
+    end
+    if type(modData.BCR.kills) ~= "number" then
+        modData.BCR.kills = 0
+    end
+    if type(modData.BCR.rewardsGiven) ~= "number" then
+        modData.BCR.rewardsGiven = 0
     end
     return modData.BCR
 end
@@ -404,11 +628,7 @@ end
 
 function BCR.HasAvailableRewards(player)
     if not player then return false end
-    local opts = BCR.opts
-    if not opts then
-        BCR.RefreshConfig()
-        opts = BCR.opts
-    end
+    local opts = BCR.GetOpts()
     local earnableCount = 0
     local removableCount = 0
     if opts.enablePositive ~= false then
@@ -430,16 +650,16 @@ end
 -- THIRD-PARTY TRAIT TESTS
 -- ============================================================
 
-function BCR_RunThirdPartyTests()
+function BCR.RunThirdPartyTests()
     local passed, failed = 0, 0
 
     local function ok(msg, condition)
         if condition then
             passed = passed + 1
-            print("[BCR ThirdPartyTest] PASS: " .. msg)
+            print("[BCR] [ThirdPartyTest] PASS: " .. msg)
         else
             failed = failed + 1
-            print("[BCR ThirdPartyTest] FAIL: " .. msg)
+            print("[BCR] [ThirdPartyTest] FAIL: " .. msg)
         end
     end
 
@@ -453,11 +673,11 @@ function BCR_RunThirdPartyTests()
     end
 
     if positiveCount == 0 and negativeCount == 0 then
-        print("[BCR ThirdPartyTest] No third-party traits registered.")
+        print("[BCR] [ThirdPartyTest] No third-party traits registered.")
         return true
     end
 
-    print("[BCR ThirdPartyTest] ===== Checking " .. tostring(positiveCount) ..
+    print("[BCR] [ThirdPartyTest] ===== Checking " .. tostring(positiveCount) ..
         " custom positive, " .. tostring(negativeCount) .. " custom negative trait(s) =====")
 
     local sources = {}
@@ -468,7 +688,7 @@ function BCR_RunThirdPartyTests()
             local traitId = entry.id
             if not traitId then
                 failed = failed + 1
-                print("[BCR ThirdPartyTest] FAIL: " .. label .. " entry missing id")
+                print("[BCR] [ThirdPartyTest] FAIL: " .. label .. " entry missing id")
             else
                 local source = BCR.CustomTraitSources and BCR.CustomTraitSources[traitId]
                 local ns = BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[traitId]
@@ -476,24 +696,24 @@ function BCR_RunThirdPartyTests()
 
                 if not source then
                     failed = failed + 1
-                    print("[BCR ThirdPartyTest] FAIL: " .. traitId .. " missing source")
+                    print("[BCR] [ThirdPartyTest] FAIL: " .. traitId .. " missing source")
                 else
                     sources[source] = true
                 end
 
                 if not ns then
                     failed = failed + 1
-                    print("[BCR ThirdPartyTest] FAIL: " .. traitId .. " missing sandbox namespace")
+                    print("[BCR] [ThirdPartyTest] FAIL: " .. traitId .. " missing sandbox namespace")
                 end
 
                 if not userdata then
                     failed = failed + 1
-                    print("[BCR ThirdPartyTest] FAIL: " .. traitId .. " does not resolve via CharacterTrait")
+                    print("[BCR] [ThirdPartyTest] FAIL: " .. traitId .. " does not resolve via CharacterTrait")
                 end
 
                 if source and ns and userdata then
                     passed = passed + 1
-                    print("[BCR ThirdPartyTest] OK: " .. traitId .. " (source=\"" .. source .. "\", ns=\"" .. ns .. "\")")
+                    print("[BCR] [ThirdPartyTest] OK: " .. traitId .. " (source=\"" .. source .. "\", ns=\"" .. ns .. "\")")
                 end
             end
         end
@@ -582,10 +802,10 @@ function BCR_RunThirdPartyTests()
         for _, excludeList in pairs(BCR.Exclusions) do
             if type(excludeList) == "table" then
                 for _, excludedId in ipairs(excludeList) do
-                    if type(excludedId) == "string" and excludedId ~= "" then
-ok("Exclusion target " .. excludedId .. " is a known trait",
-                    knownTraits[excludedId] ~= nil or BCR.GetTraitUserdata(excludedId) ~= nil)
-                    end
+                        if type(excludedId) == "string" and excludedId ~= "" then
+                            ok("Exclusion target " .. excludedId .. " is a known trait",
+                                knownTraits[excludedId] ~= nil or BCR.GetTraitUserdata(excludedId) ~= nil)
+                        end
                 end
             end
         end
@@ -635,11 +855,13 @@ ok("Exclusion target " .. excludedId .. " is a known trait",
 
     local sourceList = {}
     for s, _ in pairs(sources) do table.insert(sourceList, "\"" .. s .. "\"") end
-    print("[BCR ThirdPartyTest] Active addon(s): " .. table.concat(sourceList, ", "))
+    print("[BCR] [ThirdPartyTest] Active addon(s): " .. table.concat(sourceList, ", "))
 
-    print("[BCR ThirdPartyTest] ===== " .. tostring(passed) .. " passed, " ..
+    print("[BCR] [ThirdPartyTest] ===== " .. tostring(passed) .. " passed, " ..
         tostring(failed) .. " failed =====")
     return failed == 0
 end
 
-BCR.RunThirdPartyTests = BCR_RunThirdPartyTests
+-- Backwards-compatible global name for console users who typed the
+-- pre-1.3.4 identifier directly.
+BCR_RunThirdPartyTests = BCR.RunThirdPartyTests

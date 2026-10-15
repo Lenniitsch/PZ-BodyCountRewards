@@ -1,6 +1,7 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 -- BCRData (Build 42.19+)
--- Pure data tables. No functions. No logic. Edit trait lists here.
+-- BodyCountRewards v1.3.4 -- BCRData (Build 42.19+)
+-- Base trait lists, rarity tiers, exclusions, and the third-party
+-- trait registration API (BCR.RegisterCustomTraits).
 -- ============================================================
 
 BCR = BCR or {}
@@ -170,6 +171,7 @@ BCR.RarityTiers = {
     common    = { maxCost = 2,  color = { 0.80, 0.80, 0.80 } },
     uncommon  = { maxCost = 4,  color = { 0.60, 1.00, 0.20 } },
     rare      = { maxCost = 6,  color = { 1.00, 0.60, 0.20 } },
+    -- maxCost = 99 is a sentinel for "no upper bound"
     veryRare  = { maxCost = 99, color = { 0.80, 0.30, 1.00 } },
 }
 
@@ -184,11 +186,11 @@ BCR.CustomTraitNamespaces = BCR.CustomTraitNamespaces or {}
 
 function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, negativeTraits, exclusions)
     if not sourceName then
-        print("[BCR] RegisterCustomTraits: missing sourceName")
+        print("[BCR] [Addon] RegisterCustomTraits: missing sourceName")
         return 0
     end
     if not sandboxNamespace then
-        print("[BCR] RegisterCustomTraits: missing sandboxNamespace for \"" .. tostring(sourceName) .. "\"")
+        print("[BCR] [Addon] RegisterCustomTraits: missing sandboxNamespace for \"" .. tostring(sourceName) .. "\"")
         return 0
     end
     local registeredPos = 0
@@ -200,20 +202,22 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         for _, entry in ipairs(list) do
             local traitId = entry.id
             if not traitId then
-                print("[BCR] \"" .. sourceName .. "\" -- trait entry missing id, skipped")
+                print("[BCR] [Addon] \"" .. sourceName .. "\" -- trait entry missing id, skipped")
                 rejected = rejected + 1
             elseif type(entry.cost) ~= "number" then
-                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost, skipped")
+                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " has no numeric cost, skipped")
                 rejected = rejected + 1
             elseif isPositive and entry.cost > 0 then
-                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " positive trait with positive cost " .. tostring(entry.cost) .. " (expected negative); registered anyway")
+                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " positive trait with positive cost " .. tostring(entry.cost) .. " (expected negative); skipped")
+                rejected = rejected + 1
             elseif not isPositive and entry.cost < 0 then
-                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " negative trait with negative cost " .. tostring(entry.cost) .. " (expected positive); registered anyway")
+                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " negative trait with negative cost " .. tostring(entry.cost) .. " (expected positive); skipped")
+                rejected = rejected + 1
             elseif not BCR.GetTraitUserdata(traitId) then
-                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
+                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " not a valid CharacterTrait, skipped")
                 rejected = rejected + 1
             elseif BCR.CustomTraitSources[traitId] then
-                print("[BCR] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
+                print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. tostring(traitId) .. " already registered by \"" .. tostring(BCR.CustomTraitSources[traitId]) .. "\", skipped")
                 rejected = rejected + 1
             else
                 local alreadyInBase = false
@@ -233,7 +237,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
                     end
                 end
                 if alreadyInBase then
-                    print("[BCR] \"" .. sourceName .. "\" -- " .. traitId .. " is already a base BCR trait, skipped")
+                    print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. traitId .. " is already a base BCR trait, skipped")
                     rejected = rejected + 1
                 else
                     BCR.CustomTraitSources[traitId] = sourceName
@@ -254,7 +258,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
             if type(traitId) == "string" and type(excludeList) == "table" then
                 for _, excludedId in ipairs(excludeList) do
                     if type(excludedId) ~= "string" or excludedId == "" then
-                        print("[BCR] \"" .. sourceName .. "\" -- invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
+                        print("[BCR] [Addon] \"" .. sourceName .. "\" -- invalid exclusion entry in " .. traitId .. " (non-string or empty value)")
                     else
                         if not BCR.Exclusions[traitId] then
                             BCR.Exclusions[traitId] = {}
@@ -279,7 +283,7 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         mergeExclusions()
     end)
     if not ok then
-        print("[BCR] \"" .. sourceName .. "\" -- internal error during registration: " .. tostring(err))
+        print("[BCR] [Addon] \"" .. sourceName .. "\" -- internal error during registration: " .. tostring(err))
         return registeredPos + registeredNeg
     end
 
@@ -299,8 +303,8 @@ function BCR.RegisterCustomTraits(sourceName, sandboxNamespace, positiveTraits, 
         end
     end
 
-    print("[BCR] \"" .. sourceName .. "\" -- " .. statusStr)
-    BCR.DebugPrint("RegisterCustomTraits: [" .. sourceName .. "] detail -- " .. registeredStr)
+    print("[BCR] [Addon] \"" .. sourceName .. "\" -- " .. statusStr)
+    BCR.DebugPrint("Addon", "RegisterCustomTraits: [" .. sourceName .. "] detail -- " .. registeredStr)
     if totalRegistered > 0 then
         BCR.RebuildMergedTraits()
     end

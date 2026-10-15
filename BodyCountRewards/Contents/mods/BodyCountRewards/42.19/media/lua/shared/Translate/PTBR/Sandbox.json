@@ -10,6 +10,8 @@
     "Sandbox_BCR_enableNegativeTraits_tooltip": "Permite remover atributos negativos como recompensa. <LINE><LINE> <RGB:0.8,0.8,0.8> Padr\u00e3o: Desativado",
     "Sandbox_BCR_grantMissedOpportunities": "Recompensas Retroativas",
     "Sandbox_BCR_grantMissedOpportunities_tooltip": "Concede recompensas por abates feitos antes de instalar o mod. <LINE><LINE> <RGB:1.0,0.6,0.2> ATEN\u00c7\u00c3O: Contagens altas podem conceder muitas recompensas de uma vez! <LINE><LINE> <RGB:0.8,0.8,0.8> Padr\u00e3o: Desativado",
+    "Sandbox_BCR_restoreMissingTraits": "Restaurar traços ausentes",
+    "Sandbox_BCR_restoreMissingTraits_tooltip": "Reaplica automaticamente os traços ganhos pelo BCR que faltarem em um jogador (dessincronização no multijogador, remoção manual) em vez de marcá-los como perdidos. <LINE><LINE> <RGB:0.8,0.8,0.8> Padrão: Desativado",
     "Sandbox_BCR_rewardPriority": "Prioridade de Recompensa",
     "Sandbox_BCR_rewardPriority_tooltip": "O que vem primeiro ao atingir uma conquista? <LINE><LINE> <RGB:0.6,1.0,0.2> Ganhar Primeiro: Recebe atributos positivos antes de remover negativos <LINE> <RGB:1.0,0.6,0.2> Perder Primeiro: Remove atributos negativos antes de ganhar positivos <LINE> <RGB:0.8,0.3,1.0> Aleat\u00f3rio: Deixa as coisas imprevis\u00edveis!",
     "Sandbox_BCR_rewardPriority_option1": "Ganhar Primeiro",

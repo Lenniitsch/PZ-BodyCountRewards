@@ -10,6 +10,8 @@
     "Sandbox_BCR_enableNegativeTraits_tooltip": "Allow removing negative traits as rewards. <LINE><LINE> <RGB:0.8,0.8,0.8> Default: Disabled",
     "Sandbox_BCR_grantMissedOpportunities": "Retroactive Rewards",
     "Sandbox_BCR_grantMissedOpportunities_tooltip": "Grant rewards for kills made before installing the mod. <LINE><LINE> <RGB:1.0,0.6,0.2> WARNING: High body counts may grant many rewards at once! <LINE><LINE> <RGB:0.8,0.8,0.8> Default: Disabled",
+    "Sandbox_BCR_restoreMissingTraits": "Restore Missing Traits",
+    "Sandbox_BCR_restoreMissingTraits_tooltip": "Re-apply BCR-earned traits that are missing from a player (multiplayer desync, manual removal) instead of marking them as lost. <LINE><LINE> <RGB:0.8,0.8,0.8> Default: Disabled",
     "Sandbox_BCR_rewardPriority": "Reward Priority",
     "Sandbox_BCR_rewardPriority_tooltip": "What comes first when you hit a milestone? <LINE><LINE> <RGB:0.6,1.0,0.2> Gain First: Earn positive traits before removing negative ones <LINE> <RGB:1.0,0.6,0.2> Lose First: Remove negative traits before gaining positive ones <LINE> <RGB:0.8,0.3,1.0> Random: Keep things spicy!",
     "Sandbox_BCR_rewardPriority_option1": "Gain First",

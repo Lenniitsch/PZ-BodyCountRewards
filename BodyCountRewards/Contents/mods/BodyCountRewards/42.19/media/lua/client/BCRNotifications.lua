@@ -1,5 +1,5 @@
 -- ============================================================
--- BodyCountRewards v1.3.0 -- BCRNotifications (Build 42.19+)
+-- BodyCountRewards v1.3.4 -- BCRNotifications (Build 42.19+)
 -- Notification queue, staggering, halo text display.
 -- ============================================================
 
@@ -14,7 +14,13 @@ BCR = BCR or {}
 local notificationQueue = {}
 local notificationTimer = 0
 local isShowingNotification = false
-local NOTIFICATION_DELAY_TICKS = 200
+
+local HALO_COLORS = {
+    gained = { 0, 255, 0 },
+    lost   = { 255, 165, 0 },
+    batch  = { 200, 200, 200 },
+    final  = { 255, 255, 255 },
+}
 
 -- ============================================================
 -- PUBLIC FUNCTIONS
@@ -23,10 +29,15 @@ local NOTIFICATION_DELAY_TICKS = 200
 function BCR.EnqueueNotification(result)
     if not result then return end
     if #notificationQueue >= BCR.MAX_NOTIFICATION_QUEUE then
+        local batchedCount = #notificationQueue + 1
+        local label = getText("UI_BCR_BatchRewards")
+        if not label or label == "UI_BCR_BatchRewards" then
+            label = tostring(batchedCount) .. " rewards"
+        end
         notificationQueue = {
             {
                 id = "BATCH",
-                displayName = getText("UI_BCR_BatchRewards") or (tostring(#notificationQueue + 1) .. " rewards"),
+                displayName = label,
                 action = "batch",
                 rarity = "common",
                 color = { 1, 1, 1 },
@@ -41,7 +52,7 @@ function BCR.UpdateNotifications(player)
     if #notificationQueue == 0 then
         if isShowingNotification then
             notificationTimer = notificationTimer + 1
-            if notificationTimer >= NOTIFICATION_DELAY_TICKS then
+            if notificationTimer >= BCR.NOTIFICATION_DELAY_TICKS then
                 isShowingNotification = false
                 notificationTimer = 0
             end
@@ -50,7 +61,7 @@ function BCR.UpdateNotifications(player)
     end
     if isShowingNotification then
         notificationTimer = notificationTimer + 1
-        if notificationTimer >= NOTIFICATION_DELAY_TICKS then
+        if notificationTimer >= BCR.NOTIFICATION_DELAY_TICKS then
             isShowingNotification = false
             notificationTimer = 0
         else
@@ -65,24 +76,24 @@ function BCR.UpdateNotifications(player)
     end
     isShowingNotification = true
     notificationTimer = 0
-    BCR.DebugPrint(string.format("[Client] Showing notification (%d remaining)", #notificationQueue))
+    BCR.DebugPrint("Client", string.format("Showing notification (%d remaining)", #notificationQueue))
     local action = result.action or "added"
     local displayName = result.displayName or BCR.GetTraitDisplayName(result.id) or "Unknown"
     if action == "added" then
         local actionText = getText("UI_BCR_Gained") or "Gained"
         local text = actionText .. ": " .. displayName
-        HaloTextHelper.addTextWithArrow(player, text, true, 0, 255, 0)
+        HaloTextHelper.addTextWithArrow(player, text, true, HALO_COLORS.gained[1], HALO_COLORS.gained[2], HALO_COLORS.gained[3])
     elseif action == "removed" then
         local actionText = getText("UI_BCR_Lost") or "Lost"
         local text = actionText .. ": " .. displayName
-        HaloTextHelper.addTextWithArrow(player, text, true, 255, 165, 0)
+        HaloTextHelper.addTextWithArrow(player, text, true, HALO_COLORS.lost[1], HALO_COLORS.lost[2], HALO_COLORS.lost[3])
     elseif action == "batch" then
-        HaloTextHelper.addText(player, displayName, "", 200, 200, 200)
+        HaloTextHelper.addText(player, displayName, "", HALO_COLORS.batch[1], HALO_COLORS.batch[2], HALO_COLORS.batch[3])
     end
 end
 
 function BCR.ShowFinalMessage(player)
     if not player then return end
     local text = getText("UI_BCR_AllRewardsGranted") or "All rewards granted!"
-    HaloTextHelper.addText(player, text, "", 255, 255, 255)
+    HaloTextHelper.addText(player, text, "", HALO_COLORS.final[1], HALO_COLORS.final[2], HALO_COLORS.final[3])
 end

@@ -4,7 +4,7 @@ title=Body Count Rewards
 description=[i]Finally, a mod where your body count actually matters.[/i]
 description=Look, I'm not here to judge your... [i]numbers[/i]. Kill zombies, hit milestones, earn trait rewards. Higher trait cost = lower drop chance. Simple.
 description=
-description=[b]Compatible with B42.19+ | SP and MP[/b] because your body count shouldn't depend on your social life.
+description=[b]Compatible with B42.20+ (Stable) | SP and MP[/b] because your body count shouldn't depend on your social life.
 description=
 description=The spiritual successor to Circuit's [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3540255691]Kill Milestones (Zombies) B42[/url]. His mod gave me the idea, I wanted more features and control for my server, so I built my own from scratch. Circuit has since moved on from PZ modding and linked this mod on his page. Thanks for the inspiration!
 description=
@@ -87,6 +87,7 @@ description=[i]On an older version? Check out Circuit's Kill Milestones (Zombies
 description=
 description=[i]Hobby project. Maintained as long as PZ has its hooks in me.[/i]
 description=[i]Found a bug? Got a suggestion? Leave a comment or open an issue on [url=https://github.com/Lenniitsch/PZ-BodyCountRewards/issues]GitHub[/url]![/i]
-description=[i]If this made your apocalypse more rewarding, a thumbs up is always appreciated.[/i]
+description=
+description=[img]https://i.imgur.com/eZp8dXD.gif[/img]
 tags=Build 42;Multiplayer;Traits
 visibility=public
