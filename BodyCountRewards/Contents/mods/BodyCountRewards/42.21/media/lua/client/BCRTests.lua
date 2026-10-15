@@ -981,7 +981,7 @@ local function suitePoolBuildingPlayerState()
             assertEqual(BCR.GetKillsForMilestone(answeredNow + 1, optsNow), view.progress.nextMilestone,
                 "Progress view milestone matches core math")
             assertTrue(view.progress.killsRemaining >= 0, "killsRemaining non-negative")
-            assertTrue(#view.progress.milestones > 0, "Roadmap has entries")
+            assertTrue(#view.progress.milestones > 0 or view.progress.allComplete, "Roadmap has entries (or complete)")
         end
         if view.catalog then
             local validStatus = {
@@ -992,9 +992,14 @@ local function suitePoolBuildingPlayerState()
             for _, entry in ipairs(view.catalog.positive) do
                 if not validStatus[entry.status] then badStatus = badStatus + 1 end
             end
-            for _, section in ipairs(view.catalog.customPositive) do
-                for _, entry in ipairs(section.entries) do
-                    if not validStatus[entry.status] then badStatus = badStatus + 1 end
+            for _, entry in ipairs(view.catalog.negative) do
+                if not validStatus[entry.status] then badStatus = badStatus + 1 end
+            end
+            for _, sections in ipairs({ view.catalog.customPositive, view.catalog.customNegative }) do
+                for _, section in ipairs(sections) do
+                    for _, entry in ipairs(section.entries) do
+                        if not validStatus[entry.status] then badStatus = badStatus + 1 end
+                    end
                 end
             end
             assertEqual(0, badStatus, "Catalog statuses are valid codes")

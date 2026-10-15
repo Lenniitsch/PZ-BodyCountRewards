@@ -5,6 +5,7 @@
 -- ============================================================
 
 require "BCRCore"
+require "BCRStatsData"
 require "ISUI/ISCollapsableWindow"
 require "ISUI/ISTabPanel"
 require "ISUI/ISRichTextPanel"
