@@ -1,5 +1,6 @@
 VERSION = 1,
 
+/* Keep the default in sync with BCR.DEFAULT_BODY_COUNT in BCRConfig.lua. */
 option BCR.BodyCount
 {
     type = integer,

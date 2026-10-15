@@ -152,6 +152,12 @@ function BCR.ReconcileTraitState(player, bcrData, opts)
     return changed
 end
 
+-- ZombRand(2) returns 0 or 1; treat 1 as heads. Keeps the intent of the
+-- coin flip readable at the call site.
+local function coinFlip()
+    return ZombRand(2) == 1
+end
+
 local function buildAndApplyReward(player, earnablePool, removablePool, opts, appliedThisBatch)
     if not player or not opts then return nil end
 
@@ -162,7 +168,7 @@ local function buildAndApplyReward(player, earnablePool, removablePool, opts, ap
     local priority = opts.rewardPriority or BCR.PRIORITY_POSITIVE_FIRST
 
     if priority == BCR.PRIORITY_RANDOM then
-        priority = ZombRand(2) == 1 and BCR.PRIORITY_POSITIVE_FIRST or BCR.PRIORITY_NEGATIVE_FIRST
+        priority = coinFlip() and BCR.PRIORITY_POSITIVE_FIRST or BCR.PRIORITY_NEGATIVE_FIRST
     end
 
     local firstChoice, secondChoice

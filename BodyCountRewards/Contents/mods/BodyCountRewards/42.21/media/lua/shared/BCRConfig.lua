@@ -14,6 +14,8 @@ BCR.PRIORITY_NEGATIVE_FIRST = 2
 BCR.PRIORITY_RANDOM = 3
 BCR.MODULE_NAME = "BCR"
 BCR.MAX_NOTIFICATION_QUEUE = 8
+-- Fallback when the sandbox option is missing; must match the
+-- `BCR.BodyCount` default in media/sandbox-options.txt.
 BCR.DEFAULT_BODY_COUNT = 1000
 BCR.DEFAULT_PROGRESSIVE_FACTOR = 0.5
 BCR.NOTIFICATION_DELAY_TICKS = 200

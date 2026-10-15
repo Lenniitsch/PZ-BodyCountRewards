@@ -97,6 +97,12 @@ function BCR.ShowFinalMessage(player)
     HaloTextHelper.addText(player, text, "", HALO_COLORS.final[1], HALO_COLORS.final[2], HALO_COLORS.final[3])
 end
 
+-- Pending-rewards halo (for example "3 rewards earned!").
+function BCR.ShowPendingRewardsHalo(player, message)
+    if not player or not message then return end
+    HaloTextHelper.addText(player, message, "", HALO_COLORS.final[1], HALO_COLORS.final[2], HALO_COLORS.final[3])
+end
+
 -- Clears queued notifications and display state. Called on player
 -- creation and after tests so stale entries never leak forward.
 function BCR.ResetNotifications()

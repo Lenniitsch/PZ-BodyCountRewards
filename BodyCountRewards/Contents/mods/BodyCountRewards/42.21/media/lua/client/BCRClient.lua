@@ -271,7 +271,7 @@ local function BCR_OnPlayerUpdate(player)
                     pendingRewardsCount = missed
                     pendingRewardTimer = 0
                     local msg = missed .. " " .. (getTextOrNull("UI_BCR_PendingRewards") or "rewards earned!")
-                    HaloTextHelper.addText(player, msg, "", 255, 255, 255)
+                    BCR.ShowPendingRewardsHalo(player, msg)
                 else
                     if not isPendingRequestInFlight then
                         isPendingRequestInFlight = true
