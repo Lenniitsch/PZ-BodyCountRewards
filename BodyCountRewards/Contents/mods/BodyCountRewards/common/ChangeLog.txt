@@ -17,6 +17,8 @@ FIXES & IMPROVEMENTS
 - Old reward popups and the stats window no longer carry over from a previous character into a new session.
 - Loading a save no longer reports your lifetime kill count as newly earned kills.
 - Saves are repaired on load when reward counters or the reward history are damaged or oversized.
+- Stats window: removed-trait history rows are labeled correctly, long translated labels no longer overlap their values, and the catalog sorts consistently.
+- Large multiplayer reward batches no longer rebuild the stats window repeatedly, so the UI stays smooth.
 [ ------ ]
 
 [ v1.3.4 - Body Count Rewards ]
