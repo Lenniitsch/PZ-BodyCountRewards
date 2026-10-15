@@ -17,12 +17,14 @@ BCR = BCR or {}
 -- ============================================================
 
 local statsWindow = nil
+local statsDirty = false
 local UI_WIDTH = 520
 local UI_HEIGHT = 550
 local PADDING = 10
 local TAB_CONTENT_OFFSET = 6
 local LINE_H = 24
 local VAL_X_OFFSET = 190
+local VALUE_GAP = 8
 local MILESTONE_PAST_COUNT = 2
 local MILESTONE_FUTURE_COUNT = 5
 
@@ -94,6 +96,14 @@ local function getRarityLabel(rarity)
     return getTextOrNull("UI_BCR_Rarity_" .. tostring(rarity)) or tostring(rarity)
 end
 
+-- ISRichTextPanel parses any "<...>" token as a command; escape dynamic
+-- (addon/ModData) values so they always render as plain text.
+local function escapeRichText(text)
+    if type(text) ~= "string" then return text end
+    text = string.gsub(text, "<", "&lt;")
+    return (string.gsub(text, ">", "&gt;"))
+end
+
 local function getBCRData(player)
     -- Route through EnsureModData so the UI never reads an
     -- unnormalized/corrupt ModData table.
@@ -123,6 +133,33 @@ local function formatNumber(value)
     return sign .. grouped
 end
 
+-- Trims text with an ellipsis so it fits maxWidth in UIFont.Small.
+-- Never splits a UTF-8 multi-byte sequence.
+local function ellipsizeToWidth(text, maxWidth)
+    if getTextManager():MeasureStringX(UIFont.Small, text) <= maxWidth then
+        return text
+    end
+    local ellipsis = "..."
+    local ellipsisWidth = getTextManager():MeasureStringX(UIFont.Small, ellipsis)
+    local limit = #text
+    while limit > 0 do
+        local candidate = string.sub(text, 1, limit)
+        if getTextManager():MeasureStringX(UIFont.Small, candidate) + ellipsisWidth <= maxWidth then
+            break
+        end
+        limit = limit - 1
+    end
+    while limit > 0 do
+        local nextByte = string.byte(text, limit + 1)
+        if nextByte and nextByte >= 128 and nextByte < 192 then
+            limit = limit - 1
+        else
+            break
+        end
+    end
+    return string.sub(text, 1, limit) .. ellipsis
+end
+
 -- ============================================================
 -- BCRProgressPanel -- draws the cached snapshot each frame; the
 -- expensive data recompute is event-gated, not per-frame.
@@ -149,14 +186,15 @@ end
 
 function BCRProgressPanel:drawStatRow(label, value, x, y)
     local valX = x + VAL_X_OFFSET
+    label = ellipsizeToWidth(label, VAL_X_OFFSET - VALUE_GAP)
     self:drawText(label, x, y, COLORS.dim.r, COLORS.dim.g, COLORS.dim.b, 1, UIFont.Small)
     self:drawText(value, valX, y, COLORS.text.r, COLORS.text.g, COLORS.text.b, 1, UIFont.Small)
     return y + LINE_H
 end
 
 function BCRProgressPanel:drawProgressContent()
-    local data = self.cached
-    if not data then
+    local progress = self.cached
+    if not progress then
         self:drawText(
             getTextOrNull("UI_BCR_NoData") or "No data available.",
             PADDING, PADDING + TAB_CONTENT_OFFSET,
@@ -169,17 +207,17 @@ function BCRProgressPanel:drawProgressContent()
     local y = PADDING + TAB_CONTENT_OFFSET
     local contentWidth = self.width - (PADDING * 2)
 
-    if data.allComplete then
+    if progress.allComplete then
         self:drawText(
             getTextOrNull("UI_BCR_AllComplete") or "All rewards earned!",
             x, y, COLORS.sectionHead.r, COLORS.sectionHead.g, COLORS.sectionHead.b, 1, UIFont.Medium
         )
         y = y + HEADER_GAP
 
-        y = self:drawStatRow((getTextOrNull("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(data.rewardsGiven), x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_ZombieKills") or "Zombie Kills") .. ":", formatNumber(data.kills), x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", data.scalingLabel, x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_RewardPriority") or "Reward Priority") .. ":", data.rewardPriorityLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(progress.rewardsGiven), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_ZombieKills") or "Zombie Kills") .. ":", formatNumber(progress.kills), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", progress.scalingLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_RewardPriority") or "Reward Priority") .. ":", progress.rewardPriorityLabel, x, y)
     else
         self:drawText(
             getTextOrNull("UI_BCR_ZombieKills") or "Zombie Kills",
@@ -187,7 +225,7 @@ function BCRProgressPanel:drawProgressContent()
         )
         y = y + SECTION_HEAD_GAP
 
-        self:drawText(formatNumber(data.kills), x + KILLS_INSET, y, COLORS.plainWhite.r, COLORS.plainWhite.g, COLORS.plainWhite.b, 1, UIFont.Large)
+        self:drawText(formatNumber(progress.kills), x + KILLS_INSET, y, COLORS.plainWhite.r, COLORS.plainWhite.g, COLORS.plainWhite.b, 1, UIFont.Large)
         y = y + BIG_NUMBER_GAP
 
         local barX = x
@@ -198,12 +236,12 @@ function BCRProgressPanel:drawProgressContent()
         self:drawRect(barX, barY, barW, barH,
             COLORS.barBg.a, COLORS.barBg.r, COLORS.barBg.g, COLORS.barBg.b)
 
-        local fillW = math.floor(barW * data.progress)
+        local fillW = math.floor(barW * progress.progress)
         if fillW > 0 then
             local fillColor
-            if data.progress >= BAR_HIGH_THRESHOLD then
+            if progress.progress >= BAR_HIGH_THRESHOLD then
                 fillColor = COLORS.barFillHigh
-            elseif data.progress >= BAR_MID_THRESHOLD then
+            elseif progress.progress >= BAR_MID_THRESHOLD then
                 fillColor = COLORS.barFillMid
             else
                 fillColor = COLORS.barFillLow
@@ -214,7 +252,7 @@ function BCRProgressPanel:drawProgressContent()
         self:drawRectBorder(barX, barY, barW, barH,
             COLORS.barBorder.a, COLORS.barBorder.r, COLORS.barBorder.g, COLORS.barBorder.b)
 
-        local progressLabel = formatNumber(data.progressCurrent) .. " / " .. formatNumber(data.progressMax)
+        local progressLabel = formatNumber(progress.progressCurrent) .. " / " .. formatNumber(progress.progressMax)
         local labelW = getTextManager():MeasureStringX(UIFont.Small, progressLabel)
         local fontH = getTextManager():MeasureStringY(UIFont.Small, progressLabel)
         local textY = barY + math.floor((barH - fontH) / 2)
@@ -222,14 +260,14 @@ function BCRProgressPanel:drawProgressContent()
 
         y = barY + barH + BAR_BOTTOM_GAP
 
-        y = self:drawStatRow((getTextOrNull("UI_BCR_NextRewardAt") or "Next Reward at") .. ":", formatNumber(data.nextMilestone) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills"), x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_KillsRemaining") or "Kills Remaining") .. ":", formatNumber(data.killsRemaining), x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(data.rewardsGiven), x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", data.scalingLabel, x, y)
-        y = self:drawStatRow((getTextOrNull("UI_BCR_RewardPriority") or "Reward Priority") .. ":", data.rewardPriorityLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_NextRewardAt") or "Next Reward at") .. ":", formatNumber(progress.nextMilestone) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills"), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_KillsRemaining") or "Kills Remaining") .. ":", formatNumber(progress.killsRemaining), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_TotalRewards") or "Total Rewards") .. ":", tostring(progress.rewardsGiven), x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_ScalingMode") or "Scaling Mode") .. ":", progress.scalingLabel, x, y)
+        y = self:drawStatRow((getTextOrNull("UI_BCR_RewardPriority") or "Reward Priority") .. ":", progress.rewardPriorityLabel, x, y)
     end
 
-    if data.milestones and #data.milestones > 0 then
+    if progress.milestones and #progress.milestones > 0 then
         y = y + SECTION_GAP
         self:drawText(
             getTextOrNull("UI_BCR_MilestoneRoadmap") or "Milestone Roadmap",
@@ -242,7 +280,7 @@ function BCRProgressPanel:drawProgressContent()
         local msLabelX = x + MS_NUMBER_X
         local msKillsX = x + VAL_X_OFFSET
 
-        for _, ms in ipairs(data.milestones) do
+        for _, ms in ipairs(progress.milestones) do
             local prefix, cr, cg, cb
             if ms.reached then
                 prefix = getTextOrNull("UI_BCR_MilestoneReached") or "[x]"
@@ -367,12 +405,18 @@ function BCRStatsWindow:updateHistory()
         local entry = history[i]
         if entry and entry.action ~= "baseline" then
             local traitId = entry.id or entry.trait
-            local displayName = BCR.GetTraitDisplayName(traitId) or traitId
-            local rarity = entry.rarity or "common"
-            local rarityLabel = getRarityLabel(rarity)
+            local displayName = escapeRichText(BCR.GetTraitDisplayName(traitId) or traitId)
+            local rarityLabel = getRarityLabel(entry.rarity or "common")
+
             local sourceStr = ""
             if entry.source then
-                sourceStr = " | Added by: " .. entry.source
+                local sourceLabel
+                if entry.action == "added" then
+                    sourceLabel = getTextOrNull("UI_BCR_HistoryAddedBy") or "Added by"
+                else
+                    sourceLabel = getTextOrNull("UI_BCR_HistoryProvidedBy") or "Provided by"
+                end
+                sourceStr = " | " .. sourceLabel .. ": " .. escapeRichText(entry.source)
             end
 
             text = text .. "<INDENT:16>"
@@ -395,24 +439,18 @@ end
 -- TAB 3: CATALOG CONTENT
 -- ============================================================
 
-function BCRStatsWindow:updateCatalog()
+function BCRStatsWindow:updateCatalog(earnableList, removableList)
     local bcrData = getBCRData(self.player)
     local opts = BCR.GetOpts()
 
     local earnablePool = {}
-    if self.player and opts.enablePositive ~= false then
-        local pool = BCR.BuildEarnablePool(self.player) or {}
-        for _, entry in ipairs(pool) do
-            earnablePool[entry.id] = entry
-        end
+    for _, entry in ipairs(earnableList or {}) do
+        earnablePool[entry.id] = entry
     end
 
     local removablePool = {}
-    if self.player and opts.enableNegative ~= false then
-        local pool = BCR.BuildRemovablePool(self.player) or {}
-        for _, entry in ipairs(pool) do
-            removablePool[entry.id] = entry
-        end
+    for _, entry in ipairs(removableList or {}) do
+        removablePool[entry.id] = entry
     end
 
     -- Last history action per trait -- "last action wins", mirroring
@@ -424,9 +462,9 @@ function BCRStatsWindow:updateCatalog()
         end
     end
 
-    local function renderTraitLine(traitId, cost, poolLookup, isPositive)
+    local function renderTraitLine(traitId, cost, poolLookup, kind)
         local line = ""
-        local displayName = BCR.GetTraitDisplayName(traitId) or traitId
+        local displayName = escapeRichText(BCR.GetTraitDisplayName(traitId) or traitId)
         local rarity = BCR.GetRarity(cost)
         local rarityLabel = getRarityLabel(rarity)
         local isInPool = poolLookup[traitId] ~= nil
@@ -448,8 +486,8 @@ function BCRStatsWindow:updateCatalog()
             statusReason = getTextOrNull("UI_BCR_StatusEarned") or "Earned"
         else
             local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
-            if isPositive and hasConflict and blockerId then
-                local blockerName = BCR.GetTraitDisplayName(blockerId) or blockerId
+            if kind == "earnable" and hasConflict and blockerId then
+                local blockerName = escapeRichText(BCR.GetTraitDisplayName(blockerId) or blockerId)
                 statusReason = getText("UI_BCR_StatusConflict", blockerName)
             else
                 statusReason = getTextOrNull("UI_BCR_StatusUnavailable") or "Unavailable"
@@ -462,24 +500,23 @@ function BCRStatsWindow:updateCatalog()
         return line
     end
 
-    local function sortByCost(t)
-        if not t then return nil end
+    local function sortByCost(list)
+        if not list then return nil end
         local sorted = {}
-        for _, v in ipairs(t) do
+        for _, v in ipairs(list) do
             table.insert(sorted, v)
         end
         table.sort(sorted, function(a, b)
             local ca = math.abs(a.cost or 0)
             local cb = math.abs(b.cost or 0)
             if ca ~= cb then return ca < cb end
-            local na = BCR.GetTraitDisplayName(a.id) or a.id
-            local nb = BCR.GetTraitDisplayName(b.id) or b.id
-            return na < nb
+            -- id tie-break: ASCII-stable, independent of the active language
+            return (a.id or "") < (b.id or "")
         end)
         return sorted
     end
 
-    local function renderCustomSection(list, poolLookup, isPositive, filterFn)
+    local function renderCustomSection(list, poolLookup, kind, filterFn)
         if not list or #list == 0 then return "" end
         local grouped = {}
         for _, entry in ipairs(list) do
@@ -508,9 +545,9 @@ function BCRStatsWindow:updateCatalog()
             else
                 label = getTextOrNull("UI_BCR_AddedBySingular") or "Trait added by:"
             end
-            sectionText = sectionText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. source .. "\" <LINE> "
+            sectionText = sectionText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. escapeRichText(source) .. "\" <LINE> "
             for _, entry in ipairs(group) do
-                sectionText = sectionText .. renderTraitLine(entry.id, entry.cost, poolLookup, isPositive)
+                sectionText = sectionText .. renderTraitLine(entry.id, entry.cost, poolLookup, kind)
             end
         end
         return sectionText
@@ -531,9 +568,9 @@ function BCRStatsWindow:updateCatalog()
         text = text .. " <LINE> "
     else
         for _, entry in ipairs(sortedPositive) do
-            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, true)
+            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, "earnable")
         end
-        text = text .. renderCustomSection(BCR.CustomPositiveTraits, earnablePool, true)
+        text = text .. renderCustomSection(BCR.CustomPositiveTraits, earnablePool, "earnable")
     end
 
     text = text .. " <INDENT:0> <BR> "
@@ -552,11 +589,11 @@ function BCRStatsWindow:updateCatalog()
             local traitId = entry.id
             if BCR.PlayerHasTrait(self.player, traitId) or lastByTrait[traitId] == "removed" then
                 hasRelevantTraits = true
-                text = text .. renderTraitLine(traitId, entry.cost, removablePool, false)
+                text = text .. renderTraitLine(traitId, entry.cost, removablePool, "removable")
             end
         end
         if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
-            local customText = renderCustomSection(BCR.CustomNegativeTraits, removablePool, false,
+            local customText = renderCustomSection(BCR.CustomNegativeTraits, removablePool, "removable",
                 function(entry)
                     return BCR.PlayerHasTrait(self.player, entry.id) or lastByTrait[entry.id] == "removed"
                 end)
@@ -581,7 +618,7 @@ end
 -- PROGRESS DATA COMPUTATION
 -- ============================================================
 
-function BCRStatsWindow:updateProgress()
+function BCRStatsWindow:updateProgress(earnableList, removableList)
     local bcrData = getBCRData(self.player)
     if not bcrData then
         self.progressPanel.cached = nil
@@ -593,7 +630,10 @@ function BCRStatsWindow:updateProgress()
     if not opts then return end
 
     local ok, kills = pcall(function() return self.player:getZombieKills() end)
-    if not ok then kills = 0 end
+    if not ok then
+        BCR.DebugPrint("Client", "updateProgress: getZombieKills failed")
+        kills = 0
+    end
     local killsNum = kills or 0
     local rewardsGiven = bcrData.rewardsGiven or 0
     local answered = BCR.GetAnsweredMilestones(bcrData)
@@ -623,7 +663,9 @@ function BCRStatsWindow:updateProgress()
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityGainFirst") or "Gain Positive First"
     end
 
-    local allComplete = not BCR.HasAvailableRewards(self.player)
+    -- Pool sizes respect the sandbox toggles and the player's live state.
+    local rewardsLeft = #(earnableList or {}) + #(removableList or {})
+    local allComplete = rewardsLeft == 0
 
     local msStart, msEnd
 
@@ -631,9 +673,6 @@ function BCRStatsWindow:updateProgress()
         msStart = math.max(1, answered - (MILESTONE_PAST_COUNT + MILESTONE_FUTURE_COUNT - 1))
         msEnd = answered
     else
-        local earnableCount = (BCR.PositiveTraits and #BCR.PositiveTraits or 0) + (BCR.CustomPositiveTraits and #BCR.CustomPositiveTraits or 0)
-        local removableCount = (BCR.NegativeTraits and #BCR.NegativeTraits or 0) + (BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits or 0)
-        local rewardsLeft = earnableCount + removableCount
         msStart = math.max(1, answered - MILESTONE_PAST_COUNT + 1)
         msEnd = math.min(answered + MILESTONE_FUTURE_COUNT, answered + rewardsLeft)
     end
@@ -668,9 +707,17 @@ end
 -- ============================================================
 
 function BCRStatsWindow:updateContent()
-    self:updateProgress()
+    local opts = BCR.GetOpts()
+    local earnableList, removableList
+    if self.player and opts.enablePositive ~= false then
+        earnableList = BCR.BuildEarnablePool(self.player) or {}
+    end
+    if self.player and opts.enableNegative ~= false then
+        removableList = BCR.BuildRemovablePool(self.player) or {}
+    end
+    self:updateProgress(earnableList, removableList)
     self:updateHistory()
-    self:updateCatalog()
+    self:updateCatalog(earnableList, removableList)
 end
 
 -- ============================================================
@@ -700,13 +747,22 @@ function BCR.ShowStatsWindow(player)
     if not ok then
         print("[BCR] [Client] ShowStatsWindow updateContent error: " .. tostring(err))
     end
+    statsDirty = false
 end
 
+-- Requests a refresh; the update tick performs at most one rebuild per tick.
 function BCR.RefreshStatsWindow()
+    statsDirty = true
+end
+
+-- Drains the dirty flag and rebuilds the window. Called from the update tick.
+function BCR.FlushStatsWindow()
+    if not statsDirty then return end
+    statsDirty = false
     if statsWindow and statsWindow:isVisible() then
         local ok, err = pcall(function() statsWindow:updateContent() end)
         if not ok then
-            print("[BCR] [Client] RefreshStatsWindow error: " .. tostring(err))
+            print("[BCR] [Client] FlushStatsWindow error: " .. tostring(err))
         end
     end
 end
@@ -715,6 +771,7 @@ end
 -- window left open across a save load cannot keep the old player.
 function BCR.CloseStatsWindow()
     local window = statsWindow
+    statsDirty = false
     if not window then return end
     statsWindow = nil
     pcall(function() window:setVisible(false) end)
