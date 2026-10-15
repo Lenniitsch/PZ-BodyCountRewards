@@ -25,8 +25,6 @@ local TAB_CONTENT_OFFSET = 6
 local LINE_H = 24
 local VAL_X_OFFSET = 190
 local VALUE_GAP = 8
-local MILESTONE_PAST_COUNT = 2
-local MILESTONE_FUTURE_COUNT = 5
 
 -- Layout constants (progress panel)
 local HEADER_GAP = 36
@@ -439,59 +437,37 @@ end
 -- TAB 3: CATALOG CONTENT
 -- ============================================================
 
-function BCRStatsWindow:updateCatalog(earnableList, removableList)
-    local bcrData = getBCRData(self.player)
-    local opts = BCR.GetOpts()
-
-    local earnablePool = {}
-    for _, entry in ipairs(earnableList or {}) do
-        earnablePool[entry.id] = entry
+function BCRStatsWindow:updateCatalog(catalog)
+    if not catalog then
+        self.catalogPanel.text = getTextOrNull("UI_BCR_NoData") or "No data available."
+        self.catalogPanel:paginate()
+        return
     end
 
-    local removablePool = {}
-    for _, entry in ipairs(removableList or {}) do
-        removablePool[entry.id] = entry
-    end
-
-    -- Last history action per trait -- "last action wins", mirroring
-    -- the pool guards, so status labels never go stale.
-    local lastByTrait = {}
-    for _, h in ipairs(bcrData and bcrData.traitHistory or {}) do
-        if h and h.id and h.action then
-            lastByTrait[h.id] = h.action
-        end
-    end
-
-    local function renderTraitLine(traitId, cost, poolLookup, kind)
+    local function renderTraitLine(entry)
         local line = ""
-        local displayName = escapeRichText(BCR.GetTraitDisplayName(traitId) or traitId)
-        local rarity = BCR.GetRarity(cost)
-        local rarityLabel = getRarityLabel(rarity)
-        local isInPool = poolLookup[traitId] ~= nil
-        local isAllowed = BCR.IsTraitAllowed(traitId)
+        local displayName = escapeRichText(BCR.GetTraitDisplayName(entry.id) or entry.id)
+        local rarityLabel = getRarityLabel(entry.rarity)
 
-        if isInPool then
-            line = line .. " <INDENT:16> " .. colorTag(rarityColor(rarity))
+        if entry.status == "earnable" then
+            line = line .. " <INDENT:16> " .. colorTag(rarityColor(entry.rarity))
             line = line .. "- " .. displayName .. " | " .. rarityLabel
             line = line .. " <LINE> "
             return line
         end
 
         local statusReason
-        if not isAllowed then
+        if entry.status == "conflict" then
+            local blockerName = escapeRichText(BCR.GetTraitDisplayName(entry.blockerId) or entry.blockerId)
+            statusReason = getText("UI_BCR_StatusConflict", blockerName)
+        elseif entry.status == "disabled" then
             statusReason = getTextOrNull("UI_BCR_StatusServerDisabled") or "Disabled"
-        elseif lastByTrait[traitId] == "removed" then
+        elseif entry.status == "removed" then
             statusReason = getTextOrNull("UI_BCR_StatusRemoved") or "Removed"
-        elseif lastByTrait[traitId] == "added" or BCR.PlayerHasTrait(self.player, traitId) then
+        elseif entry.status == "earned" then
             statusReason = getTextOrNull("UI_BCR_StatusEarned") or "Earned"
         else
-            local hasConflict, blockerId = BCR.HasMutuallyExclusiveTrait(self.player, traitId)
-            if kind == "earnable" and hasConflict and blockerId then
-                local blockerName = escapeRichText(BCR.GetTraitDisplayName(blockerId) or blockerId)
-                statusReason = getText("UI_BCR_StatusConflict", blockerName)
-            else
-                statusReason = getTextOrNull("UI_BCR_StatusUnavailable") or "Unavailable"
-            end
+            statusReason = getTextOrNull("UI_BCR_StatusUnavailable") or "Unavailable"
         end
 
         line = line .. " <INDENT:16> " .. colorTag(COLORS.dim)
@@ -500,54 +476,19 @@ function BCRStatsWindow:updateCatalog(earnableList, removableList)
         return line
     end
 
-    local function sortByCost(list)
-        if not list then return nil end
-        local sorted = {}
-        for _, v in ipairs(list) do
-            table.insert(sorted, v)
-        end
-        table.sort(sorted, function(a, b)
-            local ca = math.abs(a.cost or 0)
-            local cb = math.abs(b.cost or 0)
-            if ca ~= cb then return ca < cb end
-            -- id tie-break: ASCII-stable, independent of the active language
-            return (a.id or "") < (b.id or "")
-        end)
-        return sorted
-    end
-
-    local function renderCustomSection(list, poolLookup, kind, filterFn)
-        if not list or #list == 0 then return "" end
-        local grouped = {}
-        for _, entry in ipairs(list) do
-            if not filterFn or filterFn(entry) then
-                local source = BCR.CustomTraitSources and BCR.CustomTraitSources[entry.id] or ""
-                if not grouped[source] then
-                    grouped[source] = {}
-                end
-                table.insert(grouped[source], entry)
-            end
-        end
-        local sources = {}
-        for source in pairs(grouped) do
-            table.insert(sources, source)
-        end
-        table.sort(sources)
-        for _, source in ipairs(sources) do
-            grouped[source] = sortByCost(grouped[source])
-        end
+    local function renderCustomSections(sections)
         local sectionText = ""
-        for _, source in ipairs(sources) do
-            local group = grouped[source]
+        for _, section in ipairs(sections or {}) do
+            local group = section.entries
             local label
             if #group > 1 then
                 label = getTextOrNull("UI_BCR_AddedByPlural") or "Traits added by:"
             else
                 label = getTextOrNull("UI_BCR_AddedBySingular") or "Trait added by:"
             end
-            sectionText = sectionText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. escapeRichText(source) .. "\" <LINE> "
+            sectionText = sectionText .. " <LINE> " .. colorTag(COLORS.text) .. label .. " \"" .. escapeRichText(section.source) .. "\" <LINE> "
             for _, entry in ipairs(group) do
-                sectionText = sectionText .. renderTraitLine(entry.id, entry.cost, poolLookup, kind)
+                sectionText = sectionText .. renderTraitLine(entry)
             end
         end
         return sectionText
@@ -555,22 +496,19 @@ function BCRStatsWindow:updateCatalog(earnableList, removableList)
 
     local text = ""
 
-    local sortedPositive = sortByCost(BCR.PositiveTraits)
-    local sortedNegative = sortByCost(BCR.NegativeTraits)
-
     text = text .. colorTag(COLORS.sectionHead)
     text = text .. " <H2> " .. (getTextOrNull("UI_BCR_CatalogPositive") or "Earnable Positive Traits")
     text = text .. " <LINE><TEXT> "
 
-    if opts.enablePositive == false then
+    if catalog.positiveDisabled then
         text = text .. " <INDENT:16> " .. colorTag(COLORS.dim)
         text = text .. (getTextOrNull("UI_BCR_CategoryDisabled") or "Disabled in server settings")
         text = text .. " <LINE> "
     else
-        for _, entry in ipairs(sortedPositive) do
-            text = text .. renderTraitLine(entry.id, entry.cost, earnablePool, "earnable")
+        for _, entry in ipairs(catalog.positive) do
+            text = text .. renderTraitLine(entry)
         end
-        text = text .. renderCustomSection(BCR.CustomPositiveTraits, earnablePool, "earnable")
+        text = text .. renderCustomSections(catalog.customPositive)
     end
 
     text = text .. " <INDENT:0> <BR> "
@@ -579,31 +517,16 @@ function BCRStatsWindow:updateCatalog(earnableList, removableList)
     text = text .. " <H2> " .. (getTextOrNull("UI_BCR_CatalogNegative") or "Removable Negative Traits")
     text = text .. " <LINE><TEXT> "
 
-    if opts.enableNegative == false then
+    if catalog.negativeDisabled then
         text = text .. " <INDENT:16> " .. colorTag(COLORS.dim)
         text = text .. (getTextOrNull("UI_BCR_CategoryDisabled") or "Disabled in server settings")
         text = text .. " <LINE> "
     else
-        local hasRelevantTraits = false
-        for _, entry in ipairs(sortedNegative) do
-            local traitId = entry.id
-            if BCR.PlayerHasTrait(self.player, traitId) or lastByTrait[traitId] == "removed" then
-                hasRelevantTraits = true
-                text = text .. renderTraitLine(traitId, entry.cost, removablePool, "removable")
-            end
+        for _, entry in ipairs(catalog.negative) do
+            text = text .. renderTraitLine(entry)
         end
-        if BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits > 0 then
-            local customText = renderCustomSection(BCR.CustomNegativeTraits, removablePool, "removable",
-                function(entry)
-                    return BCR.PlayerHasTrait(self.player, entry.id) or lastByTrait[entry.id] == "removed"
-                end)
-            if customText ~= "" then
-                hasRelevantTraits = true
-                text = text .. customText
-            end
-        end
-
-        if not hasRelevantTraits then
+        text = text .. renderCustomSections(catalog.customNegative)
+        if not catalog.hasRelevantNegative then
             text = text .. " <INDENT:16> " .. colorTag(COLORS.empty)
             text = text .. (getTextOrNull("UI_BCR_NoNegativeTraits") or "No negative traits found. Character was created without any.")
             text = text .. " <LINE> "
@@ -618,87 +541,41 @@ end
 -- PROGRESS DATA COMPUTATION
 -- ============================================================
 
-function BCRStatsWindow:updateProgress(earnableList, removableList)
-    local bcrData = getBCRData(self.player)
-    if not bcrData then
+function BCRStatsWindow:updateProgress(view)
+    if not view then
         self.progressPanel.cached = nil
         return
     end
 
-    BCR.RefreshConfig()
-    local opts = BCR.opts
-    if not opts then return end
-
-    local ok, kills = pcall(function() return self.player:getZombieKills() end)
-    if not ok then
-        BCR.DebugPrint("Client", "updateProgress: getZombieKills failed")
-        kills = 0
-    end
-    local killsNum = kills or 0
-    local rewardsGiven = bcrData.rewardsGiven or 0
-    local answered = BCR.GetAnsweredMilestones(bcrData)
-    local nextMilestone = BCR.GetKillsForMilestone(answered + 1, opts)
-    local prevMilestone = BCR.GetKillsForMilestone(answered, opts)
-
-    local progress = 0
-    if nextMilestone > prevMilestone then
-        progress = math.max(0, math.min(1, (killsNum - prevMilestone) / (nextMilestone - prevMilestone)))
-    end
-
     local scalingLabel
-    if opts.milestoneScaling == BCR.SCALING_PROGRESSIVE then
-        local factor = opts.progressiveScalingFactor or BCR.DEFAULT_PROGRESSIVE_FACTOR
+    if view.scalingCode == "progressive" then
         scalingLabel = (getTextOrNull("UI_BCR_ScalingProgressive") or "Progressive")
-            .. " (x" .. formatFloatLocaleSafe(factor, 1) .. ")"
+            .. " (x" .. formatFloatLocaleSafe(view.scalingFactor, 1) .. ")"
     else
         scalingLabel = getTextOrNull("UI_BCR_ScalingLinear") or "Linear"
     end
 
     local rewardPriorityLabel
-    if opts.rewardPriority == BCR.PRIORITY_NEGATIVE_FIRST then
+    if view.priorityCode == BCR.PRIORITY_NEGATIVE_FIRST then
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityLoseFirst") or "Remove Negative First"
-    elseif opts.rewardPriority == BCR.PRIORITY_RANDOM then
+    elseif view.priorityCode == BCR.PRIORITY_RANDOM then
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityRandom") or "Random"
     else
         rewardPriorityLabel = getTextOrNull("UI_BCR_PriorityGainFirst") or "Gain Positive First"
     end
 
-    -- Pool sizes respect the sandbox toggles and the player's live state.
-    local rewardsLeft = #(earnableList or {}) + #(removableList or {})
-    local allComplete = rewardsLeft == 0
-
-    local msStart, msEnd
-
-    if allComplete then
-        msStart = math.max(1, answered - (MILESTONE_PAST_COUNT + MILESTONE_FUTURE_COUNT - 1))
-        msEnd = answered
-    else
-        msStart = math.max(1, answered - MILESTONE_PAST_COUNT + 1)
-        msEnd = math.min(answered + MILESTONE_FUTURE_COUNT, answered + rewardsLeft)
-    end
-
-    local milestones = {}
-    for m = msStart, msEnd do
-        table.insert(milestones, {
-            number = m,
-            killsNeeded = BCR.GetKillsForMilestone(m, opts),
-            reached = m <= answered,
-            isCurrent = m == answered + 1,
-        })
-    end
-
     self.progressPanel.cached = {
-        kills = killsNum,
-        rewardsGiven = rewardsGiven,
-        nextMilestone = nextMilestone,
-        killsRemaining = math.max(0, nextMilestone - killsNum),
-        progress = progress,
-        progressCurrent = math.max(0, killsNum - prevMilestone),
-        progressMax = nextMilestone - prevMilestone,
+        kills = view.kills,
+        rewardsGiven = view.rewardsGiven,
+        nextMilestone = view.nextMilestone,
+        killsRemaining = view.killsRemaining,
+        progress = view.progressFraction,
+        progressCurrent = view.progressCurrent,
+        progressMax = view.progressMax,
         scalingLabel = scalingLabel,
         rewardPriorityLabel = rewardPriorityLabel,
-        milestones = milestones,
-        allComplete = allComplete,
+        milestones = view.milestones,
+        allComplete = view.allComplete,
     }
 end
 
@@ -707,17 +584,10 @@ end
 -- ============================================================
 
 function BCRStatsWindow:updateContent()
-    local opts = BCR.GetOpts()
-    local earnableList, removableList
-    if self.player and opts.enablePositive ~= false then
-        earnableList = BCR.BuildEarnablePool(self.player) or {}
-    end
-    if self.player and opts.enableNegative ~= false then
-        removableList = BCR.BuildRemovablePool(self.player) or {}
-    end
-    self:updateProgress(earnableList, removableList)
+    local view = BCR.BuildStatsView(self.player)
+    self:updateProgress(view and view.progress)
     self:updateHistory()
-    self:updateCatalog(earnableList, removableList)
+    self:updateCatalog(view and view.catalog)
 end
 
 -- ============================================================

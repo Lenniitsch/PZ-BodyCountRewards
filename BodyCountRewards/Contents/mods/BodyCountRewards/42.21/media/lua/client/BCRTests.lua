@@ -967,6 +967,42 @@ local function suitePoolBuildingPlayerState()
             assertFalse(capturedOnOpts, "No capture while retroactive rewards are on")
         end
     end
+
+    -- === Stats view builder (data layer for the stats window) ===
+    local viewData = BCR.EnsureModData(player)
+    local view = BCR.BuildStatsView(player)
+    assertNotNil(view, "BuildStatsView returns a view")
+    assertNotNil(view and view.progress, "BuildStatsView: progress present")
+    assertNotNil(view and view.catalog, "BuildStatsView: catalog present")
+    if view then
+        local optsNow = BCR.GetOpts()
+        if viewData and view.progress then
+            local answeredNow = BCR.GetAnsweredMilestones(viewData)
+            assertEqual(BCR.GetKillsForMilestone(answeredNow + 1, optsNow), view.progress.nextMilestone,
+                "Progress view milestone matches core math")
+            assertTrue(view.progress.killsRemaining >= 0, "killsRemaining non-negative")
+            assertTrue(#view.progress.milestones > 0, "Roadmap has entries")
+        end
+        if view.catalog then
+            local validStatus = {
+                earnable = true, disabled = true, removed = true,
+                earned = true, conflict = true, unavailable = true,
+            }
+            local badStatus = 0
+            for _, entry in ipairs(view.catalog.positive) do
+                if not validStatus[entry.status] then badStatus = badStatus + 1 end
+            end
+            for _, section in ipairs(view.catalog.customPositive) do
+                for _, entry in ipairs(section.entries) do
+                    if not validStatus[entry.status] then badStatus = badStatus + 1 end
+                end
+            end
+            assertEqual(0, badStatus, "Catalog statuses are valid codes")
+            if optsNow.enablePositive ~= false then
+                assertEqual(#BCR.PositiveTraits, #view.catalog.positive, "Catalog covers the base positive list")
+            end
+        end
+    end
 end
 
 -- ============================================================

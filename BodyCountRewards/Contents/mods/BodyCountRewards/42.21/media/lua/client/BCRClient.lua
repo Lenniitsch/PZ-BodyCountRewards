@@ -465,14 +465,11 @@ local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects
     local player = getSpecificPlayer(playerNum)
     if not player then return end
 
-    local bcrData = BCR.EnsureModData(player)
-    BCR.RefreshConfig()
-    local opts = BCR.opts
-    if not opts then return end
+    local view = BCR.BuildStatsView(player)
+    local progress = view and view.progress
+    if not progress then return end
 
-    local ok, kills = pcall(function() return player:getZombieKills() end)
-    if not ok then return end
-    local currentKills = kills or 0
+    tryReexhaust(player)
 
     local label = getTextOrNull("UI_BCR_MenuTitle") or "Body Count Rewards"
     local bcrOption = context:addOption(label, nil, nil)
@@ -485,24 +482,18 @@ local function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects
         BCR.ShowStatsWindow
     )
 
-    tryReexhaust(player)
-
-    if hasShownAllTraitsMessage or not BCR.HasAvailableRewards(player) then
+    if hasShownAllTraitsMessage or progress.poolSize == 0 then
         local exhaustedText = getTextOrNull("UI_BCR_AllRewardsGranted") or "All rewards granted!"
         local exhaustedOption = subMenu:addOption(exhaustedText, nil, nil)
         exhaustedOption.notAvailable = true
     else
-        local answered = bcrData and BCR.GetAnsweredMilestones(bcrData) or 0
-        local nextMilestone = BCR.GetKillsForMilestone(answered + 1, opts)
-        local killsRemaining = math.max(0, nextMilestone - currentKills)
-
         local progressText = (getTextOrNull("UI_BCR_Progress") or "Progress") .. ": "
-            .. tostring(currentKills) .. " / " .. tostring(nextMilestone)
+            .. tostring(progress.kills) .. " / " .. tostring(progress.nextMilestone)
         local progressOption = subMenu:addOption(progressText, nil, nil)
         progressOption.notAvailable = true
 
         local remainingText = (getTextOrNull("UI_BCR_NextReward") or "Next reward") .. ": "
-            .. tostring(killsRemaining) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills")
+            .. tostring(progress.killsRemaining) .. " " .. (getTextOrNull("UI_BCR_Kills") or "kills")
         local remainingOption = subMenu:addOption(remainingText, nil, nil)
         remainingOption.notAvailable = true
     end
