@@ -20,6 +20,8 @@ local PENDING_REWARD_DELAY_TICKS = 90
 local MP_REQUEST_TIMEOUT_TICKS = 300
 local REEXHAUST_CHECK_TICKS = 60
 local MAX_PENDING_STALLS = 3
+local PLAYER_READY_MAX_ATTEMPTS = 3
+local PLAYER_READY_RETRY_TICKS = 60
 
 -- ============================================================
 -- STATE VARIABLES
@@ -36,6 +38,9 @@ local showFinalMessageTimer = 0
 local rewardsExhausted = false
 local pendingStallCount = 0
 local reexhaustTimer = 0
+local needsPlayerReady = false
+local playerReadyAttempts = 0
+local playerReadyTimer = 0
 
 -- ============================================================
 -- HELPERS
@@ -61,6 +66,9 @@ local function resetState()
     rewardsExhausted = false
     pendingStallCount = 0
     reexhaustTimer = 0
+    needsPlayerReady = false
+    playerReadyAttempts = 0
+    playerReadyTimer = 0
 end
 
 local function countMissedMilestones(bcrData, opts)
@@ -70,6 +78,20 @@ local function countMissedMilestones(bcrData, opts)
     local ok, kills = pcall(function() return player:getZombieKills() end)
     if not ok or not kills then return 0 end
     return BCR.GetMissedMilestoneCount(bcrData, kills, opts)
+end
+
+-- Arms the pending drain when rewards are already owed at load time
+-- (for example a released withheld pool after a late option flip).
+local function seedPendingRewards(player, bcrData)
+    if not player or not bcrData or not BCR.opts then return end
+    if hasShownAllTraitsMessage then return end
+    local ok, kills = pcall(function() return player:getZombieKills() end)
+    if not ok or not kills then return end
+    local missed = BCR.GetMissedMilestoneCount(bcrData, kills, BCR.opts)
+    if missed > 0 then
+        pendingRewardsCount = missed
+        pendingRewardTimer = 0
+    end
 end
 
 local function tryReexhaust(player)
@@ -132,6 +154,18 @@ function BCR_OnCreatePlayer(playerNum, player)
         hasShownAllTraitsMessage = true
         BCR.DebugPrint("Client", "onCreatePlayer: all rewards exhausted -- skipping future processing")
     end
+
+    if isSinglePlayer() then
+        -- Same VM as the server module: capture the withheld baseline and
+        -- drain anything already owed without waiting for the next kill.
+        if BCR.CaptureWithheldBaseline and BCR.opts then
+            pcall(BCR.CaptureWithheldBaseline, player, bcrData, BCR.opts)
+        end
+        seedPendingRewards(player, bcrData)
+    else
+        -- MP: announce this session to the server (retried from OnPlayerUpdate).
+        needsPlayerReady = true
+    end
 end
 
 local function requestReward(player, bcrData)
@@ -170,6 +204,19 @@ function BCR_OnPlayerUpdate(player)
             isPendingRequestInFlight = false
             pendingRequestTimer = 0
             pendingRewardsCount = 0
+        end
+    end
+    if needsPlayerReady then
+        playerReadyTimer = playerReadyTimer + 1
+        if playerReadyAttempts == 0 or playerReadyTimer >= PLAYER_READY_RETRY_TICKS then
+            playerReadyTimer = 0
+            playerReadyAttempts = playerReadyAttempts + 1
+            local sent = pcall(function()
+                sendClientCommand(player, "BCR", "PlayerReady", {})
+            end)
+            if not sent or playerReadyAttempts >= PLAYER_READY_MAX_ATTEMPTS then
+                needsPlayerReady = false
+            end
         end
     end
     if hasShownAllTraitsMessage then
@@ -317,6 +364,21 @@ function BCR_OnServerCommand(module, command, args)
         if not BCR.HasAvailableRewards(player) then
             scheduleFinalMessage()
         end
+    elseif command == "PlayerSync" then
+        needsPlayerReady = false
+        playerReadyAttempts = 0
+        playerReadyTimer = 0
+        if type(args.kills) == "number" and args.kills >= 0 then
+            bcrData.kills = args.kills
+        end
+        if type(args.rewardsGiven) == "number" and args.rewardsGiven >= 0 then
+            bcrData.rewardsGiven = args.rewardsGiven
+        end
+        if type(args.withheldMilestones) == "number" and args.withheldMilestones >= 0 then
+            bcrData.withheldMilestones = args.withheldMilestones
+        end
+        BCR.DebugPrint("Client", "Player sync received")
+        seedPendingRewards(player, bcrData)
     elseif command == "RewardError" then
         print("[BCR] [Client] Reward error: " .. tostring(args.reason))
         isPendingRequestInFlight = false
@@ -359,8 +421,8 @@ function BCR_OnFillWorldObjectContextMenu(playerNum, context, worldObjects, test
         local exhaustedOption = subMenu:addOption(exhaustedText, nil, nil)
         exhaustedOption.notAvailable = true
     else
-        local rewardsGiven = bcrData and bcrData.rewardsGiven or 0
-        local nextMilestone = BCR.GetKillsForMilestone(rewardsGiven + 1, opts)
+        local answered = bcrData and BCR.GetAnsweredMilestones(bcrData) or 0
+        local nextMilestone = BCR.GetKillsForMilestone(answered + 1, opts)
         local killsRemaining = math.max(0, nextMilestone - currentKills)
 
         local progressText = (getText("UI_BCR_Progress") or "Progress") .. ": "

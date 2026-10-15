@@ -611,8 +611,9 @@ function BCRStatsWindow:updateProgress()
     if not ok then kills = 0 end
     local killsNum = kills or 0
     local rewardsGiven = bcrData.rewardsGiven or 0
-    local nextMilestone = BCR.GetKillsForMilestone(rewardsGiven + 1, opts)
-    local prevMilestone = BCR.GetKillsForMilestone(rewardsGiven, opts)
+    local answered = BCR.GetAnsweredMilestones(bcrData)
+    local nextMilestone = BCR.GetKillsForMilestone(answered + 1, opts)
+    local prevMilestone = BCR.GetKillsForMilestone(answered, opts)
 
     local progress = 0
     if nextMilestone > prevMilestone then
@@ -642,14 +643,14 @@ function BCRStatsWindow:updateProgress()
     local msStart, msEnd
 
     if allComplete then
-        msStart = math.max(1, rewardsGiven - (MILESTONE_PAST_COUNT + MILESTONE_FUTURE_COUNT - 1))
-        msEnd = rewardsGiven
+        msStart = math.max(1, answered - (MILESTONE_PAST_COUNT + MILESTONE_FUTURE_COUNT - 1))
+        msEnd = answered
     else
         local earnableCount = (BCR.PositiveTraits and #BCR.PositiveTraits or 0) + (BCR.CustomPositiveTraits and #BCR.CustomPositiveTraits or 0)
         local removableCount = (BCR.NegativeTraits and #BCR.NegativeTraits or 0) + (BCR.CustomNegativeTraits and #BCR.CustomNegativeTraits or 0)
         local rewardsLeft = earnableCount + removableCount
-        msStart = math.max(1, rewardsGiven - MILESTONE_PAST_COUNT + 1)
-        msEnd = math.min(rewardsGiven + MILESTONE_FUTURE_COUNT, rewardsGiven + rewardsLeft)
+        msStart = math.max(1, answered - MILESTONE_PAST_COUNT + 1)
+        msEnd = math.min(answered + MILESTONE_FUTURE_COUNT, answered + rewardsLeft)
     end
 
     local milestones = {}
@@ -657,8 +658,8 @@ function BCRStatsWindow:updateProgress()
         table.insert(milestones, {
             number = m,
             killsNeeded = BCR.GetKillsForMilestone(m, opts),
-            reached = m <= rewardsGiven,
-            isCurrent = m == rewardsGiven + 1,
+            reached = m <= answered,
+            isCurrent = m == answered + 1,
         })
     end
 

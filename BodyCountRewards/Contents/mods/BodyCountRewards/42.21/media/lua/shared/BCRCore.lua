@@ -544,8 +544,29 @@ end
 function BCR.GetMissedMilestoneCount(bcrData, kills, opts)
     if not bcrData or not opts then return 0 end
     local milestonesAtKills = BCR.GetMilestonesAtKills(kills, opts)
-    local currentRewards = bcrData.rewardsGiven or 0
-    return math.max(0, milestonesAtKills - currentRewards)
+    local answered = bcrData.rewardsGiven or 0
+    if not opts.grantMissedOpportunities then
+        answered = answered + (bcrData.withheldMilestones or 0)
+    end
+    return math.max(0, milestonesAtKills - answered)
+end
+
+-- Milestones already answered: granted, plus those withheld while
+-- retroactive rewards are off.
+function BCR.GetAnsweredMilestones(bcrData)
+    if not bcrData then return 0 end
+    return (bcrData.rewardsGiven or 0) + (bcrData.withheldMilestones or 0)
+end
+
+-- Each reward granted while retroactive rewards are on consumes one
+-- withheld milestone, so the OFF-mode progress counter stays correct
+-- if the option is switched off again later.
+function BCR.ConsumeWithheldMilestones(bcrData, grantedCount, opts)
+    if not bcrData or not opts or not opts.grantMissedOpportunities then return end
+    if type(grantedCount) ~= "number" or grantedCount <= 0 then return end
+    local withheld = bcrData.withheldMilestones or 0
+    if withheld <= 0 then return end
+    bcrData.withheldMilestones = math.max(0, withheld - grantedCount)
 end
 
 -- ============================================================
@@ -618,6 +639,14 @@ function BCR.EnsureModData(player)
     end
     if type(modData.BCR.rewardsGiven) ~= "number" or modData.BCR.rewardsGiven < 0 then
         modData.BCR.rewardsGiven = 0
+    end
+    -- withheldMilestones: absent means "baseline not captured yet" (nil),
+    -- a number means that many milestones are withheld while retroactive
+    -- rewards stay off. Corrupt values are dropped so the next capture
+    -- point can rebuild them.
+    if modData.BCR.withheldMilestones ~= nil and
+        (type(modData.BCR.withheldMilestones) ~= "number" or modData.BCR.withheldMilestones < 0) then
+        modData.BCR.withheldMilestones = nil
     end
     return modData.BCR
 end

@@ -209,6 +209,7 @@ local function applyRewardBatch(player, bcrData, opts, rewardsToGive)
         recordTraitHistory(bcrData, applied)
         table.insert(results, applied)
     end
+    BCR.ConsumeWithheldMilestones(bcrData, #results, opts)
     return results
 end
 
@@ -225,6 +226,24 @@ function BCR.SyncAuthoritativeKills(player, bcrData)
     local serverKills = getZombieKillsSafe(player) or 0
     bcrData.kills = serverKills
     return serverKills
+end
+
+-- ============================================================
+-- RETROACTIVE REWARDS BASELINE -- captured once per player while
+-- the option is off. Milestones reached before that moment are
+-- withheld: not owed while the option stays off, released when it
+-- is switched on. Returns true when the baseline was captured now.
+-- ============================================================
+
+function BCR.CaptureWithheldBaseline(player, bcrData, opts)
+    if not bcrData or not opts then return false end
+    if bcrData.withheldMilestones ~= nil then return false end
+    if opts.grantMissedOpportunities then return false end
+    local kills = getZombieKillsSafe(player) or 0
+    local reached = BCR.GetMilestonesAtKills(kills, opts)
+    local rewarded = bcrData.rewardsGiven or 0
+    bcrData.withheldMilestones = math.max(0, reached - rewarded)
+    return true
 end
 
 -- ============================================================
@@ -287,8 +306,14 @@ local function handleRequestReward(player, args)
     BCR.SyncAuthoritativeKills(player, bcrData)
     local canClaim, missedCount = validateMilestone(player, bcrData, opts)
     if not canClaim then
-        sendServerCommand(player, "BCR", "RewardError", {
-            reason = "Milestone not reached",
+        -- Nothing owed right now (for example a withheld backlog).
+        -- Report it as a normal empty batch so the client stops asking
+        -- without logging an error.
+        sendServerCommand(player, "BCR", "RewardBatchComplete", {
+            totalGranted = 0,
+            remainingMilestones = 0,
+            rewardsGiven = bcrData.rewardsGiven or 0,
+            withheldMilestones = bcrData.withheldMilestones,
         })
         return
     end
@@ -308,8 +333,7 @@ local function handleRequestReward(player, args)
             color = applied.color,
         })
     end
-    local milestonesEarned = BCR.GetMilestonesAtKills(bcrData.kills or 0, opts)
-    local remainingMilestones = math.max(0, milestonesEarned - (bcrData.rewardsGiven or 0))
+    local remainingMilestones = BCR.GetMissedMilestoneCount(bcrData, bcrData.kills or 0, opts)
     if isServer() then
         pcall(function() player:transmitModData() end)
     end
@@ -317,6 +341,27 @@ local function handleRequestReward(player, args)
         totalGranted = totalGranted,
         remainingMilestones = remainingMilestones,
         rewardsGiven = bcrData.rewardsGiven or 0,
+        withheldMilestones = bcrData.withheldMilestones,
+    })
+end
+
+-- MP clients announce themselves once per session so the server can
+-- capture the withheld baseline before the first kill. The reply
+-- carries the authoritative values for the client mirror.
+local function handlePlayerReady(player)
+    if not player then return end
+    local bcrData = BCR.EnsureModData(player)
+    if not bcrData then return end
+    local opts = BCR.GetOpts()
+    BCR.SyncAuthoritativeKills(player, bcrData)
+    BCR.CaptureWithheldBaseline(player, bcrData, opts)
+    if isServer() then
+        pcall(function() player:transmitModData() end)
+    end
+    sendServerCommand(player, "BCR", "PlayerSync", {
+        kills = bcrData.kills or 0,
+        rewardsGiven = bcrData.rewardsGiven or 0,
+        withheldMilestones = bcrData.withheldMilestones,
     })
 end
 
@@ -326,6 +371,11 @@ Events.OnClientCommand.Add(function(module, command, player, args)
         local ok, err = pcall(handleRequestReward, player, args)
         if not ok then
             print("[BCR] [Server] RequestReward error: " .. tostring(err))
+        end
+    elseif command == "PlayerReady" then
+        local ok, err = pcall(handlePlayerReady, player)
+        if not ok then
+            print("[BCR] [Server] PlayerReady error: " .. tostring(err))
         end
     end
 end)

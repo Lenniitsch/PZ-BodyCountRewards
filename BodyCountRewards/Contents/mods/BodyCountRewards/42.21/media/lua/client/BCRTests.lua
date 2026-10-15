@@ -576,6 +576,35 @@ local function suiteMilestoneMath()
         "Nil ModData -> 0")
     assertEqual(0, BCR.GetMissedMilestoneCount({ rewardsGiven = 0 }, 5000, nil),
         "Nil opts -> 0")
+
+    -- Withheld milestones (retroactive rewards baseline)
+    local offOpts = { bodyCount = 1000, milestoneScaling = 1, grantMissedOpportunities = false }
+    local onOpts = { bodyCount = 1000, milestoneScaling = 1, grantMissedOpportunities = true }
+    assertEqual(0, BCR.GetMissedMilestoneCount({ rewardsGiven = 0, withheldMilestones = 5 }, 5500, offOpts),
+        "Withheld backlog is not owed while the option is off")
+    assertEqual(0, BCR.GetMissedMilestoneCount({ rewardsGiven = 1, withheldMilestones = 5 }, 6500, offOpts),
+        "Grants earned while off leave the withheld pool intact")
+    assertEqual(1, BCR.GetMissedMilestoneCount({ rewardsGiven = 1, withheldMilestones = 5 }, 7000, offOpts),
+        "The next crossing is owed while the option is off")
+    assertEqual(5, BCR.GetMissedMilestoneCount({ rewardsGiven = 2, withheldMilestones = 5 }, 7000, onOpts),
+        "Switching the option on releases the withheld milestones")
+    assertEqual(0, BCR.GetMissedMilestoneCount({ rewardsGiven = 0, withheldMilestones = 99 }, 1000, offOpts),
+        "Withheld never makes the count negative")
+
+    assertEqual(7, BCR.GetAnsweredMilestones({ rewardsGiven = 2, withheldMilestones = 5 }),
+        "Answered = granted + withheld")
+    assertEqual(3, BCR.GetAnsweredMilestones({ rewardsGiven = 3 }),
+        "Answered handles a missing withheld field")
+    assertEqual(0, BCR.GetAnsweredMilestones(nil), "Answered(nil) -> 0")
+
+    local fakeData = { rewardsGiven = 0, withheldMilestones = 3 }
+    BCR.ConsumeWithheldMilestones(fakeData, 2, onOpts)
+    assertEqual(1, fakeData.withheldMilestones, "Grants while on consume withheld milestones")
+    BCR.ConsumeWithheldMilestones(fakeData, 5, onOpts)
+    assertEqual(0, fakeData.withheldMilestones, "Withheld consumption clamps at zero")
+    fakeData.withheldMilestones = 2
+    BCR.ConsumeWithheldMilestones(fakeData, 1, offOpts)
+    assertEqual(2, fakeData.withheldMilestones, "Grants while off do not consume the pool")
 end
 
 -- ============================================================
@@ -840,6 +869,37 @@ local function suitePoolBuildingPlayerState()
                 "SyncAuthoritativeKills replaces stored kills with the engine value")
         end
     end
+
+    -- === Regression: withheld baseline capture (retroactive rewards) ===
+    if BCR.CaptureWithheldBaseline then
+        local okK3, engineKills3 = pcall(function() return player:getZombieKills() end)
+        if okK3 and type(engineKills3) == "number" then
+            local captureOpts = {
+                bodyCount = 1000, milestoneScaling = 1,
+                progressiveScalingFactor = 0.5, grantMissedOpportunities = false,
+            }
+            local expected = BCR.GetMilestonesAtKills(engineKills3, captureOpts)
+            local savedWithheld = bcrData.withheldMilestones
+            local savedRewards2 = bcrData.rewardsGiven
+
+            bcrData.withheldMilestones = nil
+            bcrData.rewardsGiven = 0
+            local captured = BCR.CaptureWithheldBaseline(player, bcrData, captureOpts)
+            local withheld = bcrData.withheldMilestones
+            local capturedAgain = BCR.CaptureWithheldBaseline(player, bcrData, captureOpts)
+
+            bcrData.withheldMilestones = nil
+            local capturedOnOpts = BCR.CaptureWithheldBaseline(player, bcrData, { grantMissedOpportunities = true })
+
+            bcrData.withheldMilestones = savedWithheld
+            bcrData.rewardsGiven = savedRewards2
+
+            assertTrue(captured, "First capture reports a change")
+            assertEqual(expected, withheld, "Capture withholds reached-but-ungranted milestones")
+            assertFalse(capturedAgain, "Capture is a one-time baseline")
+            assertFalse(capturedOnOpts, "No capture while retroactive rewards are on")
+        end
+    end
 end
 
 -- ============================================================
@@ -862,6 +922,7 @@ local function suiteCatchUpProcessReward()
     -- Snapshot live state so this destructive suite can restore it
     local originalKills = bcrData.kills
     local originalRewardsGiven = bcrData.rewardsGiven
+    local originalWithheld = bcrData.withheldMilestones
     local historyCopy = {}
     for i, v in pairs(bcrData.traitHistory) do
         historyCopy[i] = v
@@ -889,6 +950,7 @@ local function suiteCatchUpProcessReward()
     -- while any reward remains available.
     bcrData.rewardsGiven = 0
     bcrData.kills = 50000
+    bcrData.withheldMilestones = 0
     local rewardsBefore = BCR.HasAvailableRewards(player)
     result = BCR.ProcessRewardDirect(player)
     local gotBatch = result ~= nil and type(result) == "table" and #result > 0
@@ -921,6 +983,7 @@ local function suiteCatchUpProcessReward()
     -- Restore ModData fields
     bcrData.kills = originalKills
     bcrData.rewardsGiven = originalRewardsGiven
+    bcrData.withheldMilestones = originalWithheld
     bcrData.traitHistory = historyCopy
 
     -- Restore trait changes the reward path may have applied
@@ -1201,6 +1264,7 @@ local function snapshotPlayerState(player)
     local snapshot = {
         kills = bcrData.kills,
         rewardsGiven = bcrData.rewardsGiven,
+        withheld = bcrData.withheldMilestones,
         history = {},
         traits = {},
         restoreMissingTraits = BCR.opts and BCR.opts.restoreMissingTraits,
@@ -1231,6 +1295,7 @@ local function restorePlayerState(player, snapshot)
     if bcrData then
         bcrData.kills = snapshot.kills
         bcrData.rewardsGiven = snapshot.rewardsGiven
+        bcrData.withheldMilestones = snapshot.withheld
         local history = {}
         for i, v in ipairs(snapshot.history) do
             history[i] = v
