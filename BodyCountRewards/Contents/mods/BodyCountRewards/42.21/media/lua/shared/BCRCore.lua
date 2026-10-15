@@ -726,19 +726,23 @@ function BCR.RunThirdPartyTests()
         BCR.Exclusions ~= nil and type(BCR.Exclusions) == "table")
 
     -- ============================================================
-    -- NEW (v1.3.3): Sandbox toggle wiring -- every registered trait
-    -- must have IsTraitAllowed == true by default. Catches
+    -- Sandbox toggle wiring -- every registered trait must declare
+    -- its "allow_<id>" key in the sandbox namespace. Catches
     -- namespace / option-name mismatches between sandbox-options.txt
-    -- and RegisterCustomTraits().
+    -- and RegisterCustomTraits(). Checks the key's presence, not its
+    -- value, so an admin who disables a toggle does not fail the test.
     -- ============================================================
 
     local function checkSandboxToggles(list, label)
         if not list then return end
         for _, entry in ipairs(list) do
             local traitId = entry.id
-            if traitId and BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[traitId] then
-                local allowed = BCR.IsTraitAllowed(traitId)
-                ok(label .. " sandbox toggle active for " .. traitId, allowed == true)
+            local namespace = traitId and BCR.CustomTraitNamespaces and BCR.CustomTraitNamespaces[traitId]
+            if namespace then
+                local key = "allow_" .. string.gsub(traitId, ":", "_")
+                local sandboxVars = SandboxVars[namespace]
+                ok(label .. " sandbox toggle declared for " .. traitId .. " (" .. namespace .. "." .. key .. ")",
+                    sandboxVars ~= nil and sandboxVars[key] ~= nil)
             end
         end
     end

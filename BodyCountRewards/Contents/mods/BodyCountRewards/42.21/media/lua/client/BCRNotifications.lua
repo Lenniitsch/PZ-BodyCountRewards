@@ -97,3 +97,11 @@ function BCR.ShowFinalMessage(player)
     local text = getText("UI_BCR_AllRewardsGranted") or "All rewards granted!"
     HaloTextHelper.addText(player, text, "", HALO_COLORS.final[1], HALO_COLORS.final[2], HALO_COLORS.final[3])
 end
+
+-- Clears queued notifications and display state. Called on player
+-- creation and after tests so stale entries never leak forward.
+function BCR.ResetNotifications()
+    notificationQueue = {}
+    notificationTimer = 0
+    isShowingNotification = false
+end

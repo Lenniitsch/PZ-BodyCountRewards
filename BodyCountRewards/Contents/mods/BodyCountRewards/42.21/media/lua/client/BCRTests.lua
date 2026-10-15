@@ -979,6 +979,10 @@ local function suiteNotificationQueue()
 
     local ok5, _ = pcall(BCR.ShowFinalMessage, nil)
     assertTrue(ok5, "ShowFinalMessage(nil) does not crash")
+
+    -- Leave no synthetic entries behind for the live update loop
+    local ok6 = pcall(BCR.ResetNotifications)
+    assertTrue(ok6, "ResetNotifications does not crash")
 end
 
 -- ============================================================
@@ -1185,6 +1189,84 @@ local testSuites = {
     { "Trait History & Reconciliation", suiteTraitHistoryReconciliation },
 }
 
+-- ============================================================
+-- RUN-LEVEL SAFETY NET -- some suites mutate live player state.
+-- Snapshot before the run and restore afterwards, so a crashing
+-- suite can never leave test values in the save.
+-- ============================================================
+
+local function snapshotPlayerState(player)
+    local bcrData = BCR.EnsureModData(player)
+    if not bcrData then return nil end
+    local snapshot = {
+        kills = bcrData.kills,
+        rewardsGiven = bcrData.rewardsGiven,
+        history = {},
+        traits = {},
+        restoreMissingTraits = BCR.opts and BCR.opts.restoreMissingTraits,
+        sandbox = {},
+    }
+    if type(bcrData.traitHistory) == "table" then
+        for i, v in ipairs(bcrData.traitHistory) do
+            snapshot.history[i] = v
+        end
+    end
+    local traitList = BCR.GetPlayerTraitsList(player)
+    if traitList then
+        for _, tid in ipairs(traitList) do
+            snapshot.traits[tid] = true
+        end
+    end
+    local sandboxVars = SandboxVars and SandboxVars.BCR
+    if type(sandboxVars) == "table" then
+        for k, v in pairs(sandboxVars) do
+            snapshot.sandbox[k] = v
+        end
+    end
+    return snapshot
+end
+
+local function restorePlayerState(player, snapshot)
+    local bcrData = BCR.EnsureModData(player)
+    if bcrData then
+        bcrData.kills = snapshot.kills
+        bcrData.rewardsGiven = snapshot.rewardsGiven
+        local history = {}
+        for i, v in ipairs(snapshot.history) do
+            history[i] = v
+        end
+        bcrData.traitHistory = history
+    end
+
+    local traitsNow = {}
+    local traitList = BCR.GetPlayerTraitsList(player)
+    if traitList then
+        for _, tid in ipairs(traitList) do
+            traitsNow[tid] = true
+        end
+    end
+    for tid in pairs(traitsNow) do
+        if not snapshot.traits[tid] then
+            BCR.RemoveTrait(player, { id = tid })
+        end
+    end
+    for tid in pairs(snapshot.traits) do
+        if not traitsNow[tid] then
+            BCR.AddTrait(player, { id = tid })
+        end
+    end
+
+    if BCR.opts then
+        BCR.opts.restoreMissingTraits = snapshot.restoreMissingTraits
+    end
+    local sandboxVars = SandboxVars and SandboxVars.BCR
+    if type(sandboxVars) == "table" then
+        for k, v in pairs(snapshot.sandbox) do
+            sandboxVars[k] = v
+        end
+    end
+end
+
 function BCRRunTests()
     passed = 0
     failed = 0
@@ -1193,8 +1275,18 @@ function BCRRunTests()
     suiteIndex = 0
     suiteTotal = #testSuites
 
+    local player = getPlayerForTests()
+    local snapshot = player and snapshotPlayerState(player) or nil
+
     for _, s in ipairs(testSuites) do
         runSuite(s[1], s[2])
+    end
+
+    if snapshot then
+        local okRestore, errRestore = pcall(restorePlayerState, player, snapshot)
+        if not okRestore then
+            print("[BCR] [Tests] State restore error: " .. tostring(errRestore))
+        end
     end
 
     local total = passed + failed
