@@ -237,7 +237,8 @@ function BCR_OnPlayerUpdate(player)
                             pendingStallCount = 0
                         end
                     end
-                    pendingRewardsCount = countMissedMilestones(bcrData, BCR.opts)
+                    -- Do not recompute the count here: keep it for a retry,
+                    -- or keep the zero that stops the loop (exhausted/stalled).
                 else
                     isPendingRequestInFlight = false
                     pendingStallCount = 0
@@ -245,9 +246,11 @@ function BCR_OnPlayerUpdate(player)
                         BCR.EnqueueNotification(result)
                     end
                     BCR.RefreshStatsWindow()
-                    pendingRewardsCount = countMissedMilestones(bcrData, BCR.opts)
                     if not BCR.HasAvailableRewards(player) then
                         scheduleFinalMessage()
+                        pendingRewardsCount = 0
+                    else
+                        pendingRewardsCount = countMissedMilestones(bcrData, BCR.opts)
                     end
                 end
             elseif not isSinglePlayer() and not isPendingRequestInFlight then

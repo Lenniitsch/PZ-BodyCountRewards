@@ -804,6 +804,42 @@ local function suitePoolBuildingPlayerState()
     -- Repeated calls return same table
     local bcrData2 = BCR.EnsureModData(player)
     assertEqual(bcrData, bcrData2, "Repeated EnsureModData returns same table")
+
+    -- === Regression: EnsureModData repairs corrupt fields ===
+    local savedHistory = bcrData.traitHistory
+    local savedKills = bcrData.kills
+    local savedRewards = bcrData.rewardsGiven
+
+    bcrData.traitHistory = "corrupt"
+    local repaired = BCR.EnsureModData(player)
+    assertType("table", repaired.traitHistory, "Corrupt traitHistory is replaced with a table")
+
+    bcrData.kills = -5
+    bcrData.rewardsGiven = -2
+    repaired = BCR.EnsureModData(player)
+    assertEqual(0, repaired.kills, "Negative kills are clamped to 0")
+    assertEqual(0, repaired.rewardsGiven, "Negative rewardsGiven are clamped to 0")
+
+    bcrData.traitHistory = savedHistory
+    bcrData.kills = savedKills
+    bcrData.rewardsGiven = savedRewards
+
+    -- === Regression: server kill sync takes the engine value ===
+    if BCR.SyncAuthoritativeKills then
+        local okKills, engineKills = pcall(function() return player:getZombieKills() end)
+        if okKills and type(engineKills) == "number" then
+            local savedKills2 = bcrData.kills
+            local okSync = pcall(function()
+                bcrData.kills = engineKills + 500000
+                BCR.SyncAuthoritativeKills(player, bcrData)
+            end)
+            local syncedKills = bcrData.kills
+            bcrData.kills = savedKills2
+            assertTrue(okSync, "SyncAuthoritativeKills does not error")
+            assertEqual(engineKills, syncedKills,
+                "SyncAuthoritativeKills replaces stored kills with the engine value")
+        end
+    end
 end
 
 -- ============================================================

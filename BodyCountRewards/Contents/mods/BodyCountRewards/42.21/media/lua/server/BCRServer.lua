@@ -218,12 +218,13 @@ end
 -- are ignored.
 -- ============================================================
 
-local function syncAuthoritativeKills(player, bcrData)
+-- The engine counter always wins: stored ModData is client-writable and
+-- must never raise the kill count above what the server simulated.
+function BCR.SyncAuthoritativeKills(player, bcrData)
+    if not bcrData then return 0 end
     local serverKills = getZombieKillsSafe(player) or 0
-    if serverKills > (bcrData.kills or 0) then
-        bcrData.kills = serverKills
-    end
-    return bcrData.kills
+    bcrData.kills = serverKills
+    return serverKills
 end
 
 -- ============================================================
@@ -283,7 +284,7 @@ local function handleRequestReward(player, args)
         return
     end
 
-    syncAuthoritativeKills(player, bcrData)
+    BCR.SyncAuthoritativeKills(player, bcrData)
     local canClaim, missedCount = validateMilestone(player, bcrData, opts)
     if not canClaim then
         sendServerCommand(player, "BCR", "RewardError", {

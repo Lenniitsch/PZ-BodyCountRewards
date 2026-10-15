@@ -610,13 +610,13 @@ function BCR.EnsureModData(player)
             traitHistory = {},
         }
     end
-    if not modData.BCR.traitHistory then
+    if type(modData.BCR.traitHistory) ~= "table" then
         modData.BCR.traitHistory = {}
     end
-    if type(modData.BCR.kills) ~= "number" then
+    if type(modData.BCR.kills) ~= "number" or modData.BCR.kills < 0 then
         modData.BCR.kills = 0
     end
-    if type(modData.BCR.rewardsGiven) ~= "number" then
+    if type(modData.BCR.rewardsGiven) ~= "number" or modData.BCR.rewardsGiven < 0 then
         modData.BCR.rewardsGiven = 0
     end
     return modData.BCR
