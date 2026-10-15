@@ -69,6 +69,9 @@ local function resetState()
     needsPlayerReady = false
     playerReadyAttempts = 0
     playerReadyTimer = 0
+    -- Clear UI state that belongs to the previous session.
+    if BCR.ResetNotifications then BCR.ResetNotifications() end
+    if BCR.CloseStatsWindow then BCR.CloseStatsWindow() end
 end
 
 local function countMissedMilestones(bcrData, opts)

@@ -708,13 +708,30 @@ function BCR.ShowStatsWindow(player)
     window:initialise()
     window:addToUIManager()
     window:setVisible(true)
-    window:updateContent()
-
+    -- Track the window before the first content build, so a build error
+    -- cannot orphan it in the UI manager.
     statsWindow = window
+    local ok, err = pcall(function() window:updateContent() end)
+    if not ok then
+        print("[BCR] [Client] ShowStatsWindow updateContent error: " .. tostring(err))
+    end
 end
 
 function BCR.RefreshStatsWindow()
     if statsWindow and statsWindow:isVisible() then
-        statsWindow:updateContent()
+        local ok, err = pcall(function() statsWindow:updateContent() end)
+        if not ok then
+            print("[BCR] [Client] RefreshStatsWindow error: " .. tostring(err))
+        end
     end
+end
+
+-- Closes and forgets the stats window. Called on player creation so a
+-- window left open across a save load cannot keep the old player.
+function BCR.CloseStatsWindow()
+    local window = statsWindow
+    if not window then return end
+    statsWindow = nil
+    pcall(function() window:setVisible(false) end)
+    pcall(function() window:removeFromUIManager() end)
 end

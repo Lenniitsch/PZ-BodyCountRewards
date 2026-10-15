@@ -1098,6 +1098,8 @@ local function suiteNotificationQueue()
     -- Leave no synthetic entries behind for the live update loop
     local ok6 = pcall(BCR.ResetNotifications)
     assertTrue(ok6, "ResetNotifications does not crash")
+    local ok7 = pcall(BCR.CloseStatsWindow)
+    assertTrue(ok7, "CloseStatsWindow is safe with no open window")
 end
 
 -- ============================================================
